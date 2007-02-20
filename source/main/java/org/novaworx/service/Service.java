@@ -114,7 +114,7 @@ public abstract class Service {
 	 * 
 	 * @throws IOException
 	 */
-	protected abstract void startService() throws IOException;
+	protected abstract void startService() throws Exception;
 
 	/**
 	 * Subclasses implement this method to stop the service. Implementations of
@@ -122,7 +122,7 @@ public abstract class Service {
 	 * 
 	 * @throws IOException
 	 */
-	protected abstract void stopService() throws IOException;
+	protected abstract void stopService() throws Exception;
 
 	/**
 	 * Wait for the start operation to complete. Returns immediately if the
@@ -150,9 +150,7 @@ public abstract class Service {
 		if( state == State.STARTED ) {
 			Log.write( Log.DEBUG, "Already started." );
 			return;
-		}
-
-		if( state == State.STARTING ) {
+		} else if( state == State.STARTING ) {
 			return;
 		}
 
@@ -171,9 +169,7 @@ public abstract class Service {
 		if( state == State.STOPPED ) {
 			Log.write( Log.DEBUG, "Already shutdown." );
 			return;
-		}
-
-		if( state == State.STOPPING ) {
+		} else if( state == State.STOPPING ) {
 			return;
 		}
 
