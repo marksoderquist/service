@@ -41,7 +41,7 @@ public abstract class Service {
 	 * Start the Service. This method creates the service thread and returns
 	 * immediately.
 	 */
-	public void start() {
+	public final void start() {
 		execute = true;
 		thread = new Thread( new ServiceRunner(), name );
 		thread.setPriority( Thread.NORM_PRIORITY );
@@ -56,7 +56,7 @@ public abstract class Service {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public void startAndWait() throws Exception {
+	public final void startAndWait() throws Exception {
 		start();
 		waitForStartup();
 		if( exception != null ) {
@@ -68,7 +68,7 @@ public abstract class Service {
 	 * Stop the Service. This method interrupts the service thread and returns
 	 * immediately.
 	 */
-	public void stop() {
+	public final void stop() {
 		execute = false;
 		thread.interrupt();
 	}
@@ -80,7 +80,7 @@ public abstract class Service {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public void stopAndWait() throws Exception {
+	public final void stopAndWait() throws Exception {
 		stop();
 		waitForShutdown();
 		if( exception != null ) {
@@ -93,7 +93,7 @@ public abstract class Service {
 	 * 
 	 * @return True if connected, false otherwise.
 	 */
-	public synchronized boolean isRunning() {
+	public final synchronized boolean isRunning() {
 		return state == State.STARTED;
 	}
 
@@ -102,7 +102,7 @@ public abstract class Service {
 	 * 
 	 * @throws IOException
 	 */
-	public void restart() throws Exception {
+	public final void restart() throws Exception {
 		// Don't use start() and stop(), they cause threading issues.
 		stopAndWait();
 		startAndWait();
@@ -130,7 +130,7 @@ public abstract class Service {
 	 * 
 	 * @throws InterruptedException
 	 */
-	synchronized void waitForStartup() throws InterruptedException {
+	final synchronized void waitForStartup() throws InterruptedException {
 		if( state == State.STARTED ) return;
 		wait();
 	}
@@ -141,12 +141,12 @@ public abstract class Service {
 	 * 
 	 * @throws InterruptedException
 	 */
-	synchronized void waitForShutdown() throws InterruptedException {
+	final synchronized void waitForShutdown() throws InterruptedException {
 		if( state == State.STOPPED ) return;
 		wait();
 	}
 
-	private synchronized void startup() throws Exception {
+	private final synchronized void startup() throws Exception {
 		if( state == State.STARTED ) {
 			Log.write( Log.DEBUG, "Already started." );
 			return;
@@ -167,7 +167,7 @@ public abstract class Service {
 		}
 	}
 
-	private synchronized void shutdown() throws Exception {
+	private final synchronized void shutdown() throws Exception {
 		if( state == State.STOPPED ) {
 			Log.write( Log.DEBUG, "Already shutdown." );
 			return;
@@ -191,7 +191,7 @@ public abstract class Service {
 		}
 	}
 
-	private class ServiceRunner implements Runnable {
+	private final class ServiceRunner implements Runnable {
 		/**
 		 * The implmentation of the Runnable interface.
 		 */
