@@ -1,0 +1,10 @@
+<classpath>
+  <classpathentry kind="src" path="source/main/java"/>
+  <classpathentry kind="src" path="source/main/resources" excluding="**/*.java"/>
+  <classpathentry kind="src" path="source/test/java" output="target/test-classes"/>
+  <classpathentry kind="src" path="source/test/resources" output="target/test-classes" excluding="**/*.java"/>
+  <classpathentry kind="output" path="target/classes"/>
+  <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+  <classpathentry kind="var" path="M2_REPO/org/novaworx/utility/1.0-SNAPSHOT/utility-1.0-SNAPSHOT.jar"/>
+  <classpathentry kind="var" path="M2_REPO/junit/junit/4.0/junit-4.0.jar"/>
+</classpath>
