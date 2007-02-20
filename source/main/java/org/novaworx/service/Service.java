@@ -154,7 +154,9 @@ public abstract class Service {
 		if( state == State.STARTED ) {
 			Log.write( Log.INFO, getName() + " already started." );
 			return;
-		} else if( state == State.STARTING ) {
+		}
+
+		if( state == State.STARTING ) {
 			return;
 		}
 
@@ -173,7 +175,9 @@ public abstract class Service {
 		if( state == State.STOPPED ) {
 			Log.write( Log.INFO, getName() + " already shutdown." );
 			return;
-		} else if( state == State.STOPPING ) {
+		}
+
+		if( state == State.STOPPING ) {
 			return;
 		}
 
