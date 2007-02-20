@@ -2,7 +2,19 @@ package org.novaworx.service;
 
 import junit.framework.TestCase;
 
+import org.novaworx.util.Log;
+
 public class ServiceTest extends TestCase {
+
+	@Override
+	public void setUp() {
+		Log.setLevel( Log.NONE );
+	}
+
+	@Override
+	public void tearDown() {
+		Log.setLevel( null );
+	}
 
 	public void testStart() throws Exception {
 		TestConnectionHandler handler = new TestConnectionHandler();

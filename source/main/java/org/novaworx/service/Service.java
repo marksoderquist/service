@@ -37,6 +37,10 @@ public abstract class Service {
 		this.name = name;
 	}
 
+	public String getName() {
+		return name;
+	}
+
 	/**
 	 * Start the Service. This method creates the service thread and returns
 	 * immediately.
@@ -148,18 +152,18 @@ public abstract class Service {
 
 	private final synchronized void startup() throws Exception {
 		if( state == State.STARTED ) {
-			Log.write( Log.DEBUG, "Already started." );
+			Log.write( Log.INFO, getName() + " already started." );
 			return;
 		} else if( state == State.STARTING ) {
 			return;
 		}
 
-		Log.write( Log.DEBUG, "Starting service..." );
+		Log.write( Log.DEBUG, "Starting " + getName() + "..." );
 		try {
 			state = State.STARTING;
 			startService();
 			state = State.STARTED;
-			Log.write( Log.DEBUG, "Service started." );
+			Log.write( Log.INFO, getName() + " started." );
 		} finally {
 			notifyAll();
 		}
@@ -167,18 +171,18 @@ public abstract class Service {
 
 	private final synchronized void shutdown() throws Exception {
 		if( state == State.STOPPED ) {
-			Log.write( Log.DEBUG, "Already shutdown." );
+			Log.write( Log.INFO, getName() + " already shutdown." );
 			return;
 		} else if( state == State.STOPPING ) {
 			return;
 		}
 
-		Log.write( Log.DEBUG, "Stopping service..." );
+		Log.write( Log.DEBUG, "Stopping " + getName() + "..." );
 		try {
 			state = State.STOPPING;
 			stopService();
 			state = State.STOPPED;
-			Log.write( Log.DEBUG, "Service stopped." );
+			Log.write( Log.INFO, getName() + " stopped." );
 		} finally {
 			notifyAll();
 			synchronized( startedLock ) {

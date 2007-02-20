@@ -1,5 +1,7 @@
 package org.novaworx.service;
 
+import org.novaworx.util.Log;
+
 import junit.framework.TestCase;
 
 public class ServerServiceTest extends TestCase {
@@ -7,7 +9,14 @@ public class ServerServiceTest extends TestCase {
 	private static final int PORT = 23423;
 
 	@Override
-	public void setUp() throws Exception {}
+	public void setUp() {
+		Log.setLevel( Log.NONE );
+	}
+
+	@Override
+	public void tearDown() {
+		Log.setLevel( null );
+	}
 
 	public void testStartStop() throws Exception {
 		ServerService service = new ServerService( PORT );
@@ -60,8 +69,5 @@ public class ServerServiceTest extends TestCase {
 	// service.stopAndWait();
 	// assertFalse( "Service is not stopped.", service.isRunning() );
 	// }
-
-	@Override
-	public void tearDown() throws Exception {}
 
 }

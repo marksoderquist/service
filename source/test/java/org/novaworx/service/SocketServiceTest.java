@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.Socket;
 import java.nio.charset.Charset;
 
+import org.novaworx.util.Log;
+
 import junit.framework.TestCase;
 
 public class SocketServiceTest extends TestCase {
@@ -12,6 +14,7 @@ public class SocketServiceTest extends TestCase {
 
 	@Override
 	public void setUp() throws Exception {
+		Log.setLevel( Log.NONE );
 		server = new TestServerSocketService();
 		server.startAndWait();
 		assertTrue( server.isRunning() );
@@ -71,6 +74,7 @@ public class SocketServiceTest extends TestCase {
 	@Override
 	public void tearDown() throws Exception {
 		server.stopAndWait();
+		Log.setLevel( null );
 	}
 
 	private static class TestServerSocketService extends ServerService {
