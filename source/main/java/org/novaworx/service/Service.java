@@ -210,7 +210,6 @@ public abstract class Service {
 							startedLock.wait();
 						} catch( InterruptedException exception ) {
 							// Intentionally ignore exception.
-							Log.write( Log.DEBUG, "Service thread interrupted." );
 						}
 					}
 				} catch( Exception exception ) {
@@ -219,6 +218,8 @@ public abstract class Service {
 				} finally {
 					try {
 						shutdown();
+					} catch( InterruptedException exception ) {
+						Log.write( Log.ERROR, Thread.currentThread().getName() + " interrupted." );
 					} catch( Exception exception ) {
 						Service.this.exception = exception;
 						Log.write( exception );
