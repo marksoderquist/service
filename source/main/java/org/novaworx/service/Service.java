@@ -26,11 +26,11 @@ public abstract class Service {
 	private final Object startedLock = new Object();
 
 	private Exception exception;
-
+	
 	protected Service() {
 		String className = getClass().getName();
 		int index = className.lastIndexOf( '.' );
-		name = className.substring( index + 1 );
+		this.name = className.substring( index + 1 );
 	}
 
 	protected Service( String name ) {
