@@ -23,7 +23,7 @@ public abstract class Worker extends Service implements Runnable {
 	@Override
 	protected synchronized void startService() throws Exception {
 		execute = true;
-		thread = new Thread( this, name + " Worker" );
+		thread = new Thread( this, name + ":Worker" );
 		thread.setPriority( Thread.NORM_PRIORITY );
 		thread.setDaemon( false );
 		thread.start();
@@ -32,7 +32,7 @@ public abstract class Worker extends Service implements Runnable {
 	@Override
 	protected synchronized void stopService() throws Exception {
 		execute = false;
-		thread.interrupt();
+		if( thread != null ) thread.interrupt();
 	}
 
 }
