@@ -74,7 +74,7 @@ public abstract class Service {
 	 */
 	public final void stop() {
 		execute = false;
-		thread.interrupt();
+		if( thread != null) thread.interrupt();
 	}
 
 	/**

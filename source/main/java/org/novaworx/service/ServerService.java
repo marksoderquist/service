@@ -71,7 +71,7 @@ public class ServerService extends IOService {
 
 		public void start() {
 			execute = true;
-			thread = new Thread( this, "ServerSocketService$ServerRunner" );
+			thread = new Thread( this, getName() +":ServerRunner" );
 			thread.setPriority( Thread.NORM_PRIORITY );
 			thread.setDaemon( true );
 			thread.start();
