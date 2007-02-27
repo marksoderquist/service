@@ -7,5 +7,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="var" path="M2_REPO/junit/junit/4.0/junit-4.0.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/utility"/>
+	<classpathentry kind="var" path="M2_REPO/javax/comm/comm/3.0/comm-3.0.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
