@@ -34,5 +34,5 @@ public abstract class Worker extends Service implements Runnable {
 		execute = false;
 		if( thread != null ) thread.interrupt();
 	}
-
+	
 }

@@ -26,7 +26,7 @@ public abstract class Service {
 	private final Object startedLock = new Object();
 
 	private Exception exception;
-	
+
 	protected Service() {
 		String className = getClass().getName();
 		int index = className.lastIndexOf( '.' );
@@ -62,7 +62,11 @@ public abstract class Service {
 	 */
 	public final void startAndWait() throws Exception {
 		start();
-		waitForStartup();
+		try {
+			waitForStartup();
+		} catch( InterruptedException exception ) {
+			//Log.write( exception );
+		}
 		if( exception != null ) {
 			throw new Exception( exception );
 		}
@@ -74,7 +78,7 @@ public abstract class Service {
 	 */
 	public final void stop() {
 		execute = false;
-		if( thread != null) thread.interrupt();
+		if( thread != null ) thread.interrupt();
 	}
 
 	/**
@@ -86,7 +90,11 @@ public abstract class Service {
 	 */
 	public final void stopAndWait() throws Exception {
 		stop();
-		waitForShutdown();
+		try {
+			waitForShutdown();
+		} catch( InterruptedException exception ) {
+			//Log.write( exception );
+		}
 		if( exception != null ) {
 			throw new Exception( exception );
 		}
