@@ -3,6 +3,7 @@ package org.novaworx.service;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 
 import org.novaworx.util.Log;
 
@@ -42,7 +43,7 @@ public class ServerService extends IOService {
 
 	@Override
 	protected final void stopService() throws IOException {
-		if( runner != null) runner.stopAndWait();
+		if( runner != null ) runner.stopAndWait();
 	}
 
 	protected void handleSocket( Socket socket ) throws IOException {
@@ -71,7 +72,7 @@ public class ServerService extends IOService {
 
 		public void start() {
 			execute = true;
-			thread = new Thread( this, getName() +":ServerRunner" );
+			thread = new Thread( this, getName() + ":ServerRunner" );
 			thread.setPriority( Thread.NORM_PRIORITY );
 			thread.setDaemon( true );
 			thread.start();
@@ -101,14 +102,12 @@ public class ServerService extends IOService {
 				try {
 					Socket socket = server.accept();
 					handleSocket( socket );
-				} catch( IOException exception ) {
-					// Intentionally ignore exception.
-				} finally {
-					try {
-						server.close();
-					} catch( IOException exception ) {
+				} catch( SocketException exception ) {
+					if( !"socket closed".equals( exception.getMessage().toLowerCase() ) ) {
 						Log.write( exception );
 					}
+				} catch( IOException exception ) {
+					Log.write( exception );
 				}
 			}
 		}

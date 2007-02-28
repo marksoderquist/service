@@ -75,11 +75,13 @@ public abstract class IOService extends Service {
 			try {
 				int bite = realInput.read();
 				if( bite < 0 ) {
+					if( !isRunning() ) return -1;
 					reconnect();
 					return read();
 				}
 				return bite;
 			} catch( IOException exception ) {
+				if( !isRunning() ) return -1;
 				reconnect();
 				return read();
 			}
@@ -91,13 +93,15 @@ public abstract class IOService extends Service {
 			try {
 				int read = realInput.read( data );
 				if( read < 0 ) {
+					if( !isRunning() ) return -1;
 					reconnect();
-					return read( data );
+					return read(data);
 				}
 				return read;
 			} catch( IOException exception ) {
+				if( !isRunning() ) return -1;
 				reconnect();
-				return read( data );
+				return read(data);
 			}
 		}
 
@@ -107,11 +111,13 @@ public abstract class IOService extends Service {
 			try {
 				int read = realInput.read( data, offset, length );
 				if( read < 0 ) {
+					if( !isRunning() ) return -1;
 					reconnect();
 					return read( data, offset, length );
 				}
 				return read;
 			} catch( IOException exception ) {
+				if( !isRunning() ) return -1;
 				reconnect();
 				return read( data, offset, length );
 			}
@@ -139,6 +145,7 @@ public abstract class IOService extends Service {
 			try {
 				realOutput.write( bite );
 			} catch( IOException exception ) {
+				if( !isRunning() ) return;
 				reconnect();
 				write( bite );
 			}
@@ -150,6 +157,7 @@ public abstract class IOService extends Service {
 			try {
 				realOutput.write( data );
 			} catch( IOException exception ) {
+				if( !isRunning() ) return;
 				reconnect();
 				write( data );
 			}
@@ -161,6 +169,7 @@ public abstract class IOService extends Service {
 			try {
 				realOutput.write( data, offset, length );
 			} catch( IOException exception ) {
+				if( !isRunning() ) return;
 				reconnect();
 				write( data, offset, length );
 			}
