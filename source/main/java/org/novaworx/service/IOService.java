@@ -41,6 +41,8 @@ public abstract class IOService extends Service {
 	}
 
 	protected void reconnect() {
+		if( !isRunning() ) return;
+
 		try {
 			restart();
 		} catch( Exception exception ) {
