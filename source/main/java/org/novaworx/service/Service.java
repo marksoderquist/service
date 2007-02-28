@@ -108,6 +108,10 @@ public abstract class Service {
 	public final synchronized boolean isRunning() {
 		return state == State.STARTED;
 	}
+	
+	protected String getState() {
+		return state.toString();
+	}
 
 	/**
 	 * Restart the service.
