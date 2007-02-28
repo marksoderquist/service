@@ -8,6 +8,8 @@ import javax.comm.PortInUseException;
 import javax.comm.SerialPort;
 import javax.comm.UnsupportedCommOperationException;
 
+import org.novaworx.util.Log;
+
 /**
  * Install the comm.jar into the maven repository with the following command:
  * 
@@ -50,14 +52,14 @@ public class SerialService extends IOService {
 	protected void startService() throws IOException {
 		CommPortIdentifier identifier;
 		try {
-			System.out.println("Opening serial port.");
+			Log.write(Log.DEBUG, "Opening serial port...");
 			identifier = CommPortIdentifier.getPortIdentifier(name);
 			port = (SerialPort) identifier.open("Perform MiniPC",
 					CONNECT_TIMEOUT);
 			port.setSerialPortParams(baud, bits, stop, parity);
 			setRealInputStream(port.getInputStream());
 			setRealOutputStream(port.getOutputStream());
-			System.out.println("Serial port open.");
+			Log.write("Serial port open.");
 		} catch (NoSuchPortException exception) {
 			throw new IOException(exception);
 		} catch (PortInUseException exception) {

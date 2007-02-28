@@ -109,7 +109,7 @@ public abstract class Service {
 		return state == State.STARTED;
 	}
 	
-	protected String getState() {
+	public final synchronized String getStatus() {
 		return state.toString();
 	}
 
@@ -122,6 +122,28 @@ public abstract class Service {
 		// Don't use start() and stop(), they cause threading issues.
 		stopAndWait();
 		startAndWait();
+	}
+
+	/**
+	 * Wait for the start operation to complete. Returns immediately if the
+	 * service is already started.
+	 * 
+	 * @throws InterruptedException
+	 */
+	public final synchronized void waitForStartup() throws InterruptedException {
+		if( state == State.STARTED ) return;
+		wait();
+	}
+
+	/**
+	 * Wait for the stop operation to complete. Returns immediately if the service
+	 * is already stopped.
+	 * 
+	 * @throws InterruptedException
+	 */
+	public final synchronized void waitForShutdown() throws InterruptedException {
+		if( state == State.STOPPED ) return;
+		wait();
 	}
 
 	/**
@@ -140,35 +162,13 @@ public abstract class Service {
 	 */
 	protected abstract void stopService() throws Exception;
 
-	/**
-	 * Wait for the start operation to complete. Returns immediately if the
-	 * service is already started.
-	 * 
-	 * @throws InterruptedException
-	 */
-	final synchronized void waitForStartup() throws InterruptedException {
-		if( state == State.STARTED ) return;
-		wait();
-	}
-
-	/**
-	 * Wait for the stop operation to complete. Returns immediately if the service
-	 * is already stopped.
-	 * 
-	 * @throws InterruptedException
-	 */
-	final synchronized void waitForShutdown() throws InterruptedException {
-		if( state == State.STOPPED ) return;
-		wait();
-	}
-
 	private final synchronized void startup() throws Exception {
-		if( state == State.STARTED ) {
-			Log.write( Log.INFO, getName() + " already started." );
+		if( state == State.STARTING ) {
 			return;
 		}
 
-		if( state == State.STARTING ) {
+		if( state == State.STARTED ) {
+			Log.write( Log.INFO, getName() + " already started." );
 			return;
 		}
 
@@ -184,12 +184,12 @@ public abstract class Service {
 	}
 
 	private final synchronized void shutdown() throws Exception {
-		if( state == State.STOPPED ) {
-			Log.write( Log.INFO, getName() + " already shutdown." );
+		if( state == State.STOPPING ) {
 			return;
 		}
 
-		if( state == State.STOPPING ) {
+		if( state == State.STOPPED ) {
+			Log.write( Log.INFO, getName() + " already shutdown." );
 			return;
 		}
 
