@@ -48,6 +48,7 @@ public abstract class Service {
 	 */
 	public final void start() {
 		execute = true;
+		runlock.reset();
 		thread = new Thread( new ServiceRunner(), name );
 		thread.setPriority( Thread.NORM_PRIORITY );
 		thread.setDaemon( true );
