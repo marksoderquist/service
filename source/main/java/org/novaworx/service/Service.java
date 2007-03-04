@@ -3,6 +3,7 @@ package org.novaworx.service;
 import java.io.IOException;
 
 import org.novaworx.util.Log;
+import org.novaworx.util.TripLock;
 
 /**
  * The Service class is a generic service class.
@@ -23,7 +24,7 @@ public abstract class Service {
 
 	private State state = State.STOPPED;
 
-	private final Object runLock = new Object();
+	private final TripLock runlock = new TripLock();
 
 	private Exception exception;
 
@@ -78,9 +79,7 @@ public abstract class Service {
 	 */
 	public final void stop() {
 		execute = false;
-		synchronized( runLock ) {
-			runLock.notify();
-		}
+		runlock.trip();
 	}
 
 	/**
@@ -122,8 +121,12 @@ public abstract class Service {
 	 */
 	public final void restart() throws Exception {
 		// Don't use start() and stop(), they cause threading issues.
+		System.out.println( "Calling stopAndWait()..." );
 		stopAndWait();
+		System.out.println( "stopAndWait() finished." );
+		System.out.println( "Calling startAndWait()..." );
 		startAndWait();
+		System.out.println( "startAndWait() finished." );
 	}
 
 	/**
@@ -152,8 +155,10 @@ public abstract class Service {
 	 */
 	public final synchronized void waitForShutdown() throws InterruptedException {
 		while( state != State.STOPPED ) {
+			System.out.println( Thread.currentThread() + " waiting for stop." );
 			wait();
 		}
+		System.out.println( Thread.currentThread() + " released from stop." );
 	}
 
 	public final synchronized void waitForShutdown( int timeout ) throws InterruptedException {
@@ -200,8 +205,6 @@ public abstract class Service {
 			Log.write( Log.INFO, getName() + " started." );
 		} finally {
 			notifyAll();
-			System.out.println( "Status: " + state );
-			new Exception().printStackTrace();
 		}
 	}
 
@@ -232,20 +235,10 @@ public abstract class Service {
 		 */
 		@Override
 		public void run() {
-			// FIXME Remove count when multi start call fixed.
-			int count = 0;
 			while( execute ) {
 				try {
-					System.out.println( "Pass: " + count++ );
 					startup();
-
-					synchronized( runLock ) {
-						try {
-							runLock.wait();
-						} catch( InterruptedException exception ) {
-							// Intentionally ignore exception.
-						}
-					}
+					runlock.hold();
 				} catch( Exception exception ) {
 					Service.this.exception = exception;
 					Log.write( exception );
