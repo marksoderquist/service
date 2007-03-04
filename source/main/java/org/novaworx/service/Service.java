@@ -78,7 +78,9 @@ public abstract class Service {
 	 */
 	public final void stop() {
 		execute = false;
-		if( thread != null ) thread.interrupt();
+		synchronized( startedLock) {
+			startedLock.notify();
+		}
 	}
 
 	/**
@@ -219,9 +221,6 @@ public abstract class Service {
 			Log.write( Log.INFO, getName() + " stopped." );
 		} finally {
 			notifyAll();
-			synchronized( startedLock ) {
-				startedLock.notifyAll();
-			}
 		}
 	}
 
