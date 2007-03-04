@@ -23,7 +23,7 @@ public abstract class Service {
 
 	private State state = State.STOPPED;
 
-	private final Object startedLock = new Object();
+	private final Object runLock = new Object();
 
 	private Exception exception;
 
@@ -78,8 +78,8 @@ public abstract class Service {
 	 */
 	public final void stop() {
 		execute = false;
-		synchronized( startedLock) {
-			startedLock.notify();
+		synchronized( runLock ) {
+			runLock.notify();
 		}
 	}
 
@@ -200,6 +200,8 @@ public abstract class Service {
 			Log.write( Log.INFO, getName() + " started." );
 		} finally {
 			notifyAll();
+			System.out.println( "Status: " + state );
+			new Exception().printStackTrace();
 		}
 	}
 
@@ -230,13 +232,16 @@ public abstract class Service {
 		 */
 		@Override
 		public void run() {
+			// FIXME Remove count when multi start call fixed.
+			int count = 0;
 			while( execute ) {
 				try {
+					System.out.println( "Pass: " + count++ );
 					startup();
 
-					synchronized( startedLock ) {
+					synchronized( runLock ) {
 						try {
-							startedLock.wait();
+							runLock.wait();
 						} catch( InterruptedException exception ) {
 							// Intentionally ignore exception.
 						}
