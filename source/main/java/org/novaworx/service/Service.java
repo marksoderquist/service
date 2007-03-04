@@ -62,14 +62,14 @@ public abstract class Service {
 	 */
 	public final void startAndWait() throws Exception {
 		start();
-		try {
-			waitForStartup();
-		} catch( InterruptedException exception ) {
-			//Log.write( exception );
-		}
-		if( exception != null ) {
-			throw new Exception( exception );
-		}
+		waitForStartup();
+		if( exception != null ) throw new Exception( exception );
+	}
+
+	public final void startAndWait( int timeout ) throws Exception {
+		start();
+		waitForStartup( timeout );
+		if( exception != null ) throw new Exception( exception );
 	}
 
 	/**
@@ -90,14 +90,14 @@ public abstract class Service {
 	 */
 	public final void stopAndWait() throws Exception {
 		stop();
-		try {
-			waitForShutdown();
-		} catch( InterruptedException exception ) {
-			//Log.write( exception );
-		}
-		if( exception != null ) {
-			throw new Exception( exception );
-		}
+		waitForShutdown();
+		if( exception != null ) throw new Exception( exception );
+	}
+
+	public final void stopAndWait( int timeout ) throws Exception {
+		stop();
+		waitForShutdown( timeout );
+		if( exception != null ) throw new Exception( exception );
 	}
 
 	/**
@@ -108,7 +108,7 @@ public abstract class Service {
 	public final synchronized boolean isRunning() {
 		return state == State.STARTED;
 	}
-	
+
 	public final synchronized String getStatus() {
 		return state.toString();
 	}
@@ -131,8 +131,15 @@ public abstract class Service {
 	 * @throws InterruptedException
 	 */
 	public final synchronized void waitForStartup() throws InterruptedException {
-		if( state == State.STARTED ) return;
-		wait();
+		while( state != State.STARTED ) {
+			wait();
+		}
+	}
+
+	public final synchronized void waitForStartup( int timeout ) throws InterruptedException {
+		while( state != State.STARTED ) {
+			wait( timeout );
+		}
 	}
 
 	/**
@@ -142,13 +149,22 @@ public abstract class Service {
 	 * @throws InterruptedException
 	 */
 	public final synchronized void waitForShutdown() throws InterruptedException {
-		if( state == State.STOPPED ) return;
-		wait();
+		while( state != State.STOPPED ) {
+			wait();
+		}
+	}
+
+	public final synchronized void waitForShutdown( int timeout ) throws InterruptedException {
+		while( state != State.STOPPED ) {
+			wait( timeout );
+		}
 	}
 
 	/**
 	 * Subclasses implement this method to start the service. Implementations of
-	 * this method should not block the thread.
+	 * this method should return when the service is started. This usually means
+	 * starting a separate thread, waiting for the new thread to notify the
+	 * calling thread that it has started successfully, and then returning.
 	 * 
 	 * @throws IOException
 	 */
@@ -156,7 +172,9 @@ public abstract class Service {
 
 	/**
 	 * Subclasses implement this method to stop the service. Implementations of
-	 * this method should not block the thread.
+	 * this method should return when the service has stopped. This usually means
+	 * stopping a separate thread that was started previously and waiting for the
+	 * thread to terminate before returning.
 	 * 
 	 * @throws IOException
 	 */

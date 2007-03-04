@@ -17,97 +17,124 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testStart() throws Exception {
-		TestConnectionHandler handler = new TestConnectionHandler();
-		assertFalse( handler.isRunning() );
+		TestConnectionService service = new TestConnectionService();
+		assertFalse( service.isRunning() );
 
-		handler.start();
-		handler.waitForStartup();
-		assertTrue( handler.isRunning() );
-		assertTrue( handler.wasStartServiceCalled() );
-		assertFalse( handler.wasStopServiceCalled() );
-		handler.clearFlags();
+		service.start();
+		service.waitForStartup();
+		assertTrue( service.isRunning() );
+		assertTrue( service.wasStartServiceCalled() );
+		assertFalse( service.wasStopServiceCalled() );
+		service.clearFlags();
 
-		handler.stop();
-		handler.waitForShutdown();
-		assertFalse( handler.isRunning() );
-		assertFalse( handler.wasStartServiceCalled() );
-		assertTrue( handler.wasStopServiceCalled() );
+		service.stop();
+		service.waitForShutdown();
+		assertFalse( service.isRunning() );
+		assertFalse( service.wasStartServiceCalled() );
+		assertTrue( service.wasStopServiceCalled() );
 	}
 
 	public void testStartAndWait() throws Exception {
-		TestConnectionHandler handler = new TestConnectionHandler();
-		assertFalse( handler.isRunning() );
+		TestConnectionService service = new TestConnectionService();
+		assertFalse( service.isRunning() );
 
-		handler.startAndWait();
-		assertTrue( handler.isRunning() );
-		assertTrue( handler.wasStartServiceCalled() );
-		assertFalse( handler.wasStopServiceCalled() );
-		handler.clearFlags();
+		service.startAndWait();
+		assertTrue( service.isRunning() );
+		assertTrue( service.wasStartServiceCalled() );
+		assertFalse( service.wasStopServiceCalled() );
+		service.clearFlags();
 
-		handler.stopAndWait();
-		assertFalse( handler.isRunning() );
-		assertFalse( handler.wasStartServiceCalled() );
-		assertTrue( handler.wasStopServiceCalled() );
+		service.stopAndWait();
+		assertFalse( service.isRunning() );
+		assertFalse( service.wasStartServiceCalled() );
+		assertTrue( service.wasStopServiceCalled() );
 	}
 
 	public void testStop() throws Exception {
-		TestConnectionHandler handler = new TestConnectionHandler();
-		assertFalse( handler.isRunning() );
+		TestConnectionService service = new TestConnectionService();
+		assertFalse( service.isRunning() );
 
-		handler.start();
-		handler.waitForStartup();
-		assertTrue( handler.isRunning() );
-		assertTrue( handler.wasStartServiceCalled() );
-		assertFalse( handler.wasStopServiceCalled() );
-		handler.clearFlags();
+		service.start();
+		service.waitForStartup();
+		assertTrue( service.isRunning() );
+		assertTrue( service.wasStartServiceCalled() );
+		assertFalse( service.wasStopServiceCalled() );
+		service.clearFlags();
 
-		handler.stop();
-		handler.waitForShutdown();
-		assertFalse( handler.isRunning() );
-		assertFalse( handler.wasStartServiceCalled() );
-		assertTrue( handler.wasStopServiceCalled() );
+		service.stop();
+		service.waitForShutdown();
+		assertFalse( service.isRunning() );
+		assertFalse( service.wasStartServiceCalled() );
+		assertTrue( service.wasStopServiceCalled() );
 	}
 
 	public void testStopAndWait() throws Exception {
-		TestConnectionHandler handler = new TestConnectionHandler();
-		assertFalse( handler.isRunning() );
+		TestConnectionService service = new TestConnectionService();
+		assertFalse( service.isRunning() );
 
-		handler.startAndWait();
-		assertTrue( handler.isRunning() );
-		assertTrue( handler.wasStartServiceCalled() );
-		assertFalse( handler.wasStopServiceCalled() );
-		handler.clearFlags();
+		service.startAndWait();
+		assertTrue( service.isRunning() );
+		assertTrue( service.wasStartServiceCalled() );
+		assertFalse( service.wasStopServiceCalled() );
+		service.clearFlags();
 
-		handler.stopAndWait();
-		assertFalse( handler.isRunning() );
-		assertFalse( handler.wasStartServiceCalled() );
-		assertTrue( handler.wasStopServiceCalled() );
+		service.stopAndWait();
+		assertFalse( service.isRunning() );
+		assertFalse( service.wasStartServiceCalled() );
+		assertTrue( service.wasStopServiceCalled() );
 	}
 
-	public void testReconnect() throws Exception {
-		TestConnectionHandler handler = new TestConnectionHandler();
-		assertFalse( handler.isRunning() );
+	public void testRestart() throws Exception {
+		TestConnectionService service = new TestConnectionService();
+		assertFalse( service.isRunning() );
 
-		handler.startAndWait();
-		assertTrue( handler.isRunning() );
-		assertTrue( handler.wasStartServiceCalled() );
-		assertFalse( handler.wasStopServiceCalled() );
-		handler.clearFlags();
+		service.startAndWait();
+		assertTrue( service.isRunning() );
+		assertTrue( service.wasStartServiceCalled() );
+		assertFalse( service.wasStopServiceCalled() );
+		service.clearFlags();
 
-		handler.restart();
-		handler.waitForStartup();
-		assertTrue( handler.isRunning() );
-		assertTrue( handler.wasStartServiceCalled() );
-		assertTrue( handler.wasStopServiceCalled() );
-		handler.clearFlags();
+		service.restart();
+		service.waitForStartup();
+		assertTrue( service.isRunning() );
+		assertTrue( service.wasStartServiceCalled() );
+		assertTrue( service.wasStopServiceCalled() );
+		service.clearFlags();
 
-		handler.stopAndWait();
-		assertFalse( handler.isRunning() );
-		assertFalse( handler.wasStartServiceCalled() );
-		assertTrue( handler.wasStopServiceCalled() );
+		service.stopAndWait();
+		assertFalse( service.isRunning() );
+		assertFalse( service.wasStartServiceCalled() );
+		assertTrue( service.wasStopServiceCalled() );
+	}
+	
+	public void testFastRestarts() throws Exception {
+		TestConnectionService service = new TestConnectionService();
+		assertFalse( service.isRunning() );
+
+		service.startAndWait();
+		assertTrue( service.isRunning() );
+		assertTrue( service.wasStartServiceCalled() );
+		assertFalse( service.wasStopServiceCalled() );
+		service.clearFlags();
+
+		service.restart();
+		service.restart();
+		service.restart();
+		service.restart();
+		service.restart();
+
+		assertTrue( service.isRunning() );
+		assertTrue( service.wasStartServiceCalled() );
+		assertTrue( service.wasStopServiceCalled() );
+		service.clearFlags();
+
+		service.stopAndWait();
+		assertFalse( service.isRunning() );
+		assertFalse( service.wasStartServiceCalled() );
+		assertTrue( service.wasStopServiceCalled() );
 	}
 
-	private class TestConnectionHandler extends Service {
+	private class TestConnectionService extends Service {
 
 		private boolean startServiceCalled;
 
