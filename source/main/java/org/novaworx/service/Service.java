@@ -2,6 +2,7 @@ package org.novaworx.service;
 
 import java.io.IOException;
 
+import org.novaworx.util.ClassUtil;
 import org.novaworx.util.Log;
 import org.novaworx.util.TripLock;
 
@@ -16,11 +17,9 @@ public abstract class Service {
 		STARTING, STARTED, STOPPING, STOPPED
 	};
 
-	private String name;
+	private String name = ClassUtil.getClassNameOnly( getClass() );
 
 	private Thread thread;
-
-	private boolean execute;
 
 	private volatile State state = State.STOPPED;
 
@@ -33,12 +32,11 @@ public abstract class Service {
 	private Exception exception;
 
 	protected Service() {
-		String className = getClass().getName();
-		int index = className.lastIndexOf( '.' );
-		this.name = className.substring( index + 1 );
+		stoplock.trip();
 	}
 
 	protected Service( String name ) {
+		this();
 		this.name = name;
 	}
 
@@ -51,11 +49,7 @@ public abstract class Service {
 	 * immediately.
 	 */
 	public final void start() {
-		execute = true;
-
-		startlock.reset();
-		runlock.reset();
-		stoplock.reset();
+		if( state != State.STOPPED ) return;
 
 		thread = new Thread( new ServiceRunner(), name );
 		thread.setPriority( Thread.NORM_PRIORITY );
@@ -87,7 +81,7 @@ public abstract class Service {
 	 * immediately.
 	 */
 	public final void stop() {
-		execute = false;
+		if( state != State.STARTED ) return;
 		runlock.trip();
 	}
 
@@ -130,12 +124,12 @@ public abstract class Service {
 	 */
 	public final void restart() throws Exception {
 		// Don't use start() and stop(), they cause threading issues.
-		System.out.println( "Calling stopAndWait()..." );
+		System.out.println( getName() + ".reset(): Calling stopAndWait()..." );
 		stopAndWait();
-		System.out.println( "stopAndWait() finished." );
-		System.out.println( "Calling startAndWait()..." );
+		System.out.println( getName() + ".reset(): stopAndWait() finished." );
+		System.out.println( getName() + ".reset(): Calling startAndWait()..." );
 		startAndWait();
-		System.out.println( "startAndWait() finished." );
+		System.out.println( getName() + ".reset(): startAndWait() finished." );
 	}
 
 	/**
@@ -200,6 +194,9 @@ public abstract class Service {
 			return;
 		}
 
+		runlock.reset();
+		stoplock.reset();
+
 		Log.write( Log.DEBUG, "Starting " + getName() + "..." );
 		try {
 			synchronized( this ) {
@@ -224,6 +221,8 @@ public abstract class Service {
 			return;
 		}
 
+		startlock.reset();
+
 		Log.write( Log.DEBUG, "Stopping " + getName() + "..." );
 		try {
 			synchronized( this ) {
@@ -244,22 +243,20 @@ public abstract class Service {
 		 */
 		@Override
 		public void run() {
-			while( execute ) {
+			try {
+				startup();
+				runlock.hold();
+			} catch( Exception exception ) {
+				Service.this.exception = exception;
+				Log.write( exception );
+			} finally {
 				try {
-					startup();
-					runlock.hold();
+					shutdown();
+				} catch( InterruptedException exception ) {
+					Log.write( Log.ERROR, Thread.currentThread().getName() + " interrupted." );
 				} catch( Exception exception ) {
 					Service.this.exception = exception;
 					Log.write( exception );
-				} finally {
-					try {
-						shutdown();
-					} catch( InterruptedException exception ) {
-						Log.write( Log.ERROR, Thread.currentThread().getName() + " interrupted." );
-					} catch( Exception exception ) {
-						Service.this.exception = exception;
-						Log.write( exception );
-					}
 				}
 			}
 		}
