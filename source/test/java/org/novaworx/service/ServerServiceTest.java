@@ -1,8 +1,8 @@
 package org.novaworx.service;
 
-import org.novaworx.util.Log;
-
 import junit.framework.TestCase;
+
+import org.novaworx.util.Log;
 
 public class ServerServiceTest extends TestCase {
 
@@ -19,6 +19,20 @@ public class ServerServiceTest extends TestCase {
 	}
 
 	public void testStartStop() throws Exception {
+		ServerService service = new ServerService();
+		service.startAndWait();
+		assertTrue( "Service is not running.", service.isRunning() );
+		int localPort = service.getLocalPort();
+		assertTrue( "Server port should be greater than zero: " + localPort, localPort > 0 );
+		service.stopAndWait();
+		assertFalse( "Service is not stopped.", service.isRunning() );
+		service.startAndWait();
+		assertTrue( "Service is not running.", service.isRunning() );
+		service.stopAndWait();
+		assertFalse( "Service is not stopped.", service.isRunning() );
+	}
+
+	public void testStartStopWithPort() throws Exception {
 		ServerService service = new ServerService( PORT );
 		service.startAndWait();
 		assertTrue( "Service is not running.", service.isRunning() );
@@ -39,7 +53,7 @@ public class ServerServiceTest extends TestCase {
 	// service.stopAndWait();
 	// assertFalse( "Service is not stopped.", service.isRunning() );
 	// }
-	//
+	
 	public void testRestart() throws Exception {
 		ServerService service = new ServerService( PORT );
 		assertFalse( "Service should not be running.", service.isRunning() );

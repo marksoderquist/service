@@ -22,9 +22,13 @@ public abstract class Service {
 
 	private boolean execute;
 
-	private State state = State.STOPPED;
+	private volatile State state = State.STOPPED;
+
+	private final TripLock startlock = new TripLock();
 
 	private final TripLock runlock = new TripLock();
+
+	private final TripLock stoplock = new TripLock();
 
 	private Exception exception;
 
@@ -48,7 +52,11 @@ public abstract class Service {
 	 */
 	public final void start() {
 		execute = true;
+
+		startlock.reset();
 		runlock.reset();
+		stoplock.reset();
+
 		thread = new Thread( new ServiceRunner(), name );
 		thread.setPriority( Thread.NORM_PRIORITY );
 		thread.setDaemon( true );
@@ -136,16 +144,14 @@ public abstract class Service {
 	 * 
 	 * @throws InterruptedException
 	 */
-	public final synchronized void waitForStartup() throws InterruptedException {
-		while( state != State.STARTED ) {
-			wait();
-		}
+	public final void waitForStartup() throws InterruptedException {
+		System.out.println( getName() + ": Waiting for start lock." );
+		startlock.hold();
+		System.out.println( getName() + ": Start lock tripped." );
 	}
 
-	public final synchronized void waitForStartup( int timeout ) throws InterruptedException {
-		while( state != State.STARTED ) {
-			wait( timeout );
-		}
+	public final void waitForStartup( int timeout ) throws InterruptedException {
+		startlock.hold( timeout );
 	}
 
 	/**
@@ -154,18 +160,14 @@ public abstract class Service {
 	 * 
 	 * @throws InterruptedException
 	 */
-	public final synchronized void waitForShutdown() throws InterruptedException {
-		while( state != State.STOPPED ) {
-			System.out.println( Thread.currentThread() + " waiting for stop." );
-			wait();
-		}
-		System.out.println( Thread.currentThread() + " released from stop." );
+	public final void waitForShutdown() throws InterruptedException {
+		System.out.println( getName() + ": Waiting for stop lock." );
+		stoplock.hold();
+		System.out.println( getName() + ": Stop lock tripped." );
 	}
 
-	public final synchronized void waitForShutdown( int timeout ) throws InterruptedException {
-		while( state != State.STOPPED ) {
-			wait( timeout );
-		}
+	public final void waitForShutdown( int timeout ) throws InterruptedException {
+		stoplock.hold( timeout );
 	}
 
 	/**
@@ -188,7 +190,7 @@ public abstract class Service {
 	 */
 	protected abstract void stopService() throws Exception;
 
-	private final synchronized void startup() throws Exception {
+	private final void startup() throws Exception {
 		if( state == State.STARTING ) {
 			return;
 		}
@@ -200,16 +202,19 @@ public abstract class Service {
 
 		Log.write( Log.DEBUG, "Starting " + getName() + "..." );
 		try {
-			state = State.STARTING;
-			startService();
-			state = State.STARTED;
+			synchronized( this ) {
+				state = State.STARTING;
+				startService();
+				state = State.STARTED;
+			}
 			Log.write( Log.INFO, getName() + " started." );
 		} finally {
-			notifyAll();
+			System.out.println( getName() + ": Notify from startup." );
+			startlock.trip();
 		}
 	}
 
-	private final synchronized void shutdown() throws Exception {
+	private final void shutdown() throws Exception {
 		if( state == State.STOPPING ) {
 			return;
 		}
@@ -221,12 +226,15 @@ public abstract class Service {
 
 		Log.write( Log.DEBUG, "Stopping " + getName() + "..." );
 		try {
-			state = State.STOPPING;
-			stopService();
-			state = State.STOPPED;
+			synchronized( this ) {
+				state = State.STOPPING;
+				stopService();
+				state = State.STOPPED;
+			}
 			Log.write( Log.INFO, getName() + " stopped." );
 		} finally {
-			notifyAll();
+			System.out.println( getName() + ": Notify from shutdown." );
+			stoplock.trip();
 		}
 	}
 

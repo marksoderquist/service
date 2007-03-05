@@ -28,9 +28,9 @@ public class WorkerTest extends TestCase {
 	public void testRestart() throws Exception {
 		assertFalse( worker.isWorking() );
 		worker.startAndWait();
-		assertTrue( worker.isWorking() );
+		assertTrue( "Worker not working after start.", worker.isWorking() );
 		worker.restart();
-		assertTrue( worker.isWorking() );
+		assertTrue( "Worker not working after restart.", worker.isWorking() );
 		worker.stopAndWait();
 		assertFalse( worker.isWorking() );
 	}

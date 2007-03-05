@@ -4,9 +4,9 @@ import org.novaworx.util.TripLock;
 
 public abstract class Worker extends Service implements Runnable {
 
-	private String name;
-
 	private boolean execute;
+
+	private boolean daemon;
 
 	private Thread thread;
 
@@ -15,11 +15,21 @@ public abstract class Worker extends Service implements Runnable {
 	private final TripLock startLock = new TripLock();
 
 	protected Worker() {
+		this( false );
+	}
+
+	protected Worker( boolean daemon ) {
 		super();
+		this.daemon = daemon;
 	}
 
 	protected Worker( String name ) {
+		this( name, false );
+	}
+
+	protected Worker( String name, boolean daemon ) {
 		super( name );
+		this.daemon = daemon;
 	}
 
 	public synchronized boolean isWorking() {
@@ -35,8 +45,9 @@ public abstract class Worker extends Service implements Runnable {
 			startWorker();
 		} catch( Exception exception ) {
 			this.exception = exception;
+		} finally {
+			startLock.trip();
 		}
-		startLock.trip();
 		process();
 	}
 
@@ -68,9 +79,9 @@ public abstract class Worker extends Service implements Runnable {
 	@Override
 	protected final synchronized void startService() throws Exception {
 		execute = true;
-		thread = new Thread( this, name + ":Worker" );
+		thread = new Thread( this, getName() );
 		thread.setPriority( Thread.NORM_PRIORITY );
-		thread.setDaemon( false );
+		thread.setDaemon( this.daemon );
 		thread.start();
 		startLock.hold();
 		if( exception != null ) throw exception;

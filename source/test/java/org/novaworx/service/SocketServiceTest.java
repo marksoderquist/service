@@ -4,18 +4,18 @@ import java.io.IOException;
 import java.net.Socket;
 import java.nio.charset.Charset;
 
-import org.novaworx.util.Log;
-
 import junit.framework.TestCase;
+
+import org.novaworx.util.Log;
 
 public class SocketServiceTest extends TestCase {
 
-	private TestServerSocketService server;
+	private TestServerService server;
 
 	@Override
 	public void setUp() throws Exception {
 		Log.setLevel( Log.NONE );
-		server = new TestServerSocketService();
+		server = new TestServerService();
 		server.startAndWait();
 		assertTrue( server.isRunning() );
 		int localPort = server.getLocalPort();
@@ -48,13 +48,17 @@ public class SocketServiceTest extends TestCase {
 		SocketService service = new SocketService( server.getLocalPort() );
 		assertFalse( "Service should not be running.", service.isRunning() );
 		service.startAndWait();
+		System.out.println( "A" );
 		assertTrue( "Service is not running.", service.isRunning() );
 
 		service.restart();
+		System.out.println( "B" );
 		assertTrue( "Service is not running.", service.isRunning() );
 
 		service.stopAndWait();
+		System.out.println( "C" );
 		assertFalse( "Service is not stopped.", service.isRunning() );
+		System.out.println( "D" );
 	}
 
 	public void testWrite() throws Exception {
@@ -73,18 +77,20 @@ public class SocketServiceTest extends TestCase {
 
 	@Override
 	public void tearDown() throws Exception {
+		System.out.println( "E" );
 		server.stopAndWait();
+		System.out.println( "F" );
 		Log.setLevel( null );
 	}
 
-	private static class TestServerSocketService extends ServerService {
+	private static class TestServerService extends ServerService {
 
 		private final StringBuilder builder = new StringBuilder();
 
 		@Override
 		public void handleSocket( Socket socket ) throws IOException {
-			TestClient client = new TestClient( this, socket );
-			client.start();
+			TestClientHandler handler = new TestClientHandler( this, socket );
+			handler.start();
 			super.handleSocket( socket );
 		}
 
@@ -105,29 +111,31 @@ public class SocketServiceTest extends TestCase {
 					}
 				}
 			}
+
 			String message = null;
 			synchronized( builder ) {
 				message = builder.toString();
 				builder.delete( 0, builder.length() );
 			}
+
 			return message;
 		}
 
 	}
 
-	private static class TestClient implements Runnable {
+	private static class TestClientHandler implements Runnable {
 
 		private Thread thread;
 
 		private boolean execute;
 
-		private TestServerSocketService server;
+		private TestServerService server;
 
 		private Socket socket;
 
 		private Exception exception;
 
-		public TestClient( TestServerSocketService server, Socket socket ) {
+		public TestClientHandler( TestServerService server, Socket socket ) {
 			this.server = server;
 			this.socket = socket;
 		}

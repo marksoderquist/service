@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.net.SocketException;
 
 import org.novaworx.util.Log;
+import org.novaworx.util.TripLock;
 
 public class ServerService extends IOService {
 
@@ -14,6 +15,8 @@ public class ServerService extends IOService {
 	private ServerSocket server;
 
 	private ServerRunner runner;
+	
+	private TripLock connectlock = new TripLock();
 
 	public ServerService() {
 		this( 0 );
@@ -43,7 +46,9 @@ public class ServerService extends IOService {
 
 	@Override
 	protected final void stopService() throws IOException {
+		System.out.println( "Stopping runner..." );
 		if( runner != null ) runner.stopAndWait();
+		System.out.println( "Runner stopped." );
 	}
 
 	protected void handleSocket( Socket socket ) throws IOException {
@@ -51,13 +56,14 @@ public class ServerService extends IOService {
 		setRealInputStream( socket.getInputStream() );
 		setRealOutputStream( socket.getOutputStream() );
 
-		synchronized( socket ) {
-			try {
-				socket.wait();
-			} catch( InterruptedException exception ) {
-				// Intentionally ignore exception.
-			}
-		}
+		connectlock.hold();
+//		synchronized( socket ) {
+//			try {
+//				socket.wait();
+//			} catch( InterruptedException exception ) {
+//				// Intentionally ignore exception.
+//			}
+//		}
 
 		socket.close();
 		setRealInputStream( null );
@@ -72,7 +78,7 @@ public class ServerService extends IOService {
 
 		public void start() {
 			execute = true;
-			thread = new Thread( this, getName() + ":ServerRunner" );
+			thread = new Thread( this, getName() );
 			thread.setPriority( Thread.NORM_PRIORITY );
 			thread.setDaemon( true );
 			thread.start();
@@ -80,15 +86,15 @@ public class ServerService extends IOService {
 
 		public void stop() {
 			this.execute = false;
-			thread.interrupt();
 			try {
+				connectlock.trip();
 				server.close();
 			} catch( IOException exception ) {
 				Log.write( exception );
 			}
 		}
 
-		public synchronized void stopAndWait() {
+		public void stopAndWait() {
 			stop();
 			try {
 				thread.join();
@@ -98,14 +104,17 @@ public class ServerService extends IOService {
 		}
 
 		public void run() {
+			Socket socket = null;
 			while( execute ) {
 				try {
-					Socket socket = server.accept();
+					System.out.println( "Waiting for connections..." );
+					connectlock.reset();
+					socket = server.accept();
 					handleSocket( socket );
 				} catch( SocketException exception ) {
-					if( !"socket closed".equals( exception.getMessage().toLowerCase() ) ) {
+					//if( !"socket closed".equals( exception.getMessage().toLowerCase() ) ) {
 						Log.write( exception );
-					}
+					//}
 				} catch( IOException exception ) {
 					Log.write( exception );
 				}
