@@ -48,17 +48,13 @@ public class SocketServiceTest extends TestCase {
 		SocketService service = new SocketService( server.getLocalPort() );
 		assertFalse( "Service should not be running.", service.isRunning() );
 		service.startAndWait();
-		System.out.println( "A" );
 		assertTrue( "Service is not running.", service.isRunning() );
 
 		service.restart();
-		System.out.println( "B" );
 		assertTrue( "Service is not running.", service.isRunning() );
 
 		service.stopAndWait();
-		System.out.println( "C" );
 		assertFalse( "Service is not stopped.", service.isRunning() );
-		System.out.println( "D" );
 	}
 
 	public void testWrite() throws Exception {
@@ -77,9 +73,7 @@ public class SocketServiceTest extends TestCase {
 
 	@Override
 	public void tearDown() throws Exception {
-		System.out.println( "E" );
 		server.stopAndWait();
-		System.out.println( "F" );
 		Log.setLevel( null );
 	}
 

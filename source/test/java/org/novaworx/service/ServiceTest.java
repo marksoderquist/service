@@ -84,6 +84,26 @@ public class ServiceTest extends TestCase {
 		assertEquals( "Wrong start call count.", 1, service.getStartServiceCount() );
 		assertEquals( "Wrong stop call count.", 1, service.getStopServiceCount() );
 	}
+	
+	public void testDoubleStop() throws Exception {
+		TestConnectionService service = new TestConnectionService();
+		assertFalse( service.isRunning() );
+
+		service.start();
+		service.waitForStartup();
+		assertTrue( service.isRunning() );
+		assertEquals( "Wrong start call count.", 1, service.getStartServiceCount() );
+		assertEquals( "Wrong stop call count.", 0, service.getStopServiceCount() );
+
+		service.stop();
+		service.stop();
+		service.waitForShutdown();
+		service.stop();
+		service.waitForShutdown();
+		assertFalse( service.isRunning() );
+		assertEquals( "Wrong start call count.", 1, service.getStartServiceCount() );
+		assertEquals( "Wrong stop call count.", 1, service.getStopServiceCount() );
+	}
 
 	public void testStopAndWait() throws Exception {
 		TestConnectionService service = new TestConnectionService();
@@ -110,7 +130,6 @@ public class ServiceTest extends TestCase {
 		assertEquals( "Wrong stop call count.", 0, service.getStopServiceCount() );
 
 		service.restart();
-		System.out.println( "Checking state..." );
 		assertTrue( service.isRunning() );
 		assertEquals( "Wrong start call count.", 2, service.getStartServiceCount() );
 		assertEquals( "Wrong stop call count.", 1, service.getStopServiceCount() );
@@ -130,20 +149,19 @@ public class ServiceTest extends TestCase {
 		assertEquals( "Wrong start call count.", 1, service.getStartServiceCount() );
 		assertEquals( "Wrong stop call count.", 0, service.getStopServiceCount() );
 
-		service.restart();
-		service.restart();
-		service.restart();
-		service.restart();
-		service.restart();
+		int count = 20;
+		for( int index = 0; index < count; index++ ) {
+			service.restart();
+		}
 
 		assertTrue( service.isRunning() );
-		assertEquals( "Wrong start call count.", 6, service.getStartServiceCount() );
-		assertEquals( "Wrong stop call count.", 5, service.getStopServiceCount() );
+		assertEquals( "Wrong start call count.", count + 1, service.getStartServiceCount() );
+		assertEquals( "Wrong stop call count.", count, service.getStopServiceCount() );
 
 		service.stopAndWait();
 		assertFalse( service.isRunning() );
-		assertEquals( "Wrong start call count.", 6, service.getStartServiceCount() );
-		assertEquals( "Wrong stop call count.", 6, service.getStopServiceCount() );
+		assertEquals( "Wrong start call count.", count + 1, service.getStartServiceCount() );
+		assertEquals( "Wrong stop call count.", count + 1, service.getStopServiceCount() );
 	}
 
 	private class TestConnectionService extends Service {

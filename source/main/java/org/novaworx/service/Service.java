@@ -126,12 +126,12 @@ public abstract class Service {
 	 */
 	public final void restart() throws Exception {
 		// Don't use start() and stop(), they cause threading issues.
-		System.out.println( getName() + ".reset(): Calling stopAndWait()..." );
+		Log.write( Log.DEBUG, getName() + ".reset(): Calling stopAndWait()..." );
 		stopAndWait();
-		System.out.println( getName() + ".reset(): stopAndWait() finished." );
-		System.out.println( getName() + ".reset(): Calling startAndWait()..." );
+		Log.write( Log.DEBUG, getName() + ".reset(): stopAndWait() finished." );
+		Log.write( Log.DEBUG, getName() + ".reset(): Calling startAndWait()..." );
 		startAndWait();
-		System.out.println( getName() + ".reset(): startAndWait() finished." );
+		Log.write( Log.DEBUG, getName() + ".reset(): startAndWait() finished." );
 	}
 
 	/**
@@ -141,9 +141,9 @@ public abstract class Service {
 	 * @throws InterruptedException
 	 */
 	public final void waitForStartup() throws InterruptedException {
-		System.out.println( getName() + ": Waiting for start lock." );
+		Log.write( Log.DEBUG, getName() + ": Waiting for start lock." );
 		startlock.hold();
-		System.out.println( getName() + ": Start lock tripped." );
+		Log.write( Log.DEBUG, getName() + ": Start lock tripped." );
 	}
 
 	public final void waitForStartup( int timeout ) throws InterruptedException {
@@ -157,9 +157,9 @@ public abstract class Service {
 	 * @throws InterruptedException
 	 */
 	public final void waitForShutdown() throws InterruptedException {
-		System.out.println( getName() + ": Waiting for stop lock." );
+		Log.write( Log.DEBUG, getName() + ": Waiting for stop lock." );
 		stoplock.hold();
-		System.out.println( getName() + ": Stop lock tripped." );
+		Log.write( Log.DEBUG, getName() + ": Stop lock tripped." );
 	}
 
 	public final void waitForShutdown( int timeout ) throws InterruptedException {
@@ -206,7 +206,7 @@ public abstract class Service {
 			}
 			Log.write( Log.INFO, getName() + " started." );
 		} finally {
-			System.out.println( getName() + ": Notify from startup." );
+			Log.write( Log.DEBUG, getName() + ": Notify from startup." );
 			startlock.trip();
 		}
 	}
@@ -231,7 +231,7 @@ public abstract class Service {
 			}
 			Log.write( Log.INFO, getName() + " stopped." );
 		} finally {
-			System.out.println( getName() + ": Notify from shutdown." );
+			Log.write( Log.DEBUG, getName() + ": Notify from shutdown." );
 			stoplock.trip();
 		}
 	}
