@@ -14,10 +14,15 @@ public class SocketService extends IOService {
 	private Socket socket;
 
 	public SocketService( int port ) {
-		this( null, port );
+		this( null, null, port );
 	}
 
-	public SocketService( String host, int port ) {
+	public SocketService( String name, int port ) {
+		this( name, null, port );
+	}
+
+	public SocketService( String name, String host, int port ) {
+		super( name );
 		this.host = host;
 		this.port = port;
 	}

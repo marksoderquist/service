@@ -18,6 +18,14 @@ public abstract class IOService extends Service {
 
 	private OutputStream realOutput;
 
+	public IOService() {
+		super();
+	}
+
+	public IOService( String name ) {
+		super( name );
+	}
+
 	public InputStream getInputStream() {
 		return input;
 	}
@@ -41,6 +49,7 @@ public abstract class IOService extends Service {
 	}
 
 	protected void reconnect() {
+		Log.write( Log.WARN, getName() + ": Reconnecting..." );
 		if( !isRunning() ) return;
 
 		try {
@@ -95,13 +104,13 @@ public abstract class IOService extends Service {
 				if( read < 0 ) {
 					if( !isRunning() ) return -1;
 					reconnect();
-					return read(data);
+					return read( data );
 				}
 				return read;
 			} catch( IOException exception ) {
 				if( !isRunning() ) return -1;
 				reconnect();
-				return read(data);
+				return read( data );
 			}
 		}
 

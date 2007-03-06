@@ -18,11 +18,20 @@ public class ServerService extends IOService {
 
 	private TripLock connectlock = new TripLock();
 
-	public ServerService() {
-		this( 0 );
+	public ServerService( ) {
+		this( null, 0 );
 	}
 
 	public ServerService( int port ) {
+		this( null, 0 );
+	}
+
+	public ServerService( String name ) {
+		this( name, 0 );
+	}
+
+	public ServerService( String name, int port ) {
+		super( name );
 		this.port = port;
 	}
 
