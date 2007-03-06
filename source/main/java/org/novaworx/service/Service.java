@@ -27,13 +27,11 @@ public abstract class Service {
 
 	private final TripLock runlock = new TripLock();
 
-	private final TripLock stoplock = new TripLock();
+	private final TripLock stoplock = new TripLock( true );
 
 	private Exception exception;
 
-	protected Service() {
-		stoplock.trip();
-	}
+	protected Service() {}
 
 	protected Service( String name ) {
 		this();
@@ -50,6 +48,8 @@ public abstract class Service {
 	 */
 	public final void start() {
 		if( state != State.STOPPED ) return;
+
+		stoplock.hold();
 
 		thread = new Thread( new ServiceRunner(), name );
 		thread.setPriority( Thread.NORM_PRIORITY );
@@ -82,6 +82,8 @@ public abstract class Service {
 	 */
 	public final void stop() {
 		if( state != State.STARTED ) return;
+
+		startlock.hold();
 		runlock.trip();
 	}
 
@@ -194,12 +196,10 @@ public abstract class Service {
 			return;
 		}
 
-		runlock.reset();
-		stoplock.reset();
-
 		Log.write( Log.DEBUG, "Starting " + getName() + "..." );
 		try {
 			synchronized( this ) {
+				stoplock.reset();
 				state = State.STARTING;
 				startService();
 				state = State.STARTED;
@@ -221,11 +221,10 @@ public abstract class Service {
 			return;
 		}
 
-		startlock.reset();
-
 		Log.write( Log.DEBUG, "Stopping " + getName() + "..." );
 		try {
 			synchronized( this ) {
+				startlock.reset();
 				state = State.STOPPING;
 				stopService();
 				state = State.STOPPED;
@@ -244,6 +243,7 @@ public abstract class Service {
 		@Override
 		public void run() {
 			try {
+				runlock.reset();
 				startup();
 				runlock.hold();
 			} catch( Exception exception ) {
