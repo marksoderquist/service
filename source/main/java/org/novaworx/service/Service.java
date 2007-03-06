@@ -192,7 +192,7 @@ public abstract class Service {
 		}
 
 		if( state == State.STARTED ) {
-			Log.write( Log.INFO, getName() + " already started." );
+			Log.write( Log.WARN, getName() + " already started." );
 			return;
 		}
 
@@ -202,7 +202,7 @@ public abstract class Service {
 			state = State.STARTING;
 			startService();
 			state = State.STARTED;
-			Log.write( Log.INFO, getName() + " started." );
+			Log.write( Log.CONFIG, getName() + " started." );
 		} finally {
 			Log.write( Log.DEBUG, getName() + ": Notify from startup." );
 			startlock.trip();
@@ -215,7 +215,7 @@ public abstract class Service {
 		}
 
 		if( state == State.STOPPED ) {
-			Log.write( Log.INFO, getName() + " already shutdown." );
+			Log.write( Log.WARN, getName() + " already shutdown." );
 			return;
 		}
 
@@ -225,7 +225,7 @@ public abstract class Service {
 			state = State.STOPPING;
 			stopService();
 			state = State.STOPPED;
-			Log.write( Log.INFO, getName() + " stopped." );
+			Log.write( Log.CONFIG, getName() + " stopped." );
 		} finally {
 			Log.write( Log.DEBUG, getName() + ": Notify from shutdown." );
 			stoplock.trip();
