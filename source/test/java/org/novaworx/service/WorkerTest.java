@@ -57,7 +57,8 @@ public class WorkerTest extends TestCase {
 			input = new TestInputStream();
 		}
 
-		public void process() {
+		@Override
+		public void run() {
 			try {
 				input.read();
 			} catch( IOException exception ) {

@@ -4,51 +4,52 @@ import org.novaworx.util.TripLock;
 
 public abstract class Worker extends Service implements Runnable {
 
-	private boolean execute;
-
 	private boolean daemon;
-
-	private Thread thread;
 
 	private Exception exception;
 
-	private final TripLock startLock = new TripLock();
+	private WorkerRunner runner;
 
-	protected Worker() {
-		this( false );
+	private final TripLock startlock = new TripLock();
+
+	public Worker() {
+		this( null, false );
 	}
 
-	protected Worker( boolean daemon ) {
-		super();
-		this.daemon = daemon;
+	public Worker( boolean daemon ) {
+		this( null, daemon );
 	}
 
-	protected Worker( String name ) {
+	public Worker( String name ) {
 		this( name, false );
 	}
 
-	protected Worker( String name, boolean daemon ) {
+	public Worker( String name, boolean daemon ) {
 		super( name );
 		this.daemon = daemon;
+		this.runner = new WorkerRunner();
 	}
 
-	public synchronized boolean isWorking() {
-		return thread != null && thread.isAlive();
+	public boolean isWorking() {
+		return this.runner.isWorking();
 	}
 
-	public synchronized boolean isExecutable() {
-		return execute;
+	public boolean isExecutable() {
+		return this.runner.isExecutable();
 	}
 
-	public void run() {
-		try {
-			startWorker();
-		} catch( Exception exception ) {
-			this.exception = exception;
-		} finally {
-			startLock.trip();
-		}
-		process();
+	@Override
+	protected final void startService() throws Exception {
+		startWorker();
+		runner.start();
+		startlock.hold();
+		if( exception != null ) throw exception;
+	}
+
+	@Override
+	protected final void stopService() throws Exception {
+		runner.stop();
+		if( exception != null ) throw exception;
 	}
 
 	/**
@@ -57,12 +58,6 @@ public abstract class Worker extends Service implements Runnable {
 	 * @throws Exception
 	 */
 	protected void startWorker() throws Exception {}
-
-	/**
-	 * Implement this method to do worker processing. Thread blocking operations
-	 * should be called from this method.
-	 */
-	protected abstract void process();
 
 	/**
 	 * Subclasses should override this method with code that terminates or closes
@@ -76,22 +71,59 @@ public abstract class Worker extends Service implements Runnable {
 	 */
 	protected void stopWorker() throws Exception {}
 
-	@Override
-	protected final synchronized void startService() throws Exception {
-		execute = true;
-		thread = new Thread( this, getName() );
-		thread.setPriority( Thread.NORM_PRIORITY );
-		thread.setDaemon( this.daemon );
-		thread.start();
-		startLock.hold();
-		if( exception != null ) throw exception;
-	}
+	private class WorkerRunner implements Runnable {
 
-	@Override
-	protected final synchronized void stopService() throws Exception {
-		execute = false;
-		stopWorker();
-		thread.join();
+		private Thread thread;
+
+		private boolean execute;
+
+		public synchronized boolean isWorking() {
+			return thread != null && thread.isAlive();
+		}
+
+		public synchronized boolean isExecutable() {
+			return execute;
+		}
+
+		public void start() {
+			execute = true;
+
+			try {
+				Worker.this.startWorker();
+			} catch( Exception exception ) {
+				Worker.this.exception = exception;
+				return;
+			}
+
+			thread = new Thread( this, getName() );
+			thread.setPriority( Thread.NORM_PRIORITY );
+			thread.setDaemon( Worker.this.daemon );
+			thread.start();
+		}
+
+		public void run() {
+			startlock.trip();
+			Worker.this.run();
+		}
+
+		public void stop() {
+			this.execute = false;
+			try {
+				Worker.this.stopWorker();
+			} catch( Exception exception ) {
+				Worker.this.exception = exception;
+				return;
+			}
+
+			if( Worker.this.daemon ) return;
+
+			try {
+				thread.join();
+			} catch( InterruptedException exception ) {
+				// Intentionally ignore exception.
+			}
+		}
+
 	}
 
 }

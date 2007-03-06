@@ -18,7 +18,7 @@ public class ServerService extends IOService {
 
 	private TripLock connectlock = new TripLock();
 
-	public ServerService( ) {
+	public ServerService() {
 		this( null, 0 );
 	}
 
@@ -45,18 +45,25 @@ public class ServerService extends IOService {
 	}
 
 	@Override
-	protected final void startService() throws IOException {
+	protected final void startService() throws Exception {
 		server = new ServerSocket( port );
 		server.setReuseAddress( true );
 
+		startServer();
+		
 		runner = new ServerRunner();
 		runner.start();
 	}
 
 	@Override
-	protected final void stopService() throws IOException {
+	protected final void stopService() throws Exception {
 		if( runner != null ) runner.stopAndWait();
+		stopServer();
 	}
+
+	protected void startServer() throws Exception {}
+
+	protected void stopServer() throws Exception {}
 
 	protected void handleSocket( Socket socket ) throws IOException {
 		Log.write( "Client connected: " + socket.getRemoteSocketAddress() );
@@ -80,14 +87,14 @@ public class ServerService extends IOService {
 			execute = true;
 			thread = new Thread( this, getName() );
 			thread.setPriority( Thread.NORM_PRIORITY );
-			thread.setDaemon( true );
+			thread.setDaemon( false );
 			thread.start();
 		}
 
 		public void stop() {
 			this.execute = false;
+			connectlock.trip();
 			try {
-				connectlock.trip();
 				server.close();
 			} catch( IOException exception ) {
 				Log.write( exception );
