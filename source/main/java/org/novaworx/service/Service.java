@@ -35,7 +35,7 @@ public abstract class Service {
 
 	protected Service( String name ) {
 		this();
-		this.name = name;
+		if( name != null ) this.name = name;
 	}
 
 	public String getName() {
@@ -46,7 +46,7 @@ public abstract class Service {
 	 * Start the Service. This method creates the service thread and returns
 	 * immediately.
 	 */
-	public final void start() {
+	public final synchronized void start() {
 		if( state != State.STOPPED ) return;
 
 		stoplock.hold();
@@ -80,7 +80,7 @@ public abstract class Service {
 	 * Stop the Service. This method interrupts the service thread and returns
 	 * immediately.
 	 */
-	public final void stop() {
+	public final synchronized void stop() {
 		if( state != State.STARTED ) return;
 
 		startlock.hold();
@@ -115,7 +115,7 @@ public abstract class Service {
 		return state == State.STARTED;
 	}
 
-	public final synchronized String getStatus() {
+	public final String getStatus() {
 		return state.toString();
 	}
 
@@ -126,12 +126,12 @@ public abstract class Service {
 	 */
 	public final void restart() throws Exception {
 		// Don't use start() and stop(), they cause threading issues.
-		Log.write( Log.DEBUG, getName() + ".reset(): Calling stopAndWait()..." );
+		Log.write( Log.DEBUG, getName() + ".restart(): Calling stopAndWait()..." );
 		stopAndWait();
-		Log.write( Log.DEBUG, getName() + ".reset(): stopAndWait() finished." );
-		Log.write( Log.DEBUG, getName() + ".reset(): Calling startAndWait()..." );
+		Log.write( Log.DEBUG, getName() + ".restart(): stopAndWait() finished." );
+		Log.write( Log.DEBUG, getName() + ".restart(): Calling startAndWait()..." );
 		startAndWait();
-		Log.write( Log.DEBUG, getName() + ".reset(): startAndWait() finished." );
+		Log.write( Log.DEBUG, getName() + ".restart(): startAndWait() finished." );
 	}
 
 	/**
@@ -186,7 +186,7 @@ public abstract class Service {
 	 */
 	protected abstract void stopService() throws Exception;
 
-	private final void startup() throws Exception {
+	private synchronized final void startup() throws Exception {
 		if( state == State.STARTING ) {
 			return;
 		}
@@ -198,12 +198,10 @@ public abstract class Service {
 
 		Log.write( Log.DEBUG, "Starting " + getName() + "..." );
 		try {
-			synchronized( this ) {
-				stoplock.reset();
-				state = State.STARTING;
-				startService();
-				state = State.STARTED;
-			}
+			stoplock.reset();
+			state = State.STARTING;
+			startService();
+			state = State.STARTED;
 			Log.write( Log.INFO, getName() + " started." );
 		} finally {
 			Log.write( Log.DEBUG, getName() + ": Notify from startup." );
@@ -211,7 +209,7 @@ public abstract class Service {
 		}
 	}
 
-	private final void shutdown() throws Exception {
+	private synchronized final void shutdown() throws Exception {
 		if( state == State.STOPPING ) {
 			return;
 		}
@@ -223,12 +221,10 @@ public abstract class Service {
 
 		Log.write( Log.DEBUG, "Stopping " + getName() + "..." );
 		try {
-			synchronized( this ) {
-				startlock.reset();
-				state = State.STOPPING;
-				stopService();
-				state = State.STOPPED;
-			}
+			startlock.reset();
+			state = State.STOPPING;
+			stopService();
+			state = State.STOPPED;
 			Log.write( Log.INFO, getName() + " stopped." );
 		} finally {
 			Log.write( Log.DEBUG, getName() + ": Notify from shutdown." );
