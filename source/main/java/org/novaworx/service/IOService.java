@@ -18,12 +18,23 @@ public abstract class IOService extends Service {
 
 	private OutputStream realOutput;
 
+	private boolean stopOnException;
+
 	public IOService() {
-		super();
+		this( null, false );
+	}
+
+	public IOService( boolean stopOnException ) {
+		this( null, stopOnException );
 	}
 
 	public IOService( String name ) {
+		this( name, false );
+	}
+
+	public IOService( String name, boolean stopOnException ) {
 		super( name );
+		this.stopOnException = stopOnException;
 	}
 
 	public InputStream getInputStream() {
@@ -49,12 +60,12 @@ public abstract class IOService extends Service {
 	}
 
 	protected void reconnect() {
-		Log.write( Log.WARN, getName() + ": Reconnecting..." );
 		if( !isRunning() ) return;
 
 		try {
-			restart();
-		} catch( Exception exception ) {
+			disconnect();
+			connect();
+		} catch( IOException exception ) {
 			Log.write( exception );
 			try {
 				Thread.sleep( RECONNECT_WAIT );
@@ -63,6 +74,10 @@ public abstract class IOService extends Service {
 			}
 		}
 	}
+	
+	protected abstract void connect() throws IOException;
+	
+	protected abstract void disconnect() throws IOException;
 
 	private class ServiceInputStream extends InputStream {
 
@@ -91,6 +106,10 @@ public abstract class IOService extends Service {
 				return bite;
 			} catch( IOException exception ) {
 				if( !isRunning() ) return -1;
+				if( stopOnException ) {
+					stop();
+					throw exception;
+				}
 				reconnect();
 				return read();
 			}
@@ -109,6 +128,10 @@ public abstract class IOService extends Service {
 				return read;
 			} catch( IOException exception ) {
 				if( !isRunning() ) return -1;
+				if( stopOnException ) {
+					stop();
+					throw exception;
+				}
 				reconnect();
 				return read( data );
 			}
@@ -127,6 +150,10 @@ public abstract class IOService extends Service {
 				return read;
 			} catch( IOException exception ) {
 				if( !isRunning() ) return -1;
+				if( stopOnException ) {
+					stop();
+					throw exception;
+				}
 				reconnect();
 				return read( data, offset, length );
 			}
@@ -155,6 +182,10 @@ public abstract class IOService extends Service {
 				realOutput.write( bite );
 			} catch( IOException exception ) {
 				if( !isRunning() ) return;
+				if( stopOnException ) {
+					stop();
+					throw exception;
+				}
 				reconnect();
 				write( bite );
 			}
@@ -167,6 +198,10 @@ public abstract class IOService extends Service {
 				realOutput.write( data );
 			} catch( IOException exception ) {
 				if( !isRunning() ) return;
+				if( stopOnException ) {
+					stop();
+					throw exception;
+				}
 				reconnect();
 				write( data );
 			}
@@ -179,6 +214,10 @@ public abstract class IOService extends Service {
 				realOutput.write( data, offset, length );
 			} catch( IOException exception ) {
 				if( !isRunning() ) return;
+				if( stopOnException ) {
+					stop();
+					throw exception;
+				}
 				reconnect();
 				write( data, offset, length );
 			}
@@ -190,6 +229,10 @@ public abstract class IOService extends Service {
 			try {
 				realOutput.flush();
 			} catch( IOException exception ) {
+				if( stopOnException ) {
+					stop();
+					throw exception;
+				}
 				reconnect();
 			}
 		}

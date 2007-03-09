@@ -14,7 +14,7 @@ import org.novaworx.util.Log;
  * Install the comm.jar into the maven repository with the following command:
  * 
  * <pre>
- *  mvn install:install-file -Dfile=comm.jar -DgroupId=javax.comm -DartifactId=comm -Dversion=3.0 -Dpackaging=jar -DgeneratePom=true
+ *     mvn install:install-file -Dfile=comm.jar -DgroupId=javax.comm -DartifactId=comm -Dversion=3.0 -Dpackaging=jar -DgeneratePom=true
  * </pre>
  * 
  * @author mvsoder
@@ -50,6 +50,16 @@ public class SerialService extends IOService {
 
 	@Override
 	protected void startService() throws IOException {
+		connect();
+	}
+
+	@Override
+	protected void stopService() throws IOException {
+		disconnect();
+	}
+
+	@Override
+	protected void connect() throws IOException {
 		CommPortIdentifier identifier;
 		try {
 			Log.write( Log.DEBUG, "Opening serial port..." );
@@ -66,12 +76,10 @@ public class SerialService extends IOService {
 		} catch( UnsupportedCommOperationException exception ) {
 			throw new IOException( exception );
 		}
-
 	}
 
 	@Override
-	protected void stopService() throws IOException {
-		System.out.println( "Closing serial port." );
+	protected void disconnect() throws IOException {
 		if( port != null ) port.close();
 	}
 

@@ -29,6 +29,16 @@ public class SocketService extends IOService {
 
 	@Override
 	protected void startService() throws IOException {
+		connect();
+	}
+
+	@Override
+	protected void stopService() throws IOException {
+		disconnect();
+	}
+
+	@Override
+	protected void connect() throws IOException {
 		socket = new Socket( host, port );
 		Log.write( "Connected to: " + host + ":" + port );
 		setRealInputStream( socket.getInputStream() );
@@ -36,10 +46,9 @@ public class SocketService extends IOService {
 	}
 
 	@Override
-	protected void stopService() throws IOException {
+	protected void disconnect() throws IOException {
 		if( socket != null ) socket.close();
 		setRealInputStream( null );
 		setRealOutputStream( null );
 	}
-
 }
