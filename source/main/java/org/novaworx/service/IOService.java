@@ -59,25 +59,37 @@ public abstract class IOService extends Service {
 		}
 	}
 
-	protected void reconnect() {
-		if( !isRunning() ) return;
+	@Override
+	protected void startService() throws Exception {
+		reconnect();
+	}
 
-		try {
-			disconnect();
-			connect();
-		} catch( IOException exception ) {
-			Log.write( exception );
+	@Override
+	protected void stopService() throws Exception {
+		disconnect();
+	}
+
+	protected void reconnect() {
+		while( shouldExecute() && !isConnected() ) {
 			try {
-				Thread.sleep( RECONNECT_WAIT );
-			} catch( InterruptedException sleepException ) {
-				// Intentionally ignore exception.
+				disconnect();
+				connect();
+			} catch( Exception exception ) {
+				Log.write( exception );
+				try {
+					Thread.sleep( RECONNECT_WAIT );
+				} catch( InterruptedException sleepException ) {
+					// Intentionally ignore exception.
+				}
 			}
 		}
 	}
 	
-	protected abstract void connect() throws IOException;
-	
-	protected abstract void disconnect() throws IOException;
+	protected abstract boolean isConnected();
+
+	protected abstract void connect() throws Exception;
+
+	protected abstract void disconnect() throws Exception;
 
 	private class ServiceInputStream extends InputStream {
 

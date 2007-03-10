@@ -13,7 +13,7 @@ import org.novaworx.util.TripLock;
  */
 public abstract class Service {
 
-	private enum State {
+	public enum State {
 		STARTING, STARTED, STOPPING, STOPPED
 	};
 
@@ -107,12 +107,21 @@ public abstract class Service {
 	}
 
 	/**
-	 * Check if the service is currently running.
+	 * Convenience method to check if the service is currently running (state is
+	 * STARTED).
 	 * 
-	 * @return True if connected, false otherwise.
+	 * @return True if running, false otherwise.
 	 */
 	public final synchronized boolean isRunning() {
 		return state == State.STARTED;
+	}
+
+	public final synchronized boolean shouldExecute() {
+		return state == State.STARTED || state == State.STARTING;
+	}
+
+	public final synchronized State getState() {
+		return state;
 	}
 
 	public final String getStatus() {

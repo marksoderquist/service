@@ -47,29 +47,24 @@ public class ServerService extends IOService {
 	}
 
 	@Override
-	protected final void startService() throws Exception {
-		startServer();
-		connect();
+	protected boolean isConnected() {
+		return server != null && !server.isClosed();
+	}
+
+	@Override
+	protected final void connect() throws Exception {
+		server = new ServerSocket( port );
+		server.setReuseAddress( true );
 		runner = new ServerRunner();
 		runner.start();
 		startlock.resetAndHold();
+		startServer();
 	}
 
 	@Override
-	protected final void stopService() throws Exception {
+	protected final void disconnect() throws Exception {
 		stopServer();
 		if( runner != null ) runner.stopAndWait();
-	}
-
-	@Override
-	protected final void connect() throws IOException {
-		server = new ServerSocket( port );
-		server.setReuseAddress( true );
-	}
-
-	@Override
-	protected final void disconnect() throws IOException {
-		server.close();
 	}
 
 	protected void startServer() throws Exception {}

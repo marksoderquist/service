@@ -28,13 +28,8 @@ public class SocketService extends IOService {
 	}
 
 	@Override
-	protected void startService() throws IOException {
-		connect();
-	}
-
-	@Override
-	protected void stopService() throws IOException {
-		disconnect();
+	protected boolean isConnected() {
+		return socket != null && socket.isConnected();
 	}
 
 	@Override
