@@ -211,7 +211,7 @@ public abstract class Service {
 			state = State.STARTING;
 			startService();
 			state = State.STARTED;
-			Log.write( Log.CONFIG, getName() + " started." );
+			Log.write( Log.TRACE, getName() + " started." );
 		} finally {
 			Log.write( Log.DEBUG, getName() + ": Notify from startup." );
 			startlock.trip();
@@ -234,7 +234,7 @@ public abstract class Service {
 			state = State.STOPPING;
 			stopService();
 			state = State.STOPPED;
-			Log.write( Log.CONFIG, getName() + " stopped." );
+			Log.write( Log.TRACE, getName() + " stopped." );
 		} finally {
 			Log.write( Log.DEBUG, getName() + ": Notify from shutdown." );
 			stoplock.trip();
