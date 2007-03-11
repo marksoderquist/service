@@ -14,7 +14,7 @@ import org.novaworx.util.Log;
  * Install the comm.jar into the maven repository with the following command:
  * 
  * <pre>
- *       mvn install:install-file -Dfile=comm.jar -DgroupId=javax.comm -DartifactId=comm -Dversion=3.0 -Dpackaging=jar -DgeneratePom=true
+ *        mvn install:install-file -Dfile=comm.jar -DgroupId=javax.comm -DartifactId=comm -Dversion=3.0 -Dpackaging=jar -DgeneratePom=true
  * </pre>
  * 
  * @author mvsoder
@@ -46,11 +46,6 @@ public class SerialService extends IOService {
 
 	public SerialPort getSerialPort() {
 		return port;
-	}
-
-	@Override
-	protected boolean isConnected() {
-		return port != null;
 	}
 
 	@Override

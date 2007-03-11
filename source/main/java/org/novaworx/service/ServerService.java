@@ -47,24 +47,23 @@ public class ServerService extends IOService {
 	}
 
 	@Override
-	protected boolean isConnected() {
-		return server != null && !server.isClosed();
-	}
-
-	@Override
 	protected final void connect() throws Exception {
+		Log.write( Log.DEBUG, getName() + ": Connecting..." );
 		server = new ServerSocket( port );
 		server.setReuseAddress( true );
 		runner = new ServerRunner();
 		runner.start();
 		startlock.resetAndHold();
 		startServer();
+		Log.write( Log.DEBUG, getName() + ": Connected." );
 	}
 
 	@Override
 	protected final void disconnect() throws Exception {
+		Log.write( Log.DEBUG, getName() + ": Disconnecting..." );
 		stopServer();
 		if( runner != null ) runner.stopAndWait();
+		Log.write( Log.DEBUG, getName() + ": Disconnected." );
 	}
 
 	protected void startServer() throws Exception {}

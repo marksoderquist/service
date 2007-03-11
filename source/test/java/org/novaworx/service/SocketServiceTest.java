@@ -6,6 +6,7 @@ import java.nio.charset.Charset;
 
 import junit.framework.TestCase;
 
+import org.novaworx.util.IOPump;
 import org.novaworx.util.Log;
 
 public class SocketServiceTest extends TestCase {
@@ -50,11 +51,17 @@ public class SocketServiceTest extends TestCase {
 		service.startAndWait();
 		assertTrue( "Service is not running.", service.isRunning() );
 
+		IOPump pump = new IOPump( service.getInputStream(), service.getOutputStream() );
+		pump.start();
+		assertTrue( "IOPump not executing.", pump.isExecuting() );
+
 		service.restart();
 		assertTrue( "Service is not running.", service.isRunning() );
+		assertTrue( "IOPump not executing.", pump.isExecuting() );
 
 		service.stopAndWait();
 		assertFalse( "Service is not stopped.", service.isRunning() );
+		assertTrue( "IOPump still executing.", pump.isExecuting() );
 	}
 
 	public void testWrite() throws Exception {

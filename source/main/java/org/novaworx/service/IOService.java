@@ -8,7 +8,7 @@ import org.novaworx.util.Log;
 
 public abstract class IOService extends Service {
 
-	private static final int RECONNECT_WAIT = 5000;
+	private static final int RECONNECT_WAIT = 10000;
 
 	private InputStream input = new ServiceInputStream();
 
@@ -70,11 +70,13 @@ public abstract class IOService extends Service {
 	}
 
 	protected void reconnect() {
-		while( shouldExecute() && !isConnected() ) {
+		while( shouldExecute() ) {
 			try {
 				disconnect();
 				connect();
+				break;
 			} catch( Exception exception ) {
+				Log.write( "Failed to connect! Waiting " + ( RECONNECT_WAIT / 1000.0 ) + " seconds..." );
 				Log.write( exception );
 				try {
 					Thread.sleep( RECONNECT_WAIT );
@@ -84,8 +86,6 @@ public abstract class IOService extends Service {
 			}
 		}
 	}
-	
-	protected abstract boolean isConnected();
 
 	protected abstract void connect() throws Exception;
 

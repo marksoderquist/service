@@ -28,22 +28,22 @@ public class SocketService extends IOService {
 	}
 
 	@Override
-	protected boolean isConnected() {
-		return socket != null && socket.isConnected();
-	}
-
-	@Override
 	protected void connect() throws IOException {
+		Log.write( Log.DEBUG, getName() + ": Connecting..." );
 		socket = new Socket( host, port );
 		Log.write( "Connected to: " + host + ":" + port );
 		setRealInputStream( socket.getInputStream() );
 		setRealOutputStream( socket.getOutputStream() );
+		Log.write( Log.DEBUG, getName() + ": Connected." );
 	}
 
 	@Override
 	protected void disconnect() throws IOException {
+		Log.write( Log.DEBUG, getName() + ": Disconnecting..." );
 		if( socket != null ) socket.close();
 		setRealInputStream( null );
 		setRealOutputStream( null );
+		Log.write( Log.DEBUG, getName() + ": Disconnected." );
 	}
+
 }
