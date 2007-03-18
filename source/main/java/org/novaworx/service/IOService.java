@@ -20,6 +20,8 @@ public abstract class IOService extends Service {
 
 	private boolean stopOnException;
 
+	private boolean connected;
+
 	public IOService() {
 		this( null, false );
 	}
@@ -85,6 +87,11 @@ public abstract class IOService extends Service {
 				}
 			}
 		}
+	}
+
+	public final boolean isConnected() {
+		// TODO Implement code to change connected flag.
+		return connected;
 	}
 
 	protected abstract void connect() throws Exception;

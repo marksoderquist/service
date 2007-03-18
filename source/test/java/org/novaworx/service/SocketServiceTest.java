@@ -6,9 +6,7 @@ import java.nio.charset.Charset;
 
 import junit.framework.TestCase;
 
-import org.novaworx.util.IOPump;
 import org.novaworx.util.Log;
-import org.novaworx.util.ThreadUtil;
 
 public class SocketServiceTest extends TestCase {
 
