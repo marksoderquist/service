@@ -68,14 +68,14 @@ public abstract class IOService extends Service {
 
 	@Override
 	protected void stopService() throws Exception {
-		disconnect();
+		internalDisconnect();
 	}
 
 	protected void reconnect() {
 		while( shouldExecute() ) {
 			try {
-				disconnect();
-				connect();
+				internalDisconnect();
+				internalConnect();
 				break;
 			} catch( Exception exception ) {
 				Log.write( "Failed to connect! Waiting " + ( RECONNECT_WAIT / 1000.0 ) + " seconds..." );
@@ -90,13 +90,22 @@ public abstract class IOService extends Service {
 	}
 
 	public final boolean isConnected() {
-		// TODO Implement code to change connected flag.
 		return connected;
 	}
 
 	protected abstract void connect() throws Exception;
 
 	protected abstract void disconnect() throws Exception;
+
+	private final void internalConnect() throws Exception {
+		connect();
+		connected = true;
+	}
+
+	private final void internalDisconnect() throws Exception {
+		connected = false;
+		disconnect();
+	}
 
 	private class ServiceInputStream extends InputStream {
 
