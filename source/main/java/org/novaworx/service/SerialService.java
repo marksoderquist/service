@@ -22,7 +22,7 @@ import org.novaworx.util.ThreadUtil;
  */
 public class SerialService extends IOService {
 
-	private static final int CONNECT_TIMEOUT = 1000;
+	private static final int CONNECT_TIMEOUT = 100;
 
 	private static final int RETRY_COUNT = 5;
 
@@ -30,21 +30,16 @@ public class SerialService extends IOService {
 
 	private SerialPort port;
 
-	private int baud;
+	private SerialSettings[] settings;
 
-	private int bits;
+	public SerialService( String name, String port, int baud, int bits, int parity, int stop ) {
+		this( name, port, new SerialSettings( baud, bits, parity, stop ) );
+	}
 
-	private int stop;
-
-	private int parity;
-
-	public SerialService( String name, String port, int baud, int bits, int stop, int parity ) {
+	public SerialService( String name, String port, SerialSettings... settings ) {
 		super( name );
 		this.name = port;
-		this.baud = baud;
-		this.bits = bits;
-		this.stop = stop;
-		this.parity = parity;
+		this.settings = settings;
 	}
 
 	public SerialPort getSerialPort() {
@@ -62,7 +57,7 @@ public class SerialService extends IOService {
 			int attempt = 0;
 			while( attempt < RETRY_COUNT ) {
 				try {
-					port.setSerialPortParams( baud, bits, stop, parity );
+					port.setSerialPortParams( settings[0].getBaud(), settings[0].getBits(), settings[0].getParity(), settings[0].getStop() );
 					break;
 				} catch( UnsupportedCommOperationException exception ) {
 					if( attempt < RETRY_COUNT ) {
@@ -75,8 +70,8 @@ public class SerialService extends IOService {
 				}
 			}
 
-			setRealInputStream( port.getInputStream() );
 			setRealOutputStream( port.getOutputStream() );
+			setRealInputStream( port.getInputStream() );
 			Log.write( "Serial port open." );
 		} catch( NoSuchPortException exception ) {
 			throw new IOException( exception );
