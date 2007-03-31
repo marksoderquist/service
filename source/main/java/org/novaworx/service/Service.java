@@ -1,6 +1,8 @@
 package org.novaworx.service;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.novaworx.util.ClassUtil;
 import org.novaworx.util.Log;
@@ -17,6 +19,10 @@ public abstract class Service {
 		STARTING, STARTED, STOPPING, STOPPED
 	};
 
+	public enum EventType {
+		STARTING, STARTED, STOPPING, STOPPED, CONNECTING, CONNECTED, DISCONNECTING, DISCONNECTED
+	}
+
 	private String name = ClassUtil.getClassNameOnly( getClass() );
 
 	private Thread thread;
@@ -30,6 +36,8 @@ public abstract class Service {
 	private final TripLock stoplock = new TripLock( true );
 
 	private Exception exception;
+
+	private Set<ServiceListener> listeners = new HashSet<ServiceListener>();
 
 	protected Service() {}
 
@@ -175,6 +183,14 @@ public abstract class Service {
 		stoplock.hold( timeout );
 	}
 
+	public final void addListener( ServiceListener listener ) {
+		listeners.add( listener );
+	}
+
+	public final void removeListener( ServiceListener listener ) {
+		listeners.remove( listener );
+	}
+
 	/**
 	 * Subclasses implement this method to start the service. Implementations of
 	 * this method should return when the service is started. This usually means
@@ -209,8 +225,10 @@ public abstract class Service {
 		try {
 			stoplock.reset();
 			state = State.STARTING;
+			fireEvent( EventType.STARTING );
 			startService();
 			state = State.STARTED;
+			fireEvent( EventType.STARTED );
 			Log.write( Log.TRACE, getName() + " started." );
 		} finally {
 			Log.write( Log.DEBUG, getName() + ": Notify from startup." );
@@ -232,12 +250,24 @@ public abstract class Service {
 		try {
 			startlock.reset();
 			state = State.STOPPING;
+			fireEvent( EventType.STOPPING );
 			stopService();
 			state = State.STOPPED;
+			fireEvent( EventType.STOPPED );
 			Log.write( Log.TRACE, getName() + " stopped." );
 		} finally {
 			Log.write( Log.DEBUG, getName() + ": Notify from shutdown." );
 			stoplock.trip();
+		}
+	}
+
+	protected final void fireEvent( EventType type ) {
+		fireEvent( new ServiceEvent( this, type ) );
+	}
+
+	protected final void fireEvent( ServiceEvent event ) {
+		for( ServiceListener listener : listeners ) {
+			listener.serviceEventOccurred( event );
 		}
 	}
 

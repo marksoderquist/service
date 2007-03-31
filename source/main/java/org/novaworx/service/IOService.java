@@ -98,12 +98,16 @@ public abstract class IOService extends Service {
 	protected abstract void disconnect() throws Exception;
 
 	private final void internalConnect() throws Exception {
+		fireEvent( EventType.CONNECTING );
 		connect();
+		fireEvent( EventType.CONNECTED );
 		connected = true;
 	}
 
 	private final void internalDisconnect() throws Exception {
+		fireEvent( EventType.DISCONNECTING );
 		connected = false;
+		fireEvent( EventType.DISCONNECTED );
 		disconnect();
 	}
 
