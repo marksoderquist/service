@@ -165,4 +165,19 @@ public class SerialSettingsTest extends TestCase {
 		assertNull( settings );
 	}
 
+	public void testToString() throws Exception {
+		String settings = null;
+
+		settings = "300,5,n,1";
+		assertEquals( settings, SerialSettings.parse( settings ).toString() );
+		settings = "2400,6,e,1.5";
+		assertEquals( settings, SerialSettings.parse( settings ).toString() );
+		settings = "4800,7,o,2";
+		assertEquals( settings, SerialSettings.parse( settings ).toString() );
+		settings = "9600,8,m,1";
+		assertEquals( settings, SerialSettings.parse( settings ).toString() );
+		settings = "14400,8,s,1";
+		assertEquals( settings, SerialSettings.parse( settings ).toString() );
+	}
+
 }

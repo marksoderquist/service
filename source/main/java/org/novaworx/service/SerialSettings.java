@@ -107,4 +107,47 @@ public class SerialSettings {
 		return stop;
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+
+		String baudString = String.valueOf( baud );
+		String bitsString = String.valueOf( bits );
+		String parityString = "?";
+		switch( parity ) {
+			case SerialPort.PARITY_NONE: {
+				parityString = "n";
+				break;
+			}
+			case SerialPort.PARITY_EVEN: {
+				parityString = "e";
+				break;
+			}
+			case SerialPort.PARITY_ODD: {
+				parityString = "o";
+				break;
+			}
+			case SerialPort.PARITY_MARK: {
+				parityString = "m";
+				break;
+			}
+			case SerialPort.PARITY_SPACE: {
+				parityString = "s";
+				break;
+			}
+		}
+		String stopString = String.valueOf( stop );
+		if( stop == SerialPort.STOPBITS_1_5 ) stopString = "1.5";
+
+		builder.append( baudString );
+		builder.append( "," );
+		builder.append( bitsString );
+		builder.append( "," );
+		builder.append( parityString );
+		builder.append( "," );
+		builder.append( stopString );
+
+		return builder.toString();
+	}
+
 }

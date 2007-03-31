@@ -50,14 +50,14 @@ public class SerialService extends IOService {
 	protected void connect() throws IOException {
 		CommPortIdentifier identifier;
 		try {
-			Log.write( Log.DEBUG, "Opening serial port..." );
+			Log.write( Log.DEBUG, "Opening serial port[" + name + ", " + settings[ 0 ].toString() + "]..." );
 			identifier = CommPortIdentifier.getPortIdentifier( name );
 			port = (SerialPort)identifier.open( getName(), CONNECT_TIMEOUT );
 
 			int attempt = 0;
 			while( attempt < RETRY_COUNT ) {
 				try {
-					port.setSerialPortParams( settings[0].getBaud(), settings[0].getBits(), settings[0].getParity(), settings[0].getStop() );
+					port.setSerialPortParams( settings[ 0 ].getBaud(), settings[ 0 ].getBits(), settings[ 0 ].getStop(), settings[ 0 ].getParity() );
 					break;
 				} catch( UnsupportedCommOperationException exception ) {
 					if( attempt < RETRY_COUNT ) {
@@ -70,8 +70,8 @@ public class SerialService extends IOService {
 				}
 			}
 
-			setRealOutputStream( port.getOutputStream() );
 			setRealInputStream( port.getInputStream() );
+			setRealOutputStream( port.getOutputStream() );
 			Log.write( "Serial port open." );
 		} catch( NoSuchPortException exception ) {
 			throw new IOException( exception );
