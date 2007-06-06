@@ -77,12 +77,12 @@ public abstract class Worker extends Service implements Runnable {
 
 		private boolean execute;
 
-		public synchronized boolean isWorking() {
-			return thread != null && thread.isAlive();
-		}
-
 		public synchronized boolean isExecutable() {
 			return execute;
+		}
+
+		public synchronized boolean isWorking() {
+			return thread != null && thread.isAlive();
 		}
 
 		public void start() {
