@@ -9,6 +9,7 @@ public class ServiceTest extends TestCase {
 	@Override
 	public void setUp() {
 		Log.setLevel( Log.NONE );
+		Log.write();
 	}
 
 	@Override

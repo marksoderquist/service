@@ -53,7 +53,7 @@ public abstract class Worker extends Service implements Runnable {
 	}
 
 	/**
-	 * Subclasses should overide this method with code that does any setup work.
+	 * Subclasses should override this method with code that does any setup work.
 	 * 
 	 * @throws Exception
 	 */

@@ -59,6 +59,8 @@ public abstract class Service {
 
 		stoplock.hold();
 
+		runlock.reset();
+
 		thread = new Thread( new ServiceRunner(), name );
 		thread.setPriority( Thread.NORM_PRIORITY );
 		thread.setDaemon( true );
@@ -89,7 +91,10 @@ public abstract class Service {
 	 * immediately.
 	 */
 	public final synchronized void stop() {
-		if( state != State.STARTED ) return;
+		if( state != State.STARTED ) {
+			Log.write( Log.TRACE, "State not started...is: " + getStatus() );
+			return;
+		}
 
 		startlock.hold();
 		runlock.trip();
@@ -143,12 +148,12 @@ public abstract class Service {
 	 */
 	public final void restart() throws Exception {
 		// Don't use start() and stop(), they cause threading issues.
-		Log.write( Log.DEBUG, getName() + ".restart(): Calling stopAndWait()..." );
+		Log.write( Log.TRACE, getName() + ".restart(): Calling stopAndWait()..." );
 		stopAndWait();
-		Log.write( Log.DEBUG, getName() + ".restart(): stopAndWait() finished." );
-		Log.write( Log.DEBUG, getName() + ".restart(): Calling startAndWait()..." );
+		Log.write( Log.TRACE, getName() + ".restart(): stopAndWait() finished." );
+		Log.write( Log.TRACE, getName() + ".restart(): Calling startAndWait()..." );
 		startAndWait();
-		Log.write( Log.DEBUG, getName() + ".restart(): startAndWait() finished." );
+		Log.write( Log.TRACE, getName() + ".restart(): startAndWait() finished." );
 	}
 
 	/**
@@ -158,9 +163,9 @@ public abstract class Service {
 	 * @throws InterruptedException
 	 */
 	public final void waitForStartup() throws InterruptedException {
-		Log.write( Log.DEBUG, getName() + ": Waiting for start lock." );
+		Log.write( Log.TRACE, getName() + ": Waiting for start lock." );
 		startlock.hold();
-		Log.write( Log.DEBUG, getName() + ": Start lock tripped." );
+		Log.write( Log.TRACE, getName() + ": Start lock tripped." );
 	}
 
 	public final void waitForStartup( int timeout ) throws InterruptedException {
@@ -174,9 +179,9 @@ public abstract class Service {
 	 * @throws InterruptedException
 	 */
 	public final void waitForShutdown() throws InterruptedException {
-		Log.write( Log.DEBUG, getName() + ": Waiting for stop lock." );
+		Log.write( Log.TRACE, getName() + ": Waiting for stop lock." );
 		stoplock.hold();
-		Log.write( Log.DEBUG, getName() + ": Stop lock tripped." );
+		Log.write( Log.TRACE, getName() + ": Stop lock tripped." );
 	}
 
 	public final void waitForShutdown( int timeout ) throws InterruptedException {
@@ -221,7 +226,7 @@ public abstract class Service {
 			return;
 		}
 
-		Log.write( Log.DEBUG, "Starting " + getName() + "..." );
+		Log.write( Log.TRACE, "Starting " + getName() + "..." );
 		try {
 			stoplock.reset();
 			state = State.STARTING;
@@ -231,7 +236,7 @@ public abstract class Service {
 			fireEvent( EventType.STARTED );
 			Log.write( Log.TRACE, getName() + " started." );
 		} finally {
-			Log.write( Log.DEBUG, getName() + ": Notify from startup." );
+			Log.write( Log.TRACE, getName() + ": Notify from startup." );
 			startlock.trip();
 		}
 	}
@@ -246,7 +251,7 @@ public abstract class Service {
 			return;
 		}
 
-		Log.write( Log.DEBUG, "Stopping " + getName() + "..." );
+		Log.write( Log.TRACE, "Stopping " + getName() + "..." );
 		try {
 			startlock.reset();
 			state = State.STOPPING;
@@ -256,7 +261,7 @@ public abstract class Service {
 			fireEvent( EventType.STOPPED );
 			Log.write( Log.TRACE, getName() + " stopped." );
 		} finally {
-			Log.write( Log.DEBUG, getName() + ": Notify from shutdown." );
+			Log.write( Log.TRACE, getName() + ": Notify from shutdown." );
 			stoplock.trip();
 		}
 	}
@@ -273,12 +278,11 @@ public abstract class Service {
 
 	private final class ServiceRunner implements Runnable {
 		/**
-		 * The implmentation of the Runnable interface.
+		 * The implementation of the Runnable interface.
 		 */
 		@Override
 		public void run() {
 			try {
-				runlock.reset();
 				startup();
 				runlock.hold();
 			} catch( Exception exception ) {
