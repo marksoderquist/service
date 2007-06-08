@@ -13,7 +13,7 @@ public class WorkerTest extends TestCase {
 
 	@Override
 	public void setUp() {
-		Log.setLevel( Log.NONE );
+		Log.setLevel( Log.DEBUG );
 		worker = new BlockingIOWorker();
 	}
 
@@ -21,8 +21,8 @@ public class WorkerTest extends TestCase {
 		assertFalse( worker.isWorking() );
 		worker.startAndWait();
 		assertTrue( worker.isWorking() );
-		// worker.stopAndWait();
-		// assertFalse( worker.isWorking() );
+		worker.stopAndWait();
+		assertFalse( worker.isWorking() );
 	}
 
 	// public void testRestart() throws Exception {
