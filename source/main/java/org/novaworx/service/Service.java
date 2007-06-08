@@ -34,6 +34,10 @@ public abstract class Service {
 	private final TripLock runlock = new TripLock();
 
 	private final TripLock stoplock = new TripLock( true );
+	
+	private final TripLock startuplock = new TripLock();
+	
+	private final TripLock shutdownlock = new TripLock( true );
 
 	private Exception exception;
 
@@ -60,13 +64,15 @@ public abstract class Service {
 		stoplock.hold();
 
 		runlock.reset();
-
+		
+		Log.write( Log.TRACE, "Resetting startup lock..." );
+		startuplock.reset();
 		thread = new Thread( new ServiceRunner(), name );
 		thread.setPriority( Thread.NORM_PRIORITY );
 		thread.setDaemon( true );
 		thread.start();
-		
-		Thread.yield();
+		Log.write( Log.TRACE, "Holding at startup lock..." );
+		startuplock.hold();
 	}
 
 	/**
@@ -99,7 +105,9 @@ public abstract class Service {
 		}
 
 		startlock.hold();
+		shutdownlock.reset();
 		runlock.trip();
+		shutdownlock.hold();
 	}
 
 	/**
@@ -218,7 +226,7 @@ public abstract class Service {
 	 */
 	protected abstract void stopService() throws Exception;
 
-	private synchronized final void startup() throws Exception {
+	private final void startup() throws Exception {
 		if( state == State.STARTING ) {
 			return;
 		}
@@ -232,6 +240,7 @@ public abstract class Service {
 		try {
 			stoplock.reset();
 			state = State.STARTING;
+			startuplock.trip();
 			fireEvent( EventType.STARTING );
 			startService();
 			state = State.STARTED;
@@ -243,7 +252,7 @@ public abstract class Service {
 		}
 	}
 
-	private synchronized final void shutdown() throws Exception {
+	private final void shutdown() throws Exception {
 		if( state == State.STOPPING ) {
 			return;
 		}
@@ -257,6 +266,7 @@ public abstract class Service {
 		try {
 			startlock.reset();
 			state = State.STOPPING;
+			shutdownlock.trip();
 			fireEvent( EventType.STOPPING );
 			stopService();
 			state = State.STOPPED;
