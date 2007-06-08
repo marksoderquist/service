@@ -212,14 +212,14 @@
 		<repository>
 			<id>novaworx</id>
 			<name>Novaworx Maven Repository</name>
-			<url>scp://mvn.novaworx.org//home/novaworx/mvn/release</url>
+			<url>file:///home/novaworx/mvn/release</url>
 		</repository>
 		
 		<!-- use the following if you ARE using a snapshot version. -->
 		<snapshotRepository>
 			<id>novaworx-snapshot</id>
 			<name>Novaworx Maven Snapshot Repository</name>
-			<url>scp://mvn.novaworx.org//home/novaworx/mvn/snapshot</url>
+			<url>file:///home/novaworx/mvn/snapshot</url>
 		</snapshotRepository>
 	</distributionManagement>
 </project>
