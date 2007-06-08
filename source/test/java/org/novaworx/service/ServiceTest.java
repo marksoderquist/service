@@ -18,7 +18,7 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testStartAndStop() throws Exception {
-		TestConnectionService service = new TestConnectionService();
+		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 
 		service.start();
@@ -35,7 +35,7 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testDoubleStart() throws Exception {
-		TestConnectionService service = new TestConnectionService();
+		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 
 		service.start();
@@ -55,7 +55,7 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testStartAndWait() throws Exception {
-		TestConnectionService service = new TestConnectionService();
+		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 
 		service.startAndWait();
@@ -70,7 +70,7 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testStop() throws Exception {
-		TestConnectionService service = new TestConnectionService();
+		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 
 		service.start();
@@ -87,7 +87,7 @@ public class ServiceTest extends TestCase {
 	}
 	
 	public void testDoubleStop() throws Exception {
-		TestConnectionService service = new TestConnectionService();
+		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 
 		service.start();
@@ -107,7 +107,7 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testStopAndWait() throws Exception {
-		TestConnectionService service = new TestConnectionService();
+		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 
 		service.startAndWait();
@@ -122,7 +122,7 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testRestart() throws Exception {
-		TestConnectionService service = new TestConnectionService();
+		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 
 		service.startAndWait();
@@ -142,7 +142,7 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testFastRestarts() throws Exception {
-		TestConnectionService service = new TestConnectionService();
+		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 
 		service.startAndWait();
@@ -165,7 +165,7 @@ public class ServiceTest extends TestCase {
 		assertEquals( "Wrong stop call count.", count + 1, service.getStopServiceCount() );
 	}
 
-	private class TestConnectionService extends Service {
+	private class CountingService extends Service {
 
 		private int startServiceCount;
 

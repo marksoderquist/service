@@ -65,6 +65,8 @@ public abstract class Service {
 		thread.setPriority( Thread.NORM_PRIORITY );
 		thread.setDaemon( true );
 		thread.start();
+		
+		Thread.yield();
 	}
 
 	/**
