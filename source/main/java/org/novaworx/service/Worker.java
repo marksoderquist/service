@@ -40,7 +40,6 @@ public abstract class Worker extends Service implements Runnable {
 
 	@Override
 	protected final void startService() throws Exception {
-		startWorker();
 		runner.start();
 		startlock.hold();
 		if( exception != null ) throw exception;

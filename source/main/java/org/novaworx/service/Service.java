@@ -29,14 +29,18 @@ public abstract class Service {
 
 	private volatile State state = State.STOPPED;
 
+	private final Object statelock = new Object();
+
+	private final Object stateChangeLock = new Object();
+
 	private final TripLock startlock = new TripLock();
 
 	private final TripLock runlock = new TripLock();
 
 	private final TripLock stoplock = new TripLock( true );
-	
+
 	private final TripLock startuplock = new TripLock();
-	
+
 	private final TripLock shutdownlock = new TripLock( true );
 
 	private Exception exception;
@@ -58,20 +62,18 @@ public abstract class Service {
 	 * Start the Service. This method creates the service thread and returns
 	 * immediately.
 	 */
-	public final synchronized void start() {
-		if( state != State.STOPPED ) return;
+	public final void start() {
+		if( getState() != State.STOPPED ) return;
 
 		stoplock.hold();
 
 		runlock.reset();
-		
-		Log.write( Log.TRACE, "Resetting startup lock..." );
+
 		startuplock.reset();
 		thread = new Thread( new ServiceRunner(), name );
 		thread.setPriority( Thread.NORM_PRIORITY );
 		thread.setDaemon( true );
 		thread.start();
-		Log.write( Log.TRACE, "Holding at startup lock..." );
 		startuplock.hold();
 	}
 
@@ -98,8 +100,8 @@ public abstract class Service {
 	 * Stop the Service. This method interrupts the service thread and returns
 	 * immediately.
 	 */
-	public final synchronized void stop() {
-		if( state != State.STARTED ) {
+	public final void stop() {
+		if( getState() != State.STARTED ) {
 			Log.write( Log.TRACE, "State not started...is: " + getStatus() );
 			return;
 		}
@@ -135,15 +137,16 @@ public abstract class Service {
 	 * 
 	 * @return True if running, false otherwise.
 	 */
-	public final synchronized boolean isRunning() {
-		return state == State.STARTED;
+	public final boolean isRunning() {
+		return getState() == State.STARTED;
 	}
 
-	public final synchronized boolean shouldExecute() {
+	public final boolean shouldExecute() {
+		State state = getState();
 		return state == State.STARTED || state == State.STARTING;
 	}
 
-	public final synchronized State getState() {
+	public final State getState() {
 		return state;
 	}
 
@@ -227,54 +230,64 @@ public abstract class Service {
 	protected abstract void stopService() throws Exception;
 
 	private final void startup() throws Exception {
-		if( state == State.STARTING ) {
+		if( getState() == State.STARTING ) {
 			return;
 		}
 
-		if( state == State.STARTED ) {
+		if( getState() == State.STARTED ) {
 			Log.write( Log.WARN, getName() + " already started." );
 			return;
 		}
 
-		Log.write( Log.TRACE, "Starting " + getName() + "..." );
-		try {
-			stoplock.reset();
-			state = State.STARTING;
-			startuplock.trip();
-			fireEvent( EventType.STARTING );
-			startService();
-			state = State.STARTED;
-			fireEvent( EventType.STARTED );
-			Log.write( Log.TRACE, getName() + " started." );
-		} finally {
-			Log.write( Log.TRACE, getName() + ": Notify from startup." );
-			startlock.trip();
+		synchronized( stateChangeLock ) {
+			Log.write( Log.TRACE, "Starting " + getName() + "..." );
+			try {
+				stoplock.reset();
+				setState( State.STARTING );
+				startuplock.trip();
+				fireEvent( EventType.STARTING );
+				startService();
+				setState( State.STARTED );
+				fireEvent( EventType.STARTED );
+				Log.write( Log.TRACE, getName() + " started." );
+			} finally {
+				Log.write( Log.TRACE, getName() + ": Notify from startup." );
+				startlock.trip();
+			}
 		}
 	}
 
 	private final void shutdown() throws Exception {
-		if( state == State.STOPPING ) {
+		if( getState() == State.STOPPING ) {
 			return;
 		}
 
-		if( state == State.STOPPED ) {
+		if( getState() == State.STOPPED ) {
 			Log.write( Log.WARN, getName() + " already shutdown." );
 			return;
 		}
 
-		Log.write( Log.TRACE, "Stopping " + getName() + "..." );
-		try {
-			startlock.reset();
-			state = State.STOPPING;
-			shutdownlock.trip();
-			fireEvent( EventType.STOPPING );
-			stopService();
-			state = State.STOPPED;
-			fireEvent( EventType.STOPPED );
-			Log.write( Log.TRACE, getName() + " stopped." );
-		} finally {
-			Log.write( Log.TRACE, getName() + ": Notify from shutdown." );
-			stoplock.trip();
+		synchronized( stateChangeLock ) {
+			Log.write( Log.TRACE, "Stopping " + getName() + "..." );
+			try {
+				startlock.reset();
+				setState( State.STOPPING );
+				shutdownlock.trip();
+				fireEvent( EventType.STOPPING );
+				stopService();
+				setState( State.STOPPED );
+				fireEvent( EventType.STOPPED );
+				Log.write( Log.TRACE, getName() + " stopped." );
+			} finally {
+				Log.write( Log.TRACE, getName() + ": Notify from shutdown." );
+				stoplock.trip();
+			}
+		}
+	}
+
+	private final void setState( State state ) {
+		synchronized( statelock ) {
+			this.state = state;
 		}
 	}
 

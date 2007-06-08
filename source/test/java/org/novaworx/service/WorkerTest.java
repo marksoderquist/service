@@ -6,6 +6,7 @@ import java.io.InputStream;
 import junit.framework.TestCase;
 
 import org.novaworx.util.Log;
+import org.novaworx.util.ThreadUtil;
 
 public class WorkerTest extends TestCase {
 
@@ -13,6 +14,17 @@ public class WorkerTest extends TestCase {
 	public void setUp() {
 		Log.setLevel( Log.NONE );
 		Log.write();
+	}
+
+	public void testStartStopCount() throws Exception {
+		CountingWorker worker = new CountingWorker();
+		assertFalse( worker.isWorking() );
+		worker.startAndWait();
+		assertTrue( worker.isWorking() );
+		worker.stopAndWait();
+		assertFalse( worker.isWorking() );
+		assertEquals( 1, worker.getStartCount() );
+		assertEquals( 1, worker.getStopCount() );
 	}
 
 	public void testStartAndStop() throws Exception {
@@ -48,6 +60,41 @@ public class WorkerTest extends TestCase {
 		assertTrue( worker.isWorking() );
 		worker.stopAndWait();
 		assertFalse( worker.isWorking() );
+	}
+
+	private static class CountingWorker extends Worker {
+
+		private int startCount;
+
+		private int stopCount;
+
+		public int getStartCount() {
+			return startCount;
+		}
+
+		public int getStopCount() {
+			return stopCount;
+		}
+
+		@Override
+		public void startWorker() {
+			Log.write( "Start worker..." );
+			startCount++;
+		}
+
+		@Override
+		public void stopWorker() {
+			Log.write( "Stop worker..." );
+			stopCount++;
+		}
+
+		@Override
+		public void run() {
+			while( shouldExecute() ) {
+				ThreadUtil.pause( 1 );
+			}
+		}
+
 	}
 
 	private static class BlockingIOWorker extends Worker {
