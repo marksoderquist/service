@@ -74,7 +74,7 @@ public abstract class Worker extends Service implements Runnable {
 
 		private Thread thread;
 
-		private boolean execute;
+		private volatile boolean execute;
 
 		public synchronized boolean isExecutable() {
 			return execute;
