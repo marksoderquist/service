@@ -21,18 +21,10 @@
 		<url>http://www.novaworx.org</url>
 	</organization>
 	
-	<!--
 	<ciManagement>
-	<system>Continuum</system>
-	<url>http://www.novaworx.org/continuum</url>
-	<notifiers>
-	<notifier>
-	<type>mail</type>
-	<address>mark@novaworx.org</address>
-	</notifier>
-	</notifiers>
+		<system>Continuum</system>
+		<url>http://www.novaworx.org/continuum</url>
 	</ciManagement>
-	-->
 	
 	<developers>
 		<developer>
