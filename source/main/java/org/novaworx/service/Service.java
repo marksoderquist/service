@@ -251,7 +251,7 @@ public abstract class Service {
 				fireEvent( EventType.STARTED );
 				Log.write( Log.TRACE, getName() + " started." );
 			} finally {
-				Log.write( Log.TRACE, getName() + ": Notify from startup." );
+				Log.write( Log.DEBUG, getName() + ": Notify from startup." );
 				startlock.trip();
 			}
 		}
@@ -279,7 +279,7 @@ public abstract class Service {
 				fireEvent( EventType.STOPPED );
 				Log.write( Log.TRACE, getName() + " stopped." );
 			} finally {
-				Log.write( Log.TRACE, getName() + ": Notify from shutdown." );
+				Log.write( Log.DEBUG, getName() + ": Notify from shutdown." );
 				stoplock.trip();
 			}
 		}
