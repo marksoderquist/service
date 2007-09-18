@@ -53,7 +53,7 @@ public class ServerServiceTest extends TestCase {
 	// service.stopAndWait();
 	// assertFalse( "Service is not stopped.", service.isRunning() );
 	// }
-	
+
 	public void testRestart() throws Exception {
 		ServerService service = new ServerService( PORT );
 		assertFalse( "Service should not be running.", service.isRunning() );
