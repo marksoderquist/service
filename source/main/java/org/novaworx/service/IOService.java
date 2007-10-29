@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.novaworx.util.Log;
+import com.parallelsymmetry.util.Log;
 
 public abstract class IOService extends Service {
 

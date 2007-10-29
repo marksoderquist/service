@@ -5,8 +5,8 @@ import java.io.InputStream;
 
 import junit.framework.TestCase;
 
-import org.novaworx.util.Log;
-import org.novaworx.util.ThreadUtil;
+import com.parallelsymmetry.util.Log;
+import com.parallelsymmetry.util.ThreadUtil;
 
 public class WorkerTest extends TestCase {
 

@@ -1,6 +1,6 @@
 package org.novaworx.service;
 
-import org.novaworx.util.TripLock;
+import com.parallelsymmetry.util.TripLock;
 
 public abstract class Worker extends Service implements Runnable {
 

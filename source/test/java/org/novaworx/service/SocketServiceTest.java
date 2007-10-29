@@ -6,7 +6,7 @@ import java.nio.charset.Charset;
 
 import junit.framework.TestCase;
 
-import org.novaworx.util.Log;
+import com.parallelsymmetry.util.Log;
 
 public class SocketServiceTest extends TestCase {
 

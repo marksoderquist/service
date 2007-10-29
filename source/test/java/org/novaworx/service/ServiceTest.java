@@ -2,8 +2,8 @@ package org.novaworx.service;
 
 import junit.framework.TestCase;
 
-import org.novaworx.util.Log;
-import org.novaworx.util.ThreadUtil;
+import com.parallelsymmetry.util.Log;
+import com.parallelsymmetry.util.ThreadUtil;
 
 public class ServiceTest extends TestCase {
 

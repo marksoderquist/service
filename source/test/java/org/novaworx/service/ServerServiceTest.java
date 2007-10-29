@@ -2,7 +2,7 @@ package org.novaworx.service;
 
 import junit.framework.TestCase;
 
-import org.novaworx.util.Log;
+import com.parallelsymmetry.util.Log;
 
 public class ServerServiceTest extends TestCase {
 

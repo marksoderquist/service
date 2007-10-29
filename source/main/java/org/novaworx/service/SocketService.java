@@ -3,7 +3,7 @@ package org.novaworx.service;
 import java.io.IOException;
 import java.net.Socket;
 
-import org.novaworx.util.Log;
+import com.parallelsymmetry.util.Log;
 
 public class SocketService extends IOService {
 

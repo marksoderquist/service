@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.novaworx.util.ClassUtil;
-import org.novaworx.util.Log;
-import org.novaworx.util.TripLock;
+import com.parallelsymmetry.util.ClassUtil;
+import com.parallelsymmetry.util.Log;
+import com.parallelsymmetry.util.TripLock;
 
 /**
  * The Service class is a generic service class.

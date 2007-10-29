@@ -5,8 +5,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 
-import org.novaworx.util.Log;
-import org.novaworx.util.TripLock;
+import com.parallelsymmetry.util.Log;
+import com.parallelsymmetry.util.TripLock;
 
 public class ServerService extends IOService {
 
