@@ -1,7 +1,8 @@
-package org.novaworx.service;
+package com.parallelsymmetry.service;
 
 import junit.framework.TestCase;
 
+import com.parallelsymmetry.service.Service;
 import com.parallelsymmetry.util.Log;
 import com.parallelsymmetry.util.ThreadUtil;
 

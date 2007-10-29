@@ -1,4 +1,4 @@
-package org.novaworx.service;
+package com.parallelsymmetry.service;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -6,6 +6,8 @@ import java.nio.charset.Charset;
 
 import junit.framework.TestCase;
 
+import com.parallelsymmetry.service.ServerService;
+import com.parallelsymmetry.service.SocketService;
 import com.parallelsymmetry.util.Log;
 
 public class SocketServiceTest extends TestCase {

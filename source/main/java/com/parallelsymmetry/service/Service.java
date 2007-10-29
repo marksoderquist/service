@@ -1,4 +1,4 @@
-package org.novaworx.service;
+package com.parallelsymmetry.service;
 
 import java.io.IOException;
 import java.util.HashSet;

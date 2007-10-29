@@ -1,4 +1,4 @@
-package org.novaworx.service;
+package com.parallelsymmetry.service;
 
 public interface ServiceListener {
 

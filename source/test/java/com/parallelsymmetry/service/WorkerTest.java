@@ -1,10 +1,11 @@
-package org.novaworx.service;
+package com.parallelsymmetry.service;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 import junit.framework.TestCase;
 
+import com.parallelsymmetry.service.Worker;
 import com.parallelsymmetry.util.Log;
 import com.parallelsymmetry.util.ThreadUtil;
 
