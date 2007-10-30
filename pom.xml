@@ -2,24 +2,24 @@
 	
 	<modelVersion>4.0.0</modelVersion>
 	
-	<groupId>org.novaworx</groupId>
+	<groupId>com.parallelsymmetry</groupId>
 	<artifactId>service</artifactId>
 	<version>1.0</version>
 	<packaging>jar</packaging>
 	
-	<name>Novaworx Service Library</name>
+	<name>ParallelSymmetry Service Library</name>
 	<description />
-	<url>http://www.novaworx.org</url>
+	<url>http://www.parallelsymmetry.com</url>
 	<inceptionYear>2007</inceptionYear>
 	
 	<organization>
-		<name>Novaworx</name>
-		<url>http://www.novaworx.org</url>
+		<name>ParallelSymmetry</name>
+		<url>http://www.parallelsymmetry.com</url>
 	</organization>
 	
 	<ciManagement>
 		<system>Continuum</system>
-		<url>http://www.novaworx.org/continuum</url>
+		<url>http://www.parallelsymmetry.com/continuum</url>
 	</ciManagement>
 	
 	<developers>
@@ -32,13 +32,13 @@
 				<role>Architect</role>
 				<role>Engineer</role>
 			</roles>
-			<organization>Novaworx</organization>
+			<organization>ParallelSymmetry</organization>
 			<timezone>-7</timezone>
 		</developer>
 	</developers>
 	
 	<scm>
-		<connection>scm:svn:http://svn.novaworx.org/software/service/trunk</connection>
+		<connection>scm:svn:http://svn.parallelsymmetry.com/software/service/trunk</connection>
 	</scm>
 	
 	<dependencies>
@@ -50,7 +50,7 @@
 		</dependency>
 		
 		<dependency>
-			<groupId>org.novaworx</groupId>
+			<groupId>com.parallelsymmetry</groupId>
 			<artifactId>utility</artifactId>
 			<version>1.0</version>
 		</dependency>
@@ -58,17 +58,17 @@
 	
 	<repositories>
 		<repository>
-			<id>novaworx</id>
-			<name>Novaworx</name>
-			<url>http://mvn.novaworx.org/release</url>
+			<id>parallelsymmetry</id>
+			<name>ParallelSymmetry</name>
+			<url>http://mvn.parallelsymmetry.com/release</url>
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
 		<repository>
-			<id>novaworx-snapshot</id>
-			<name>Novaworx Snapshot</name>
-			<url>http://mvn.novaworx.org/snapshot</url>
+			<id>parallelsymmetry-snapshot</id>
+			<name>ParallelSymmetry Snapshot</name>
+			<url>http://mvn.parallelsymmetry.com/snapshot</url>
 			<snapshots>
 				<updatePolicy>always</updatePolicy>
 			</snapshots>
@@ -103,7 +103,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>org.novaworx.daemon.DemoDaemon</mainClass>
+							<mainClass>com.parallelsymmetry.daemon.DemoDaemon</mainClass>
 							<addClasspath>true</addClasspath>
 						</manifest>
 					</archive>
@@ -190,18 +190,19 @@
 	</reporting>
 	
 	<distributionManagement>
-		<!-- use the following if you're not using a snapshot version. -->
+		<!-- Use the following if you're not using a snapshot version. -->
 		<repository>
-			<id>novaworx</id>
-			<name>Novaworx Maven Repository</name>
-			<url>file:///home/novaworx/mvn/release</url>
+			<id>parallelsymmetry</id>
+			<name>ParallelSymmetry Maven Repository</name>
+			<url>file:///home/parasymm/mvn/release</url>
 		</repository>
 		
-		<!-- use the following if you ARE using a snapshot version. -->
+		<!-- Use the following if you ARE using a snapshot version. -->
 		<snapshotRepository>
-			<id>novaworx-snapshot</id>
-			<name>Novaworx Maven Snapshot Repository</name>
-			<url>file:///home/novaworx/mvn/snapshot</url>
+			<id>parallelsymmetry-snapshot</id>
+			<name>ParallelSymmetry Maven Snapshot Repository</name>
+			<url>file:///home/parasymm/mvn/snapshot</url>
 		</snapshotRepository>
 	</distributionManagement>
+	
 </project>
