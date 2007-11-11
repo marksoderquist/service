@@ -2,9 +2,9 @@ package com.parallelsymmetry.service;
 
 import junit.framework.TestCase;
 
-import com.parallelsymmetry.service.ServerService;
 import com.parallelsymmetry.util.Log;
 
+// FIXME One of these tests is causing Hudson to hang on occasion.
 public class ServerServiceTest extends TestCase {
 
 	private static final int PORT = 23423;
