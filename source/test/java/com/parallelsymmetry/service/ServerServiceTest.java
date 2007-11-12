@@ -11,7 +11,7 @@ public class ServerServiceTest extends TestCase {
 
 	@Override
 	public void setUp() {
-		Log.setLevel( Log.NONE );
+		Log.setLevel( Log.DEBUG );
 	}
 
 	@Override
@@ -33,17 +33,17 @@ public class ServerServiceTest extends TestCase {
 		assertFalse( "Service is not stopped.", service.isRunning() );
 	}
 
-	public void testStartStopWithPort() throws Exception {
-		ServerService service = new ServerService( PORT );
-		service.startAndWait();
-		assertTrue( "Service is not running.", service.isRunning() );
-		service.stopAndWait();
-		assertFalse( "Service is not stopped.", service.isRunning() );
-		service.startAndWait();
-		assertTrue( "Service is not running.", service.isRunning() );
-		service.stopAndWait();
-		assertFalse( "Service is not stopped.", service.isRunning() );
-	}
+	//	public void testStartStopWithPort() throws Exception {
+	//		ServerService service = new ServerService( PORT );
+	//		service.startAndWait();
+	//		assertTrue( "Service is not running.", service.isRunning() );
+	//		service.stopAndWait();
+	//		assertFalse( "Service is not stopped.", service.isRunning() );
+	//		service.startAndWait();
+	//		assertTrue( "Service is not running.", service.isRunning() );
+	//		service.stopAndWait();
+	//		assertFalse( "Service is not stopped.", service.isRunning() );
+	//	}
 
 	// public void testConnect() throws Exception {
 	// SocketService service = new SocketService( server.getLocalPort() );

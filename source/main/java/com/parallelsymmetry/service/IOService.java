@@ -74,7 +74,7 @@ public abstract class IOService extends Service {
 	protected void reconnect() {
 		while( shouldExecute() ) {
 			try {
-				internalDisconnect();
+				if( connected ) internalDisconnect();
 				internalConnect();
 				break;
 			} catch( Exception exception ) {
