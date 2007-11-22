@@ -4,7 +4,7 @@ import junit.framework.TestCase;
 
 import com.parallelsymmetry.util.Log;
 
-// FIXME One of these tests is causing Hudson to hang on occasion.
+// TODO One of these tests is causing Hudson to hang on occasion.
 public class ServerServiceTest extends TestCase {
 
 	private static final int PORT = 23423;
