@@ -7,7 +7,7 @@ import com.parallelsymmetry.util.Log;
 // TODO One of these tests is causing Hudson to hang on occasion.
 public class ServerServiceTest extends TestCase {
 
-	private static final int PORT = 23423;
+	//private static final int PORT = 23423;
 
 	@Override
 	public void setUp() {
