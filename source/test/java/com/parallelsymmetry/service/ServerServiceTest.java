@@ -7,7 +7,7 @@ import com.parallelsymmetry.util.Log;
 // TODO One of these tests is causing Hudson to hang on occasion.
 public class ServerServiceTest extends TestCase {
 
-	//private static final int PORT = 23423;
+	private static final int PORT = 23423;
 
 	@Override
 	public void setUp() {
@@ -55,18 +55,18 @@ public class ServerServiceTest extends TestCase {
 	// assertFalse( "Service is not stopped.", service.isRunning() );
 	// }
 
-	//	public void testRestart() throws Exception {
-	//		ServerService service = new ServerService( PORT );
-	//		assertFalse( "Service should not be running.", service.isRunning() );
-	//		service.startAndWait();
-	//		assertTrue( "Service is not running.", service.isRunning() );
-	//
-	//		service.restart();
-	//		assertTrue( "Service is not running.", service.isRunning() );
-	//
-	//		service.stopAndWait();
-	//		assertFalse( "Service is not stopped.", service.isRunning() );
-	//	}
+	public void testRestart() throws Exception {
+		ServerService service = new ServerService( PORT );
+		assertFalse( "Service should not be running.", service.isRunning() );
+		service.startAndWait();
+		assertTrue( "Service is not running.", service.isRunning() );
+
+		service.restart();
+		assertTrue( "Service is not running.", service.isRunning() );
+
+		service.stopAndWait();
+		assertFalse( "Service is not stopped.", service.isRunning() );
+	}
 
 	//
 	// public void testWrite() throws Exception {
