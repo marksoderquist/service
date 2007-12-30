@@ -38,6 +38,10 @@ public abstract class Worker extends Service implements Runnable {
 		return this.runner.isExecutable();
 	}
 
+	public boolean isWorkerThread() {
+		return isServiceThread();
+	}
+
 	@Override
 	protected final void startService() throws Exception {
 		runner.start();

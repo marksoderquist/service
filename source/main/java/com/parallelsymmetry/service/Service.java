@@ -141,6 +141,10 @@ public abstract class Service {
 		return getState() == State.STARTED;
 	}
 
+	public final boolean isServiceThread() {
+		return Thread.currentThread() == thread;
+	}
+
 	public final boolean shouldExecute() {
 		State state = getState();
 		return state == State.STARTED || state == State.STARTING;
