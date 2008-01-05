@@ -43,7 +43,7 @@ public class SocketServiceTest extends TestCase {
 	//		assertFalse( "Service is not stopped.", service.isRunning() );
 	//	}
 
-	// FIXME Restart method causing tests to hang.
+	// TODO Restart method causing tests to hang.
 	public void testRestart() throws Exception {
 		SocketService service = new SocketService( server.getLocalPort() );
 		assertFalse( "Service should not be running.", service.isRunning() );
