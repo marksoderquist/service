@@ -1,6 +1,7 @@
 package com.parallelsymmetry.service;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -49,8 +50,9 @@ public class ServerService extends IOService {
 	@Override
 	protected final void connect() throws Exception {
 		Log.write( Log.DEBUG, getName() + ": Connecting..." );
-		server = new ServerSocket( port );
+		server = new ServerSocket();
 		server.setReuseAddress( true );
+		server.bind( new InetSocketAddress( port ) );
 		runner = new ServerRunner();
 		runner.start();
 		startlock.resetAndHold();
