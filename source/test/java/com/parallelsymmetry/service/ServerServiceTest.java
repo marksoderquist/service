@@ -33,27 +33,32 @@ public class ServerServiceTest extends TestCase {
 		assertFalse( "Service is not stopped.", service.isRunning() );
 	}
 
-	//	public void testStartStopWithPort() throws Exception {
-	//		ServerService service = new ServerService( PORT );
-	//		service.startAndWait();
-	//		assertTrue( "Service is not running.", service.isRunning() );
-	//		service.stopAndWait();
-	//		assertFalse( "Service is not stopped.", service.isRunning() );
-	//		service.startAndWait();
-	//		assertTrue( "Service is not running.", service.isRunning() );
-	//		service.stopAndWait();
-	//		assertFalse( "Service is not stopped.", service.isRunning() );
-	//	}
+	public void testStartStopWithPort() throws Exception {
+		ServerService service = new ServerService( PORT );
+		service.startAndWait();
+		assertTrue( "Service is not running.", service.isRunning() );
+		service.stopAndWait();
+		assertFalse( "Service is not stopped.", service.isRunning() );
+		service.startAndWait();
+		assertTrue( "Service is not running.", service.isRunning() );
+		service.stopAndWait();
+		assertFalse( "Service is not stopped.", service.isRunning() );
+	}
 
-	// public void testConnect() throws Exception {
-	// SocketService service = new SocketService( server.getLocalPort() );
-	// assertFalse( "Service should not be running.", service.isRunning() );
-	// service.startAndWait();
-	// assertTrue( "Service is not running.", service.isRunning() );
-	//
-	// service.stopAndWait();
-	// assertFalse( "Service is not stopped.", service.isRunning() );
-	// }
+	public void testConnect() throws Exception {
+		ServerService server = new ServerService( PORT );
+		server.startAndWait();
+
+		SocketService service = new SocketService( server.getLocalPort() );
+		assertFalse( "Service should not be running.", service.isRunning() );
+		service.startAndWait();
+		assertTrue( "Service is not running.", service.isRunning() );
+
+		service.stopAndWait();
+		assertFalse( "Service is not stopped.", service.isRunning() );
+
+		server.stopAndWait();
+	}
 
 	public void testRestart() throws Exception {
 		ServerService service = new ServerService( PORT );
@@ -68,21 +73,23 @@ public class ServerServiceTest extends TestCase {
 		assertFalse( "Service is not stopped.", service.isRunning() );
 	}
 
+	//	public void testWrite() throws Exception {
+	//		ServerService server = new ServerService( PORT );
+	//		server.startAndWait();
 	//
-	// public void testWrite() throws Exception {
-	// SocketService service = new SocketService( server.getLocalPort() );
-	// assertFalse( "Service should not be running.", service.isRunning() );
-	// service.startAndWait();
-	// assertTrue( "Service is not running.", service.isRunning() );
+	//		SocketService service = new SocketService( server.getLocalPort() );
+	//		assertFalse( "Service should not be running.", service.isRunning() );
+	//		service.startAndWait();
+	//		assertTrue( "Service is not running.", service.isRunning() );
 	//
-	// String message = "Test message.";
-	// service.getOutputStream().write( message.getBytes( Charset.forName(
-	// "US-ASCII" ) ) );
-	// assertEquals( "Incorrect message.", message, server.getMessage(
-	// message.length() ) );
+	//		String message = "Test message.";
+	//		service.getOutputStream().write( message.getBytes( Charset.forName( "US-ASCII" ) ) );
+	//		assertEquals( "Incorrect message.", message, server.getMessage( message.length() ) );
 	//
-	// service.stopAndWait();
-	// assertFalse( "Service is not stopped.", service.isRunning() );
-	// }
+	//		service.stopAndWait();
+	//		assertFalse( "Service is not stopped.", service.isRunning() );
+	//
+	//		server.stopAndWait();
+	//	}
 
 }
