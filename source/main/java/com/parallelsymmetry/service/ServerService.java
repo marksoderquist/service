@@ -2,18 +2,21 @@ package com.parallelsymmetry.service;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
+import java.nio.channels.AsynchronousCloseException;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 
 import com.parallelsymmetry.util.Log;
 import com.parallelsymmetry.util.TripLock;
 
 public class ServerService extends IOService {
 
+	private String host;
+
 	private int port;
 
-	private ServerSocket server;
+	private ServerSocketChannel server;
 
 	private ServerRunner runner;
 
@@ -26,15 +29,20 @@ public class ServerService extends IOService {
 	}
 
 	public ServerService( int port ) {
-		this( null, 0 );
+		this( null, port );
+	}
+
+	public ServerService( String host, int port ) {
+		this( null, host, port );
 	}
 
 	public ServerService( String name ) {
 		this( name, 0 );
 	}
 
-	public ServerService( String name, int port ) {
+	public ServerService( String name, String host, int port ) {
 		super( name );
+		this.host = host;
 		this.port = port;
 	}
 
@@ -44,15 +52,16 @@ public class ServerService extends IOService {
 
 	public int getLocalPort() {
 		if( server == null ) return 0;
-		return server.getLocalPort();
+		return server.socket().getLocalPort();
 	}
 
 	@Override
 	protected final void connect() throws Exception {
 		Log.write( Log.DEBUG, getName() + ": Connecting..." );
-		server = new ServerSocket();
-		server.setReuseAddress( true );
-		server.bind( new InetSocketAddress( port ) );
+		InetSocketAddress address = host == null ? new InetSocketAddress( port ) : new InetSocketAddress( host, port );
+		server = ServerSocketChannel.open();
+		server.socket().setReuseAddress( true );
+		server.socket().bind( address );
 		runner = new ServerRunner();
 		runner.start();
 		startlock.resetAndHold();
@@ -118,17 +127,17 @@ public class ServerService extends IOService {
 		}
 
 		public void run() {
+			SocketChannel channel = null;
 			Socket socket = null;
 			while( execute ) {
 				try {
 					startlock.trip();
 					connectlock.reset();
-					socket = server.accept();
+					channel = server.accept();
+					socket = channel.socket();
 					handleSocket( socket );
-				} catch( SocketException exception ) {
-					if( !"socket closed".equals( exception.getMessage().toLowerCase() ) ) {
-						Log.write( exception );
-					}
+				} catch( AsynchronousCloseException exception ) {
+					// Intentionally ignore exception.
 				} catch( IOException exception ) {
 					Log.write( exception );
 				}
