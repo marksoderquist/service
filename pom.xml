@@ -105,14 +105,14 @@
             <goals>
               <goal>sign</goal>
             </goals>
+				    <configuration>
+				      <keystore>/home/parasymm/parallelsymmetry.keystore</keystore>
+				      <alias>software</alias>
+				      <storepass>parallelsymmetry</storepass>
+				      <verify>true</verify>
+				    </configuration>
           </execution>
         </executions>
-        <configuration>
-          <keystore>/home/parasymm/parallelsymmetry.keystore</keystore>
-          <alias>software</alias>
-          <storepass>parallelsymmetry</storepass>
-          <verify>true</verify>
-        </configuration>
 			</plugin>
 
 			<plugin>
