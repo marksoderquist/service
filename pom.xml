@@ -102,6 +102,7 @@
 				<artifactId>maven-jar-plugin</artifactId>
 				<executions>
           <execution>
+          	<id>sign</id>
             <goals>
               <goal>sign</goal>
             </goals>
