@@ -63,7 +63,7 @@ public abstract class IOService extends Service {
 
 	@Override
 	protected void startService() throws Exception {
-		reconnect();
+		reconnect( 3 );
 	}
 
 	@Override
@@ -72,7 +72,13 @@ public abstract class IOService extends Service {
 	}
 
 	protected void reconnect() {
-		while( shouldExecute() ) {
+		reconnect( 0 );
+	}
+
+	protected void reconnect( int attempts ) {
+		int attempt = 0;
+		while( shouldExecute() && ( attempts > 0 && attempt < attempts ) ) {
+			attempt++;
 			try {
 				if( connected ) internalDisconnect();
 				internalConnect();

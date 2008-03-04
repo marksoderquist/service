@@ -131,8 +131,8 @@ public class ServerService extends IOService {
 			Socket socket = null;
 			while( execute ) {
 				try {
-					startlock.trip();
 					connectlock.reset();
+					startlock.trip();
 					channel = server.accept();
 					socket = channel.socket();
 					handleSocket( socket );
