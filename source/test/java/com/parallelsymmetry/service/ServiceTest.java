@@ -2,7 +2,6 @@ package com.parallelsymmetry.service;
 
 import junit.framework.TestCase;
 
-import com.parallelsymmetry.service.Service;
 import com.parallelsymmetry.util.Log;
 import com.parallelsymmetry.util.ThreadUtil;
 
@@ -25,14 +24,14 @@ public class ServiceTest extends TestCase {
 
 		service.start();
 		assertEquals( Service.State.STARTING, service.getState() );
-		ThreadUtil.pause( service.getStartPause() * 2 );
+		service.waitForStartup();
 		assertEquals( Service.State.STARTED, service.getState() );
 		assertEquals( "Wrong start call count.", 1, service.getStartServiceCount() );
 		assertEquals( "Wrong stop call count.", 0, service.getStopServiceCount() );
 
 		service.stop();
 		assertEquals( Service.State.STOPPING, service.getState() );
-		ThreadUtil.pause( service.getStartPause() * 2 );
+		service.waitForShutdown();
 		assertEquals( Service.State.STOPPED, service.getState() );
 		assertEquals( "Wrong start call count.", 1, service.getStartServiceCount() );
 		assertEquals( "Wrong stop call count.", 1, service.getStopServiceCount() );
