@@ -62,7 +62,7 @@ public abstract class Service {
 	 * Start the Service. This method creates the service thread and returns
 	 * immediately.
 	 */
-	public final synchronized void start() {
+	public final void start() {
 		if( getState() != State.STOPPED ) return;
 
 		stoplock.hold();
@@ -84,13 +84,13 @@ public abstract class Service {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public final synchronized void startAndWait() throws Exception {
+	public final void startAndWait() throws Exception {
 		start();
 		waitForStartup();
 		if( exception != null ) throw new Exception( exception );
 	}
 
-	public final synchronized void startAndWait( int timeout ) throws Exception {
+	public final void startAndWait( int timeout ) throws Exception {
 		start();
 		waitForStartup( timeout );
 		if( exception != null ) throw new Exception( exception );
@@ -100,7 +100,7 @@ public abstract class Service {
 	 * Stop the Service. This method interrupts the service thread and returns
 	 * immediately.
 	 */
-	public final synchronized void stop() {
+	public final void stop() {
 		if( getState() != State.STARTED ) {
 			Log.write( Log.TRACE, "State not started...is: " + getStatus() );
 			return;
@@ -119,13 +119,13 @@ public abstract class Service {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public final synchronized void stopAndWait() throws Exception {
+	public final void stopAndWait() throws Exception {
 		stop();
 		waitForShutdown();
 		if( exception != null ) throw new Exception( exception );
 	}
 
-	public final synchronized void stopAndWait( int timeout ) throws Exception {
+	public final void stopAndWait( int timeout ) throws Exception {
 		stop();
 		waitForShutdown( timeout );
 		if( exception != null ) throw new Exception( exception );
@@ -136,7 +136,7 @@ public abstract class Service {
 	 * 
 	 * @throws IOException
 	 */
-	public final synchronized void restart() throws Exception {
+	public final void restart() throws Exception {
 		// Don't use start() and stop(), they cause threading issues.
 		Log.write( Log.TRACE, getName() + ".restart(): Calling stopAndWait()..." );
 		stopAndWait();
