@@ -19,6 +19,7 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testStartAndStop() throws Exception {
+		Log.write( "testStartAndStop()..." );
 		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 
@@ -38,6 +39,7 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testDoubleStart() throws Exception {
+		Log.write( "testDoubleStart()..." );
 		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 		service.start();
@@ -56,6 +58,7 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testStartAndWait() throws Exception {
+		Log.write( "testStartAndWait()..." );
 		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 		service.startAndWait();
@@ -69,6 +72,7 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testStop() throws Exception {
+		Log.write( "testStop()..." );
 		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 		service.start();
@@ -84,6 +88,7 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testDoubleStop() throws Exception {
+		Log.write( "testDoubleStop()..." );
 		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 		service.start();
@@ -102,6 +107,7 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testStopAndWait() throws Exception {
+		Log.write( "testStopAndWait()..." );
 		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 		service.startAndWait();
@@ -115,6 +121,7 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testRestart() throws Exception {
+		Log.write( "testRestart()..." );
 		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 		service.startAndWait();
@@ -132,6 +139,7 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testFastRestarts() throws Exception {
+		Log.write( "testFastRestarts()..." );
 		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 		service.startAndWait();

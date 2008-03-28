@@ -63,7 +63,11 @@ public abstract class Service {
 	 * immediately.
 	 */
 	public final void start() {
-		if( getState() != State.STOPPED ) return;
+		//if( getState() == State.STARTING ) return;
+		if( getState() != State.STOPPED ) {
+			Log.write( Log.TRACE, getName() + ": State not stopped...is: " + getStatus() );
+			return;
+		}
 
 		stoplock.hold();
 
@@ -101,9 +105,10 @@ public abstract class Service {
 	 * immediately.
 	 */
 	public final void stop() {
+		// FIXME Put a spin lock here.
 		if( getState() != State.STARTED ) {
-			Log.write( Log.TRACE, "State not started...is: " + getStatus() );
-			return;
+			Log.write( Log.TRACE, getName() + ": State not started...is: " + getStatus() );
+			//return;
 		}
 
 		startlock.hold();
