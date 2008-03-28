@@ -62,11 +62,17 @@ public abstract class Service {
 	 * Start the Service. This method creates the service thread and returns
 	 * immediately.
 	 */
-	public final void start() {
-		//if( getState() == State.STARTING ) return;
-		if( getState() != State.STOPPED ) {
-			Log.write( Log.TRACE, getName() + ": State not stopped...is: " + getStatus() );
-			return;
+	public final boolean start() {
+		State state = this.state;
+		if( state == State.STARTED ) return false;
+		if( state == State.STARTING ) return false;
+		while( state == State.STOPPING ) {
+			try {
+				waitForShutdown();
+			} catch( InterruptedException e ) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 
 		stoplock.hold();
@@ -79,6 +85,8 @@ public abstract class Service {
 		thread.setDaemon( true );
 		thread.start();
 		startuplock.hold();
+
+		return true;
 	}
 
 	/**
@@ -89,15 +97,12 @@ public abstract class Service {
 	 * @throws InterruptedException
 	 */
 	public final void startAndWait() throws Exception {
-		start();
-		// FIXME StartAndWait() will hang here if start() exited early.
-		waitForStartup();
+		if( start() ) waitForStartup();
 		if( exception != null ) throw new Exception( exception );
 	}
 
 	public final void startAndWait( int timeout ) throws Exception {
-		start();
-		waitForStartup( timeout );
+		if( start() ) waitForStartup( timeout );
 		if( exception != null ) throw new Exception( exception );
 	}
 
@@ -105,16 +110,25 @@ public abstract class Service {
 	 * Stop the Service. This method interrupts the service thread and returns
 	 * immediately.
 	 */
-	public final void stop() {
-		if( getState() != State.STARTED ) {
-			Log.write( Log.TRACE, getName() + ": State not started...is: " + getStatus() );
-			return;
+	public final boolean stop() {
+		State state = this.state;
+		if( state == State.STOPPED ) return false;
+		if( state == State.STOPPING ) return false;
+		while( state == State.STARTING ) {
+			try {
+				waitForStartup();
+			} catch( InterruptedException e ) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 
 		startlock.hold();
 		shutdownlock.reset();
 		runlock.trip();
 		shutdownlock.hold();
+
+		return true;
 	}
 
 	/**
@@ -125,15 +139,12 @@ public abstract class Service {
 	 * @throws InterruptedException
 	 */
 	public final void stopAndWait() throws Exception {
-		stop();
-		// FIXME StopAndWait() will hang here if stop() exited early.
-		waitForShutdown();
+		if( stop() ) waitForShutdown();
 		if( exception != null ) throw new Exception( exception );
 	}
 
 	public final void stopAndWait( int timeout ) throws Exception {
-		stop();
-		waitForShutdown( timeout );
+		if( stop() ) waitForShutdown( timeout );
 		if( exception != null ) throw new Exception( exception );
 	}
 
@@ -143,7 +154,7 @@ public abstract class Service {
 	 * @throws IOException
 	 */
 	public final void restart() throws Exception {
-		// Don't use start() and stop(), they cause threading issues.
+		// Don't use start() and stop() because they are asynchronous.
 		Log.write( Log.TRACE, getName() + ".restart(): Calling stopAndWait()..." );
 		stopAndWait();
 		Log.write( Log.TRACE, getName() + ".restart(): stopAndWait() finished." );
