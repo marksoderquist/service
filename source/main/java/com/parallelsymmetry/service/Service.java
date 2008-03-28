@@ -108,7 +108,7 @@ public abstract class Service {
 		// FIXME Put a spin lock here.
 		if( getState() != State.STARTED ) {
 			Log.write( Log.TRACE, getName() + ": State not started...is: " + getStatus() );
-			//return;
+			return;
 		}
 
 		startlock.hold();
