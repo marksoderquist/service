@@ -90,6 +90,7 @@ public abstract class Service {
 	 */
 	public final void startAndWait() throws Exception {
 		start();
+		// FIXME StartAndWait() will hang here if start() exited early.
 		waitForStartup();
 		if( exception != null ) throw new Exception( exception );
 	}
@@ -105,7 +106,6 @@ public abstract class Service {
 	 * immediately.
 	 */
 	public final void stop() {
-		// FIXME Put a spin lock here.
 		if( getState() != State.STARTED ) {
 			Log.write( Log.TRACE, getName() + ": State not started...is: " + getStatus() );
 			return;
@@ -126,6 +126,7 @@ public abstract class Service {
 	 */
 	public final void stopAndWait() throws Exception {
 		stop();
+		// FIXME StopAndWait() will hang here if stop() exited early.
 		waitForShutdown();
 		if( exception != null ) throw new Exception( exception );
 	}
