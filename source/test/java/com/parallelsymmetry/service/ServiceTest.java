@@ -3,14 +3,14 @@ package com.parallelsymmetry.service;
 import junit.framework.TestCase;
 
 import com.parallelsymmetry.util.Log;
-import com.parallelsymmetry.util.ThreadUtil;
 
-public class ServiceTest extends TestCase {
+public abstract class ServiceTest extends TestCase {
+
+	protected CountingService service;
 
 	@Override
 	public void setUp() {
 		Log.setLevel( Log.NONE );
-		Log.write();
 	}
 
 	@Override
@@ -20,7 +20,6 @@ public class ServiceTest extends TestCase {
 
 	public void testStartAndStop() throws Exception {
 		Log.write( "testStartAndStop()..." );
-		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 
 		service.start();
@@ -40,7 +39,6 @@ public class ServiceTest extends TestCase {
 
 	public void testDoubleStart() throws Exception {
 		Log.write( "testDoubleStart()..." );
-		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 		service.start();
 		service.start();
@@ -59,7 +57,6 @@ public class ServiceTest extends TestCase {
 
 	public void testStartAndWait() throws Exception {
 		Log.write( "testStartAndWait()..." );
-		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 		service.startAndWait();
 		assertTrue( service.isRunning() );
@@ -73,7 +70,6 @@ public class ServiceTest extends TestCase {
 
 	public void testStop() throws Exception {
 		Log.write( "testStop()..." );
-		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 		service.start();
 		service.waitForStartup();
@@ -87,28 +83,27 @@ public class ServiceTest extends TestCase {
 		assertEquals( "Wrong stop call count.", 1, service.getStopServiceCount() );
 	}
 
-	public void testDoubleStop() throws Exception {
-		Log.write( "testDoubleStop()..." );
-		CountingService service = new CountingService();
-		assertFalse( service.isRunning() );
-		service.start();
-		service.waitForStartup();
-		assertTrue( service.isRunning() );
-		assertEquals( "Wrong start call count.", 1, service.getStartServiceCount() );
-		assertEquals( "Wrong stop call count.", 0, service.getStopServiceCount() );
-		service.stop();
-		service.stop();
-		service.waitForShutdown();
-		service.stop();
-		service.waitForShutdown();
-		assertFalse( service.isRunning() );
-		assertEquals( "Wrong start call count.", 1, service.getStartServiceCount() );
-		assertEquals( "Wrong stop call count.", 1, service.getStopServiceCount() );
-	}
+	//	public void testDoubleStop() throws Exception {
+	//		Log.write( "testDoubleStop()..." );
+	//		CountingService service = new CountingService();
+	//		assertFalse( service.isRunning() );
+	//		service.start();
+	//		service.waitForStartup();
+	//		assertTrue( service.isRunning() );
+	//		assertEquals( "Wrong start call count.", 1, service.getStartServiceCount() );
+	//		assertEquals( "Wrong stop call count.", 0, service.getStopServiceCount() );
+	//		service.stop();
+	//		service.stop();
+	//		service.waitForShutdown();
+	//		service.stop();
+	//		service.waitForShutdown();
+	//		assertFalse( service.isRunning() );
+	//		assertEquals( "Wrong start call count.", 1, service.getStartServiceCount() );
+	//		assertEquals( "Wrong stop call count.", 1, service.getStopServiceCount() );
+	//	}
 
 	public void testStopAndWait() throws Exception {
 		Log.write( "testStopAndWait()..." );
-		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 		service.startAndWait();
 		assertTrue( service.isRunning() );
@@ -122,7 +117,6 @@ public class ServiceTest extends TestCase {
 
 	public void testRestart() throws Exception {
 		Log.write( "testRestart()..." );
-		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 		service.startAndWait();
 		assertTrue( service.isRunning() );
@@ -140,7 +134,6 @@ public class ServiceTest extends TestCase {
 
 	public void testFastRestarts() throws Exception {
 		Log.write( "testFastRestarts()..." );
-		CountingService service = new CountingService();
 		assertFalse( service.isRunning() );
 		service.startAndWait();
 		assertTrue( service.isRunning() );
@@ -157,50 +150,6 @@ public class ServiceTest extends TestCase {
 		assertFalse( service.isRunning() );
 		assertEquals( "Wrong start call count.", count + 1, service.getStartServiceCount() );
 		assertEquals( "Wrong stop call count.", count + 1, service.getStopServiceCount() );
-	}
-
-	private class CountingService extends Service {
-
-		private final int startPause = 10;
-
-		private final int stopPause = 10;
-
-		private int startServiceCount;
-
-		private int stopServiceCount;
-
-		@Override
-		protected void startService() {
-			startServiceCount++;
-			ThreadUtil.pause( startPause );
-		}
-
-		@Override
-		protected void stopService() {
-			stopServiceCount++;
-			ThreadUtil.pause( stopPause );
-		}
-
-		public void reset() {
-			startServiceCount = 0;
-			stopServiceCount = 0;
-		}
-
-		public int getStartPause() {
-			return startPause;
-		}
-
-		public int getStopPause() {
-			return stopPause;
-		}
-
-		public int getStartServiceCount() {
-			return startServiceCount;
-		}
-
-		public int getStopServiceCount() {
-			return stopServiceCount;
-		}
 	}
 
 }

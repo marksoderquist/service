@@ -13,7 +13,7 @@ public class ServerServiceTest extends TestCase {
 
 	@Override
 	public void setUp() {
-		Log.setLevel( Log.DEBUG );
+		Log.setLevel( Log.NONE );
 	}
 
 	@Override

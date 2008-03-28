@@ -16,42 +16,27 @@ import com.parallelsymmetry.util.TripLock;
 public abstract class Service {
 
 	public enum State {
-		STARTING, STARTED, STOPPING, STOPPED
-	};
-
-	public enum EventType {
 		STARTING, STARTED, STOPPING, STOPPED, CONNECTING, CONNECTED, DISCONNECTING, DISCONNECTED
-	}
+	};
 
 	private String name = ClassUtil.getClassNameOnly( getClass() );
 
 	private Thread thread;
 
-	private volatile State state = State.STOPPED;
-
-	private final Object statelock = new Object();
-
-	private final Object stateChangeLock = new Object();
-
-	private final TripLock startlock = new TripLock();
-
-	private final TripLock runlock = new TripLock();
-
-	private final TripLock stoplock = new TripLock( true );
-
-	private final TripLock startuplock = new TripLock();
-
-	private final TripLock shutdownlock = new TripLock( true );
-
-	private Exception exception;
+	private State state = State.STOPPED;
 
 	private Set<ServiceListener> listeners = new HashSet<ServiceListener>();
 
-	protected Service() {}
+	protected Service() {
+		this( null );
+	}
 
 	protected Service( String name ) {
-		this();
 		if( name != null ) this.name = name;
+		thread = new Thread( new ServiceRunner(), this.name );
+		thread.setPriority( Thread.NORM_PRIORITY );
+		thread.setDaemon( true );
+		thread.start();
 	}
 
 	public String getName() {
@@ -62,31 +47,8 @@ public abstract class Service {
 	 * Start the Service. This method creates the service thread and returns
 	 * immediately.
 	 */
-	public final boolean start() {
-		State state = this.state;
-		if( state == State.STARTED ) return false;
-		if( state == State.STARTING ) return false;
-		while( state == State.STOPPING ) {
-			try {
-				waitForShutdown();
-			} catch( InterruptedException e ) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-
-		stoplock.hold();
-
-		runlock.reset();
-
-		startuplock.reset();
-		thread = new Thread( new ServiceRunner(), name );
-		thread.setPriority( Thread.NORM_PRIORITY );
-		thread.setDaemon( true );
-		thread.start();
-		startuplock.hold();
-
-		return true;
+	public final void start() {
+		if( state == State.STOPPED ) changeState( State.STARTING );
 	}
 
 	/**
@@ -97,38 +59,20 @@ public abstract class Service {
 	 * @throws InterruptedException
 	 */
 	public final void startAndWait() throws Exception {
-		if( start() ) waitForStartup();
-		if( exception != null ) throw new Exception( exception );
+		startAndWait( 0 );
 	}
 
 	public final void startAndWait( int timeout ) throws Exception {
-		if( start() ) waitForStartup( timeout );
-		if( exception != null ) throw new Exception( exception );
+		start();
+		waitForStartup( timeout );
 	}
 
 	/**
 	 * Stop the Service. This method interrupts the service thread and returns
 	 * immediately.
 	 */
-	public final boolean stop() {
-		State state = this.state;
-		if( state == State.STOPPED ) return false;
-		if( state == State.STOPPING ) return false;
-		while( state == State.STARTING ) {
-			try {
-				waitForStartup();
-			} catch( InterruptedException e ) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-
-		startlock.hold();
-		shutdownlock.reset();
-		runlock.trip();
-		shutdownlock.hold();
-
-		return true;
+	public final void stop() {
+		if( state == State.STARTED ) changeState( State.STOPPING );
 	}
 
 	/**
@@ -139,13 +83,12 @@ public abstract class Service {
 	 * @throws InterruptedException
 	 */
 	public final void stopAndWait() throws Exception {
-		if( stop() ) waitForShutdown();
-		if( exception != null ) throw new Exception( exception );
+		stopAndWait( 0 );
 	}
 
 	public final void stopAndWait( int timeout ) throws Exception {
-		if( stop() ) waitForShutdown( timeout );
-		if( exception != null ) throw new Exception( exception );
+		stop();
+		waitForShutdown( timeout );
 	}
 
 	/**
@@ -170,7 +113,7 @@ public abstract class Service {
 	 * @return True if running, false otherwise.
 	 */
 	public final boolean isRunning() {
-		return getState() == State.STARTED;
+		return state == State.STARTED;
 	}
 
 	public final boolean isServiceThread() {
@@ -178,7 +121,7 @@ public abstract class Service {
 	}
 
 	public final boolean shouldExecute() {
-		State state = getState();
+		State state = this.state;
 		return state == State.STARTED || state == State.STARTING;
 	}
 
@@ -197,13 +140,11 @@ public abstract class Service {
 	 * @throws InterruptedException
 	 */
 	public final void waitForStartup() throws InterruptedException {
-		Log.write( Log.TRACE, getName() + ": Waiting for start lock." );
-		startlock.hold();
-		Log.write( Log.TRACE, getName() + ": Start lock tripped." );
+		waitForStartup( 0 );
 	}
 
 	public final void waitForStartup( int timeout ) throws InterruptedException {
-		startlock.hold( timeout );
+		waitForState( State.STARTED );
 	}
 
 	/**
@@ -213,13 +154,11 @@ public abstract class Service {
 	 * @throws InterruptedException
 	 */
 	public final void waitForShutdown() throws InterruptedException {
-		Log.write( Log.TRACE, getName() + ": Waiting for stop lock." );
-		stoplock.hold();
-		Log.write( Log.TRACE, getName() + ": Stop lock tripped." );
+		waitForShutdown( 0 );
 	}
 
 	public final void waitForShutdown( int timeout ) throws InterruptedException {
-		stoplock.hold( timeout );
+		waitForState( State.STOPPED );
 	}
 
 	public final void addListener( ServiceListener listener ) {
@@ -250,70 +189,8 @@ public abstract class Service {
 	 */
 	protected abstract void stopService() throws Exception;
 
-	private final void startup() throws Exception {
-		if( getState() == State.STARTING ) {
-			return;
-		}
-
-		if( getState() == State.STARTED ) {
-			Log.write( Log.WARN, getName() + " already started." );
-			return;
-		}
-
-		synchronized( stateChangeLock ) {
-			Log.write( Log.TRACE, "Starting " + getName() + "..." );
-			try {
-				stoplock.reset();
-				setState( State.STARTING );
-				startuplock.trip();
-				fireEvent( EventType.STARTING );
-				startService();
-				setState( State.STARTED );
-				fireEvent( EventType.STARTED );
-				Log.write( Log.TRACE, getName() + " started." );
-			} finally {
-				Log.write( Log.DEBUG, getName() + ": Notify from startup." );
-				startlock.trip();
-			}
-		}
-	}
-
-	private final void shutdown() throws Exception {
-		if( getState() == State.STOPPING ) {
-			return;
-		}
-
-		if( getState() == State.STOPPED ) {
-			Log.write( Log.WARN, getName() + " already shutdown." );
-			return;
-		}
-
-		synchronized( stateChangeLock ) {
-			Log.write( Log.TRACE, "Stopping " + getName() + "..." );
-			try {
-				startlock.reset();
-				setState( State.STOPPING );
-				shutdownlock.trip();
-				fireEvent( EventType.STOPPING );
-				stopService();
-				setState( State.STOPPED );
-				fireEvent( EventType.STOPPED );
-				Log.write( Log.TRACE, getName() + " stopped." );
-			} finally {
-				Log.write( Log.DEBUG, getName() + ": Notify from shutdown." );
-				stoplock.trip();
-			}
-		}
-	}
-
-	private final void setState( State state ) {
-		synchronized( statelock ) {
-			this.state = state;
-		}
-	}
-
-	protected final void fireEvent( EventType type ) {
-		fireEvent( new ServiceEvent( this, type ) );
+	protected final void fireEvent( State state ) {
+		fireEvent( new ServiceEvent( this, state ) );
 	}
 
 	protected final void fireEvent( ServiceEvent event ) {
@@ -322,27 +199,64 @@ public abstract class Service {
 		}
 	}
 
-	private final class ServiceRunner implements Runnable {
+	private final void startup() throws Exception {
+		changeState( State.STARTING );
+		try {
+			startService();
+		} finally {
+			changeState( State.STARTED );
+		}
+	}
+
+	private final void shutdown() throws Exception {
+		changeState( State.STOPPING );
+		try {
+			stopService();
+		} finally {
+			changeState( State.STOPPED );
+		}
+	}
+
+	private void changeState( State state ) {
+		this.state = state;
+		synchronized( state ) {
+			state.notifyAll();
+		}
+		fireEvent( state );
+	}
+
+	private void waitForState( State state ) throws InterruptedException {
+		synchronized( state ) {
+			while( this.state != state ) {
+				state.wait();
+			}
+		}
+	}
+
+	private final class ServiceRunner extends TripLock implements Runnable {
+
 		/**
 		 * The implementation of the Runnable interface.
 		 */
 		@Override
 		public void run() {
 			try {
-				startup();
-				runlock.hold();
-			} catch( Exception exception ) {
-				Service.this.exception = exception;
-				Log.write( exception );
-			} finally {
-				try {
-					shutdown();
-				} catch( InterruptedException exception ) {
-					Log.write( Log.ERROR, Thread.currentThread().getName() + " interrupted." );
-				} catch( Exception exception ) {
-					Service.this.exception = exception;
-					Log.write( exception );
+				while( true ) {
+					waitForState( State.STARTING );
+					try {
+						startup();
+					} catch( Exception exception ) {
+						Log.write( exception );
+					}
+					waitForState( State.STOPPING );
+					try {
+						shutdown();
+					} catch( Exception exception ) {
+						Log.write( exception );
+					}
 				}
+			} catch( InterruptedException exception ) {
+				// Intentionally ignore exception.
 			}
 		}
 

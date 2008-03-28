@@ -4,19 +4,19 @@ public class ServiceEvent {
 
 	private Service service;
 
-	private Service.EventType type;
+	private Service.State state;
 
-	public ServiceEvent( Service service, Service.EventType type ) {
+	public ServiceEvent( Service service, Service.State type ) {
 		this.service = service;
-		this.type = type;
+		this.state = type;
 	}
 
 	public Service getService() {
 		return service;
 	}
 
-	public Service.EventType getType() {
-		return type;
+	public Service.State getState() {
+		return state;
 	}
 
 }
