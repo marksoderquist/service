@@ -71,6 +71,15 @@ public class ServerServiceTest extends TestCase {
 		service.restart();
 		assertTrue( "Service is not running.", service.isRunning() );
 
+		service.restart();
+		assertTrue( "Service is not running.", service.isRunning() );
+
+		service.restart();
+		assertTrue( "Service is not running.", service.isRunning() );
+
+		service.restart();
+		assertTrue( "Service is not running.", service.isRunning() );
+
 		service.stopAndWait();
 		assertFalse( "Service is not stopped.", service.isRunning() );
 	}
