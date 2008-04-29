@@ -63,8 +63,9 @@ public class ServerService extends IOService {
 		server.socket().setReuseAddress( true );
 		server.socket().bind( address );
 		runner = new ServerRunner();
+		startlock.reset();
 		runner.start();
-		startlock.resetAndHold();
+		startlock.hold();
 		startServer();
 		Log.write( Log.DEBUG, getName() + ": Connected." );
 	}
