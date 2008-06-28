@@ -8,7 +8,7 @@ import com.parallelsymmetry.util.Log;
 
 public abstract class IOService extends Service {
 
-	private static final int RECONNECT_WAIT = 10000;
+	private static final int RECONNECT_WAIT = 1000;
 
 	private InputStream input = new ServiceInputStream();
 
