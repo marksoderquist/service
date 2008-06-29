@@ -72,7 +72,7 @@ public abstract class IOService extends Service {
 	}
 
 	protected void reconnect() {
-		reconnect( 0 );
+		reconnect( 1 );
 	}
 
 	protected void reconnect( int attempts ) {

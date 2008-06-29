@@ -32,12 +32,12 @@ public class ServerService extends IOService {
 		this( null, port );
 	}
 
-	public ServerService( String host, int port ) {
-		this( null, host, port );
-	}
-
 	public ServerService( String name ) {
 		this( name, 0 );
+	}
+
+	public ServerService( String name, int port ) {
+		this( name, null, port );
 	}
 
 	public ServerService( String name, String host, int port ) {
@@ -57,8 +57,8 @@ public class ServerService extends IOService {
 
 	@Override
 	protected final void connect() throws Exception {
-		Log.write( Log.DEBUG, getName() + ": Connecting..." );
 		InetSocketAddress address = host == null ? new InetSocketAddress( port ) : new InetSocketAddress( host, port );
+		Log.write( Log.DEBUG, getName() + ": Starting on " + address + "..." );
 		server = ServerSocketChannel.open();
 		server.socket().setReuseAddress( true );
 		server.socket().bind( address );
@@ -67,7 +67,7 @@ public class ServerService extends IOService {
 		runner.start();
 		startlock.hold();
 		startServer();
-		Log.write( Log.DEBUG, getName() + ": Connected." );
+		Log.write( Log.DEBUG, getName() + ": Started on " + address + "." );
 	}
 
 	@Override
