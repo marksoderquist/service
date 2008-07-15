@@ -62,6 +62,14 @@ public abstract class Service {
 		startAndWait( 0 );
 	}
 
+	/**
+	 * Start the Service and wait for the start operation to complete or the
+	 * timeout has elapsed before returning. A timeout of zero will wait
+	 * indefinitely.
+	 * 
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
 	public final void startAndWait( int timeout ) throws Exception {
 		start();
 		waitForStartup( timeout );
