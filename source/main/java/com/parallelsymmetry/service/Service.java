@@ -32,7 +32,8 @@ public abstract class Service {
 	}
 
 	protected Service( String name ) {
-		if( name != null ) this.name = name;
+		setName( name );
+
 		thread = new Thread( new ServiceRunner(), this.name );
 		thread.setPriority( Thread.NORM_PRIORITY );
 		thread.setDaemon( true );
@@ -41,6 +42,10 @@ public abstract class Service {
 
 	public String getName() {
 		return name;
+	}
+
+	public void setName( String name ) {
+		this.name = name != null ? name : ClassUtil.getClassNameOnly( getClass() );
 	}
 
 	/**
