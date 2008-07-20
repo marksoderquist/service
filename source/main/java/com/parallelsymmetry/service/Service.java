@@ -157,7 +157,7 @@ public abstract class Service {
 	}
 
 	public final void waitForStartup( int timeout ) throws InterruptedException {
-		waitForState( State.STARTED );
+		waitForState( State.STARTED, timeout );
 	}
 
 	/**
@@ -171,7 +171,7 @@ public abstract class Service {
 	}
 
 	public final void waitForShutdown( int timeout ) throws InterruptedException {
-		waitForState( State.STOPPED );
+		waitForState( State.STOPPED, timeout );
 	}
 
 	public final void addListener( ServiceListener listener ) {
@@ -231,17 +231,23 @@ public abstract class Service {
 	}
 
 	private void changeState( State state ) {
-		this.state = state;
-		synchronized( state ) {
-			state.notifyAll();
+		synchronized( State.class ) {
+			this.state = state;
+			State.class.notifyAll();
 		}
 		fireEvent( state );
 	}
 
 	private void waitForState( State state ) throws InterruptedException {
-		synchronized( state ) {
+		waitForState( state, 0 );
+	}
+
+	private void waitForState( State state, int timeout ) throws InterruptedException {
+		synchronized( State.class ) {
+			long mark = System.currentTimeMillis();
 			while( this.state != state ) {
-				state.wait();
+				State.class.wait( timeout );
+				if( timeout > 0 && System.currentTimeMillis() - mark > timeout ) return;
 			}
 		}
 	}

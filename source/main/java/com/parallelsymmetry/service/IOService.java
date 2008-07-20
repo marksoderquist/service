@@ -112,9 +112,9 @@ public abstract class IOService extends Service {
 
 	private final void internalDisconnect() throws Exception {
 		fireEvent( State.DISCONNECTING );
-		connected = false;
-		fireEvent( State.DISCONNECTED );
 		disconnect();
+		fireEvent( State.DISCONNECTED );
+		connected = false;
 	}
 
 	private class ServiceInputStream extends InputStream {

@@ -4,7 +4,7 @@ public class ExceptionServiceTest extends ServiceTest {
 
 	@Override
 	public void setUp() {
-		service = new CountingService( 0, 0 );
+		service = new ExceptionCountingService( 0, 0 );
 		super.setUp();
 	}
 
