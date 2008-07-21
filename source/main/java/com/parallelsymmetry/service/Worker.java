@@ -98,6 +98,7 @@ public abstract class Worker extends Service implements Runnable {
 				return;
 			}
 
+			startlock.reset();
 			thread = new Thread( this, getName() );
 			thread.setPriority( Thread.NORM_PRIORITY );
 			thread.setDaemon( Worker.this.daemon );

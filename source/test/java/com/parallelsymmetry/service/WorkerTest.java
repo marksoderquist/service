@@ -5,7 +5,6 @@ import java.io.InputStream;
 
 import junit.framework.TestCase;
 
-import com.parallelsymmetry.service.Worker;
 import com.parallelsymmetry.util.Log;
 import com.parallelsymmetry.util.ThreadUtil;
 
@@ -79,13 +78,11 @@ public class WorkerTest extends TestCase {
 
 		@Override
 		public void startWorker() {
-			Log.write( "Start worker..." );
 			startCount++;
 		}
 
 		@Override
 		public void stopWorker() {
-			Log.write( "Stop worker..." );
 			stopCount++;
 		}
 

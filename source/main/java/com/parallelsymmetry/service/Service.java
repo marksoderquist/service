@@ -6,7 +6,6 @@ import java.util.Set;
 
 import com.parallelsymmetry.util.ClassUtil;
 import com.parallelsymmetry.util.Log;
-import com.parallelsymmetry.util.TripLock;
 
 /**
  * The Service class is a generic service class.
@@ -17,7 +16,9 @@ public abstract class Service {
 
 	public enum State {
 		STARTING, STARTED, STOPPING, STOPPED, CONNECTING, CONNECTED, DISCONNECTING, DISCONNECTED
-	};
+	}
+
+	private static final int FOREVER = -1;
 
 	private String name = ClassUtil.getClassNameOnly( getClass() );
 
@@ -153,7 +154,7 @@ public abstract class Service {
 	 * @throws InterruptedException
 	 */
 	public final void waitForStartup() throws InterruptedException {
-		waitForStartup( 0 );
+		waitForStartup( FOREVER );
 	}
 
 	public final void waitForStartup( int timeout ) throws InterruptedException {
@@ -167,7 +168,7 @@ public abstract class Service {
 	 * @throws InterruptedException
 	 */
 	public final void waitForShutdown() throws InterruptedException {
-		waitForShutdown( 0 );
+		waitForShutdown( FOREVER );
 	}
 
 	public final void waitForShutdown( int timeout ) throws InterruptedException {
@@ -213,7 +214,6 @@ public abstract class Service {
 	}
 
 	private final void startup() throws Exception {
-		changeState( State.STARTING );
 		try {
 			startService();
 		} finally {
@@ -222,7 +222,6 @@ public abstract class Service {
 	}
 
 	private final void shutdown() throws Exception {
-		changeState( State.STOPPING );
 		try {
 			stopService();
 		} finally {
@@ -230,29 +229,38 @@ public abstract class Service {
 		}
 	}
 
+	private Object statelock = new Object();
+
 	private void changeState( State state ) {
-		synchronized( State.class ) {
+		if( this.state == state ) return;
+
+		synchronized( statelock ) {
 			this.state = state;
-			State.class.notifyAll();
+			statelock.notifyAll();
 		}
+
 		fireEvent( state );
 	}
 
 	private void waitForState( State state ) throws InterruptedException {
-		waitForState( state, 0 );
+		waitForState( state, FOREVER );
 	}
 
 	private void waitForState( State state, int timeout ) throws InterruptedException {
-		synchronized( State.class ) {
+		synchronized( statelock ) {
 			long mark = System.currentTimeMillis();
 			while( this.state != state ) {
-				State.class.wait( timeout );
-				if( timeout > 0 && System.currentTimeMillis() - mark > timeout ) return;
+				if( timeout == FOREVER ) {
+					statelock.wait();
+				} else {
+					statelock.wait( timeout );
+					if( System.currentTimeMillis() - mark > timeout ) return;
+				}
 			}
 		}
 	}
 
-	private final class ServiceRunner extends TripLock implements Runnable {
+	private final class ServiceRunner implements Runnable {
 
 		/**
 		 * The implementation of the Runnable interface.
@@ -275,7 +283,7 @@ public abstract class Service {
 					}
 				}
 			} catch( InterruptedException exception ) {
-				// Intentionally ignore exception.
+				Log.write( Log.ERROR, "Service runner failure.", exception );
 			}
 		}
 

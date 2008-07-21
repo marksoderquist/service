@@ -19,7 +19,7 @@ public abstract class ServiceTest extends TestCase {
 	}
 
 	public void testStartAndStop() throws Exception {
-		Log.write( "testStartAndStop()..." );
+		//Log.write( "testStartAndStop()..." );
 		assertFalse( service.isRunning() );
 
 		service.start();
@@ -36,7 +36,7 @@ public abstract class ServiceTest extends TestCase {
 	}
 
 	public void testDoubleStart() throws Exception {
-		Log.write( "testDoubleStart()..." );
+		//Log.write( "testDoubleStart()..." );
 		assertFalse( service.isRunning() );
 		service.start();
 		service.start();
@@ -54,7 +54,7 @@ public abstract class ServiceTest extends TestCase {
 	}
 
 	public void testStartAndWait() throws Exception {
-		Log.write( "testStartAndWait()..." );
+		//Log.write( "testStartAndWait()..." );
 		assertFalse( service.isRunning() );
 		service.startAndWait();
 		assertTrue( service.isRunning() );
@@ -67,7 +67,7 @@ public abstract class ServiceTest extends TestCase {
 	}
 
 	public void testStop() throws Exception {
-		Log.write( "testStop()..." );
+		//Log.write( "testStop()..." );
 		assertFalse( service.isRunning() );
 		service.start();
 		service.waitForStartup();
@@ -82,7 +82,7 @@ public abstract class ServiceTest extends TestCase {
 	}
 
 	public void testDoubleStop() throws Exception {
-		Log.write( "testDoubleStop()..." );
+		//Log.write( "testDoubleStop()..." );
 		assertFalse( service.isRunning() );
 		service.start();
 		service.waitForStartup();
@@ -100,7 +100,7 @@ public abstract class ServiceTest extends TestCase {
 	}
 
 	public void testStopAndWait() throws Exception {
-		Log.write( "testStopAndWait()..." );
+		//Log.write( "testStopAndWait()..." );
 		assertFalse( service.isRunning() );
 		service.startAndWait();
 		assertTrue( service.isRunning() );
@@ -113,7 +113,7 @@ public abstract class ServiceTest extends TestCase {
 	}
 
 	public void testRestart() throws Exception {
-		Log.write( "testRestart()..." );
+		//Log.write( "testRestart()..." );
 		assertFalse( service.isRunning() );
 		service.startAndWait();
 		assertTrue( service.isRunning() );
@@ -130,7 +130,7 @@ public abstract class ServiceTest extends TestCase {
 	}
 
 	public void testFastRestarts() throws Exception {
-		Log.write( "testFastRestarts()..." );
+		//Log.write( "testFastRestarts()..." );
 		assertFalse( service.isRunning() );
 		service.startAndWait();
 		assertTrue( service.isRunning() );

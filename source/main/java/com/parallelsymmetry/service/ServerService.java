@@ -83,7 +83,7 @@ public class ServerService extends IOService {
 	protected void stopServer() throws Exception {}
 
 	protected void handleSocket( Socket socket ) throws IOException {
-		Log.write( "Client connected: " + socket.getRemoteSocketAddress() );
+		Log.write( "Client connected: " + socket.getInetAddress() + ": " + socket.getPort() );
 		setRealInputStream( socket.getInputStream() );
 		setRealOutputStream( socket.getOutputStream() );
 

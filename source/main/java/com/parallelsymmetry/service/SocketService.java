@@ -31,7 +31,7 @@ public class SocketService extends IOService {
 	protected void connect() throws IOException {
 		Log.write( Log.DEBUG, getName() + ": Connecting..." );
 		socket = new Socket( host, port );
-		Log.write( "Connected to: " + host + ":" + port );
+		Log.write( "Connected to: " + socket.getInetAddress() + ":" + socket.getPort() );
 		setRealInputStream( socket.getInputStream() );
 		setRealOutputStream( socket.getOutputStream() );
 		Log.write( Log.DEBUG, getName() + ": Connected." );
