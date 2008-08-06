@@ -58,16 +58,16 @@ public class ServerService extends IOService {
 	@Override
 	protected final void connect() throws Exception {
 		InetSocketAddress address = host == null ? new InetSocketAddress( port ) : new InetSocketAddress( host, port );
-		Log.write( Log.DEBUG, getName() + ": Starting on " + address + "..." );
 		server = ServerSocketChannel.open();
 		server.socket().setReuseAddress( true );
 		server.socket().bind( address );
+		Log.write( Log.DEBUG, getName() + ": Starting on " + server.socket().getLocalSocketAddress() + "..." );
 		runner = new ServerRunner();
 		startlock.reset();
 		runner.start();
 		startlock.hold();
 		startServer();
-		Log.write( Log.DEBUG, getName() + ": Started on " + address + "." );
+		Log.write( Log.DEBUG, getName() + ": Started on " + server.socket().getLocalSocketAddress() + "." );
 	}
 
 	@Override
