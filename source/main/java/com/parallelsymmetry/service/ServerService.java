@@ -40,6 +40,10 @@ public class ServerService extends IOService {
 		this( name, null, port );
 	}
 
+	public ServerService( String name, String host ) {
+		this( name, host, 0 );
+	}
+
 	public ServerService( String name, String host, int port ) {
 		super( name );
 		this.host = host;
@@ -61,7 +65,7 @@ public class ServerService extends IOService {
 		server = ServerSocketChannel.open();
 		server.socket().setReuseAddress( true );
 		server.socket().bind( address );
-		Log.write( Log.DEBUG, getName() + ": Starting on " + server.socket().getLocalSocketAddress() + "..." );
+		Log.write( Log.DEBUG, getName() + ": Starting on " + address + "..." );
 		runner = new ServerRunner();
 		startlock.reset();
 		runner.start();
