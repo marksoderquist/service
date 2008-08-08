@@ -71,7 +71,7 @@ public class ServerService extends IOService {
 		runner.start();
 		startlock.hold();
 		startServer();
-		Log.write( Log.DEBUG, getName() + ": Started on " + server.socket().getLocalSocketAddress() + "." );
+		Log.write( Log.TRACE, getName() + ": Started on " + server.socket().getLocalSocketAddress() + "." );
 	}
 
 	@Override
@@ -79,7 +79,7 @@ public class ServerService extends IOService {
 		Log.write( Log.DEBUG, getName() + ": Disconnecting..." );
 		stopServer();
 		if( runner != null ) runner.stopAndWait();
-		Log.write( Log.DEBUG, getName() + ": Disconnected." );
+		Log.write( Log.TRACE, getName() + ": Disconnected." );
 	}
 
 	protected void startServer() throws Exception {}

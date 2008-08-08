@@ -112,12 +112,8 @@ public abstract class Service {
 	 */
 	public final void restart() throws Exception {
 		// Don't use start() and stop() because they are asynchronous.
-		Log.write( Log.TRACE, getName() + ".restart(): Calling stopAndWait()..." );
 		stopAndWait();
-		Log.write( Log.TRACE, getName() + ".restart(): stopAndWait() finished." );
-		Log.write( Log.TRACE, getName() + ".restart(): Calling startAndWait()..." );
 		startAndWait();
-		Log.write( Log.TRACE, getName() + ".restart(): startAndWait() finished." );
 	}
 
 	/**

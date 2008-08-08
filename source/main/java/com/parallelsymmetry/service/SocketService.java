@@ -34,7 +34,7 @@ public class SocketService extends IOService {
 		Log.write( "Connected to: " + socket.getInetAddress() + ":" + socket.getPort() );
 		setRealInputStream( socket.getInputStream() );
 		setRealOutputStream( socket.getOutputStream() );
-		Log.write( Log.DEBUG, getName() + ": Connected." );
+		Log.write( Log.TRACE, getName() + ": Connected." );
 	}
 
 	@Override
@@ -43,7 +43,7 @@ public class SocketService extends IOService {
 		if( socket != null ) socket.close();
 		setRealInputStream( null );
 		setRealOutputStream( null );
-		Log.write( Log.DEBUG, getName() + ": Disconnected." );
+		Log.write( Log.TRACE, getName() + ": Disconnected." );
 	}
 
 }
