@@ -4,7 +4,7 @@
 	
 	<groupId>com.parallelsymmetry</groupId>
 	<artifactId>service</artifactId>
-	<version>1.0</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	
 	<name>ParallelSymmetry Service Library</name>
