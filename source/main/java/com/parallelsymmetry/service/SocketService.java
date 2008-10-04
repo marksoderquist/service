@@ -1,6 +1,7 @@
 package com.parallelsymmetry.service;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
@@ -36,9 +37,9 @@ public class SocketService extends IOService {
 	@Override
 	protected void connect() throws IOException {
 		Log.write( Log.DEBUG, getName() + ": Connecting..." );
+		String server = host == null ? InetAddress.getLocalHost().getHostName() : host;
 		socket = new Socket();
-		socket.setKeepAlive( true );
-		socket.connect( new InetSocketAddress( host, port ), TIMEOUT * 1000 );
+		socket.connect( new InetSocketAddress( server, port ), TIMEOUT * 1000 );
 		Log.write( "Connected to: " + socket.getInetAddress() + ":" + socket.getPort() );
 		setRealInputStream( socket.getInputStream() );
 		setRealOutputStream( socket.getOutputStream() );
