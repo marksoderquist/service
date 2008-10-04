@@ -1,11 +1,17 @@
 package com.parallelsymmetry.service;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import com.parallelsymmetry.util.Log;
 
 public class SocketService extends IOService {
+
+	/**
+	 * The connection timeout in seconds.
+	 */
+	public static final int TIMEOUT = 5;
 
 	private String host;
 
@@ -30,7 +36,9 @@ public class SocketService extends IOService {
 	@Override
 	protected void connect() throws IOException {
 		Log.write( Log.DEBUG, getName() + ": Connecting..." );
-		socket = new Socket( host, port );
+		socket = new Socket();
+		socket.setKeepAlive( true );
+		socket.connect( new InetSocketAddress( host, port ), TIMEOUT * 1000 );
 		Log.write( "Connected to: " + socket.getInetAddress() + ":" + socket.getPort() );
 		setRealInputStream( socket.getInputStream() );
 		setRealOutputStream( socket.getOutputStream() );

@@ -14,11 +14,11 @@ public abstract class IOService extends Service {
 
 	private OutputStream output = new ServiceOutputStream();
 
-	private InputStream realInput;
+	private volatile InputStream realInput;
 
-	private OutputStream realOutput;
+	private volatile OutputStream realOutput;
 
-	private boolean stopOnException;
+	private final boolean stopOnException;
 
 	private boolean connected;
 
@@ -37,6 +37,10 @@ public abstract class IOService extends Service {
 	public IOService( String name, boolean stopOnException ) {
 		super( name );
 		this.stopOnException = stopOnException;
+	}
+
+	public final boolean isConnected() {
+		return connected;
 	}
 
 	public InputStream getInputStream() {
@@ -63,7 +67,7 @@ public abstract class IOService extends Service {
 
 	@Override
 	protected void startService() throws Exception {
-		reconnect( 3 );
+		reconnect( 0 );
 	}
 
 	@Override
@@ -76,9 +80,10 @@ public abstract class IOService extends Service {
 	}
 
 	protected void reconnect( int attempts ) {
+		Log.write( Log.WARN, getName() + " reconnecting..." );
 		int attempt = 0;
-		while( shouldExecute() && ( attempts > 0 && attempt < attempts ) ) {
-			attempt++;
+		while( shouldExecute() && ( attempts == 0 || ( attempt < attempts ) ) ) {
+			if( attempts > 0 ) attempt++;
 			try {
 				if( connected ) internalDisconnect();
 				internalConnect();
@@ -93,10 +98,6 @@ public abstract class IOService extends Service {
 				}
 			}
 		}
-	}
-
-	public final boolean isConnected() {
-		return connected;
 	}
 
 	protected abstract void connect() throws Exception;
@@ -196,7 +197,6 @@ public abstract class IOService extends Service {
 				return read( data, offset, length );
 			}
 		}
-
 	}
 
 	private class ServiceOutputStream extends OutputStream {
@@ -267,11 +267,13 @@ public abstract class IOService extends Service {
 			try {
 				realOutput.flush();
 			} catch( IOException exception ) {
+				if( !isRunning() ) return;
 				if( stopOnException ) {
 					stop();
 					throw exception;
 				}
 				reconnect();
+				flush();
 			}
 		}
 
