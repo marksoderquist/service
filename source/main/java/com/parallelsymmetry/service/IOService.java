@@ -76,7 +76,7 @@ public abstract class IOService extends Service {
 	}
 
 	protected void reconnect() {
-		reconnect( 1 );
+		reconnect( 0 );
 	}
 
 	protected void reconnect( int attempts ) {
@@ -89,7 +89,7 @@ public abstract class IOService extends Service {
 				internalConnect();
 				break;
 			} catch( Exception exception ) {
-				Log.write( "Failed to connect! Waiting " + ( RECONNECT_WAIT / 1000.0 ) + " seconds..." );
+				Log.write( getName() + " failed to connect! Waiting " + (int)( RECONNECT_WAIT / 1000.0 ) + " seconds..." );
 				Log.write( exception );
 				try {
 					Thread.sleep( RECONNECT_WAIT );
