@@ -39,7 +39,7 @@ public abstract class Worker extends Service implements Runnable {
 	}
 
 	public boolean isWorkerThread() {
-		return isServiceThread();
+		return runner != null && runner.isRunnerThread();
 	}
 
 	@Override
@@ -86,6 +86,10 @@ public abstract class Worker extends Service implements Runnable {
 
 		public synchronized boolean isWorking() {
 			return thread != null && thread.isAlive();
+		}
+
+		public boolean isRunnerThread() {
+			return Thread.currentThread() == thread;
 		}
 
 		public void start() {
