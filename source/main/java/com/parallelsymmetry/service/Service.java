@@ -279,7 +279,7 @@ public abstract class Service {
 					}
 				}
 			} catch( InterruptedException exception ) {
-				Log.write( Log.ERROR, "Service runner failure.", exception );
+				Log.write( Log.ERROR, exception, "Service runner failure." );
 			}
 		}
 
