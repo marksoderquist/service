@@ -28,7 +28,7 @@
 		<dependency>
 			<groupId>com.parallelsymmetry</groupId>
 			<artifactId>utility</artifactId>
-			<version>[1.0,)</version>
+			<version>1.0.2-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	
