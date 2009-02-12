@@ -63,9 +63,7 @@ public class ServerService extends IOService {
 	@Override
 	protected final void connect() throws Exception {
 		InetSocketAddress address = host == null ? new InetSocketAddress( port ) : new InetSocketAddress( host, port );
-		//server = ServerSocketChannel.open();
 		server = new ServerSocket();
-
 		server.setReuseAddress( true );
 		server.bind( address );
 		Log.write( Log.DEBUG, getName() + ": Starting on " + address + "..." );
