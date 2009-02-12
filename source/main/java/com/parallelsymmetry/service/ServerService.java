@@ -1,11 +1,12 @@
 package com.parallelsymmetry.service;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.channels.AsynchronousCloseException;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
 
 import com.parallelsymmetry.util.Log;
 import com.parallelsymmetry.util.TripLock;
@@ -16,7 +17,7 @@ public class ServerService extends IOService {
 
 	private int port;
 
-	private ServerSocketChannel server;
+	private ServerSocket server;
 
 	private ServerRunner runner;
 
@@ -56,22 +57,24 @@ public class ServerService extends IOService {
 
 	public int getLocalPort() {
 		if( server == null ) return 0;
-		return server.socket().getLocalPort();
+		return server.getLocalPort();
 	}
 
 	@Override
 	protected final void connect() throws Exception {
 		InetSocketAddress address = host == null ? new InetSocketAddress( port ) : new InetSocketAddress( host, port );
-		server = ServerSocketChannel.open();
-		server.socket().setReuseAddress( true );
-		server.socket().bind( address );
+		//server = ServerSocketChannel.open();
+		server = new ServerSocket();
+
+		server.setReuseAddress( true );
+		server.bind( address );
 		Log.write( Log.DEBUG, getName() + ": Starting on " + address + "..." );
 		runner = new ServerRunner();
 		startlock.reset();
 		runner.start();
 		startlock.hold();
 		startServer();
-		Log.write( Log.TRACE, getName() + ": Started on " + server.socket().getLocalSocketAddress() + "." );
+		Log.write( Log.TRACE, getName() + ": Started on " + server.getLocalSocketAddress() + "." );
 	}
 
 	@Override
@@ -88,8 +91,8 @@ public class ServerService extends IOService {
 
 	protected void handleSocket( Socket socket ) throws IOException {
 		Log.write( "Client connected: " + socket.getInetAddress() + ": " + socket.getPort() );
-		setRealInputStream( socket.getInputStream() );
-		setRealOutputStream( socket.getOutputStream() );
+		setRealInputStream( new BufferedInputStream( socket.getInputStream() ) );
+		setRealOutputStream( new BufferedOutputStream( socket.getOutputStream() ) );
 
 		connectlock.hold();
 
@@ -132,14 +135,13 @@ public class ServerService extends IOService {
 		}
 
 		public void run() {
-			SocketChannel channel = null;
+			//SocketChannel channel = null;
 			Socket socket = null;
 			while( execute ) {
 				try {
 					connectlock.reset();
 					startlock.trip();
-					channel = server.accept();
-					socket = channel.socket();
+					socket = server.accept();
 					handleSocket( socket );
 				} catch( AsynchronousCloseException exception ) {
 					// Intentionally ignore exception.
