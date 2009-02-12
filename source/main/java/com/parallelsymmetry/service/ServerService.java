@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.channels.AsynchronousCloseException;
+import java.net.SocketException;
 
 import com.parallelsymmetry.util.Log;
 import com.parallelsymmetry.util.TripLock;
@@ -141,8 +141,9 @@ public class ServerService extends IOService {
 					startlock.trip();
 					socket = server.accept();
 					handleSocket( socket );
-				} catch( AsynchronousCloseException exception ) {
-					// Intentionally ignore exception.
+				} catch( SocketException exception ) {
+					String message = exception.getMessage();
+					if( message == null || !"socket closed".equals( message.toLowerCase() ) ) Log.write( exception );
 				} catch( IOException exception ) {
 					Log.write( exception );
 				}
