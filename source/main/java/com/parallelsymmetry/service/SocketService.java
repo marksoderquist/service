@@ -40,7 +40,7 @@ public class SocketService extends IOService {
 		String server = host == null ? InetAddress.getLocalHost().getHostName() : host;
 		socket = new Socket();
 		socket.connect( new InetSocketAddress( server, port ), TIMEOUT * 1000 );
-		Log.write( "Connected to: " + socket.getInetAddress() + ":" + socket.getPort() );
+		Log.write( getName() + ": Connected to: " + socket.getInetAddress() + ":" + socket.getPort() );
 		setRealInputStream( socket.getInputStream() );
 		setRealOutputStream( socket.getOutputStream() );
 		Log.write( Log.TRACE, getName() + ": Connected." );
