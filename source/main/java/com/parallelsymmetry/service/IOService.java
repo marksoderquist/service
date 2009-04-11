@@ -8,7 +8,13 @@ import com.parallelsymmetry.util.Log;
 
 public abstract class IOService extends Service {
 
-	private static final int RECONNECT_WAIT = 1000;
+	private static final int DEFAULT_RECONNECT_DELAY = 5000;
+
+	private static final boolean DEFAULT_STOP_ON_EXCEPTION = false;
+
+	private long reconnectDelay = DEFAULT_RECONNECT_DELAY;
+
+	private boolean stopOnException = DEFAULT_STOP_ON_EXCEPTION;
 
 	private InputStream input = new ServiceInputStream();
 
@@ -17,8 +23,6 @@ public abstract class IOService extends Service {
 	private volatile InputStream realInput;
 
 	private volatile OutputStream realOutput;
-
-	private final boolean stopOnException;
 
 	private boolean connected;
 
@@ -41,6 +45,22 @@ public abstract class IOService extends Service {
 
 	public final boolean isConnected() {
 		return connected;
+	}
+
+	public long getReconnectDelay() {
+		return reconnectDelay;
+	}
+
+	public void setReconnectDelay( long reconnectDelay ) {
+		this.reconnectDelay = reconnectDelay;
+	}
+
+	public boolean isStopOnException() {
+		return stopOnException;
+	}
+
+	public void setStopOnException( boolean stopOnException ) {
+		this.stopOnException = stopOnException;
 	}
 
 	public InputStream getInputStream() {
@@ -89,10 +109,10 @@ public abstract class IOService extends Service {
 				internalConnect();
 				break;
 			} catch( Exception exception ) {
-				Log.write( getName() + " failed to connect! Waiting " + (int)( RECONNECT_WAIT / 1000.0 ) + " seconds..." );
+				Log.write( getName() + " failed to connect! Waiting " + (int)( reconnectDelay / 1000.0 ) + " seconds..." );
 				Log.write( exception );
 				try {
-					Thread.sleep( RECONNECT_WAIT );
+					Thread.sleep( reconnectDelay );
 				} catch( InterruptedException sleepException ) {
 					// Intentionally ignore exception.
 				}

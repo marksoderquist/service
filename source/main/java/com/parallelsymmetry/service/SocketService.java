@@ -40,16 +40,19 @@ public class SocketService extends IOService {
 		String server = host == null ? InetAddress.getLocalHost().getHostName() : host;
 		socket = new Socket();
 		socket.connect( new InetSocketAddress( server, port ), TIMEOUT * 1000 );
-		Log.write( getName() + ": Connected to: " + socket.getInetAddress() + ":" + socket.getPort() );
 		setRealInputStream( socket.getInputStream() );
 		setRealOutputStream( socket.getOutputStream() );
-		Log.write( Log.TRACE, getName() + ": Connected." );
+		Log.write( getName() + ": Connected to: " + socket.getInetAddress() + ":" + socket.getPort() );
 	}
 
 	@Override
 	protected void disconnect() throws IOException {
 		Log.write( Log.DEBUG, getName() + ": Disconnecting..." );
-		if( socket != null ) socket.close();
+		if( socket != null ) {
+			Log.write( Log.DEBUG, getName() + ": Closing socket..." );
+			socket.close();
+			Log.write( Log.DEBUG, getName() + ": Socket closed." );
+		}
 		setRealInputStream( null );
 		setRealOutputStream( null );
 		Log.write( Log.TRACE, getName() + ": Disconnected." );

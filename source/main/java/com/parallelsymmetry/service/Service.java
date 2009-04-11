@@ -64,7 +64,7 @@ public abstract class Service {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public final void startAndWait() throws Exception {
+	public final void startAndWait() throws InterruptedException {
 		startAndWait( 0 );
 	}
 
@@ -76,7 +76,7 @@ public abstract class Service {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public final void startAndWait( int timeout ) throws Exception {
+	public final void startAndWait( int timeout ) throws InterruptedException {
 		start();
 		waitForStartup( timeout );
 	}
