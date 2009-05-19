@@ -100,7 +100,7 @@ public abstract class IOService extends Service {
 	}
 
 	protected void reconnect( int attempts ) {
-		Log.write( Log.TRACE, getName() + " reconnecting..." );
+		Log.write( Log.TRACE, getName(), " reconnecting..." );
 		int attempt = 0;
 		while( shouldExecute() && ( attempts == 0 || ( attempt < attempts ) ) ) {
 			if( attempts > 0 ) attempt++;
