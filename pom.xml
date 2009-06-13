@@ -12,7 +12,7 @@
 
 	<groupId>com.parallelsymmetry</groupId>
 	<artifactId>service</artifactId>
-	<version>1.0.2-SNAPSHOT</version>
+	<version>1.0.3</version>
 	<packaging>jar</packaging>
 	
 	<name>Parallel Symmetry Service Library</name>
@@ -21,14 +21,14 @@
 	<inceptionYear>2007</inceptionYear>
 	
 	<scm>
-		<connection>scm:svn:http://svn.parallelsymmetry.com/software/service/trunk</connection>
+		<connection>scm:svn:http://svn.parallelsymmetry.com/software/service/tags/service-1.0.3</connection>
 	</scm>
 	
 	<dependencies>
 		<dependency>
 			<groupId>com.parallelsymmetry</groupId>
 			<artifactId>utility</artifactId>
-			<version>[1.0.3-SNAPSHOT,)</version>
+			<version>[1.0.3,)</version>
 		</dependency>
 	</dependencies>
 	
