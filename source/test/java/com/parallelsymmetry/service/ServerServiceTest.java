@@ -5,7 +5,7 @@ import java.nio.charset.Charset;
 
 import junit.framework.TestCase;
 
-import com.parallelsymmetry.util.Log;
+import com.parallelsymmetry.log.Log;
 
 public class ServerServiceTest extends TestCase {
 

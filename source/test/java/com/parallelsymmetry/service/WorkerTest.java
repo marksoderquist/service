@@ -5,7 +5,7 @@ import java.io.InputStream;
 
 import junit.framework.TestCase;
 
-import com.parallelsymmetry.util.Log;
+import com.parallelsymmetry.log.Log;
 import com.parallelsymmetry.util.ThreadUtil;
 
 public class WorkerTest extends TestCase {

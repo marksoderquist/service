@@ -5,7 +5,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
-import com.parallelsymmetry.util.Log;
+import com.parallelsymmetry.log.Log;
 
 public class SocketService extends IOService {
 

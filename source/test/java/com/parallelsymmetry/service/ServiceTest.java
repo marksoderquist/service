@@ -2,7 +2,7 @@ package com.parallelsymmetry.service;
 
 import junit.framework.TestCase;
 
-import com.parallelsymmetry.util.Log;
+import com.parallelsymmetry.log.Log;
 
 public abstract class ServiceTest extends TestCase {
 

@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.parallelsymmetry.log.Log;
 import com.parallelsymmetry.util.ClassUtil;
-import com.parallelsymmetry.util.Log;
 
 /**
  * The Service class is a generic service class.

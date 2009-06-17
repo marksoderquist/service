@@ -5,7 +5,7 @@ import java.net.Socket;
 
 import junit.framework.TestCase;
 
-import com.parallelsymmetry.util.Log;
+import com.parallelsymmetry.log.Log;
 
 public class SocketServiceTest extends TestCase {
 
