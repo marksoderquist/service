@@ -112,14 +112,14 @@ public abstract class ServiceTest extends TestCase {
 		assertEquals( "Wrong stop call count.", 1, service.getStopServiceCount() );
 	}
 
-	public void testRestart() throws Exception {
-		//Log.write( "testRestart()..." );
+	public void testReset() throws Exception {
+		//Log.write( "testReset()..." );
 		assertFalse( service.isRunning() );
 		service.startAndWait();
 		assertTrue( service.isRunning() );
 		assertEquals( "Wrong start call count.", 1, service.getStartServiceCount() );
 		assertEquals( "Wrong stop call count.", 0, service.getStopServiceCount() );
-		service.restart();
+		service.reset();
 		assertTrue( service.isRunning() );
 		assertEquals( "Wrong start call count.", 2, service.getStartServiceCount() );
 		assertEquals( "Wrong stop call count.", 1, service.getStopServiceCount() );
@@ -129,8 +129,8 @@ public abstract class ServiceTest extends TestCase {
 		assertEquals( "Wrong stop call count.", 2, service.getStopServiceCount() );
 	}
 
-	public void testFastRestarts() throws Exception {
-		//Log.write( "testFastRestarts()..." );
+	public void testFastResets() throws Exception {
+		//Log.write( "testFastResets()..." );
 		assertFalse( service.isRunning() );
 		service.startAndWait();
 		assertTrue( service.isRunning() );
@@ -138,7 +138,7 @@ public abstract class ServiceTest extends TestCase {
 		assertEquals( "Wrong stop call count.", 0, service.getStopServiceCount() );
 		int count = 10;
 		for( int index = 0; index < count; index++ ) {
-			service.restart();
+			service.reset();
 		}
 		assertTrue( service.isRunning() );
 		assertEquals( "Wrong start call count.", count + 1, service.getStartServiceCount() );

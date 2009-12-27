@@ -35,7 +35,7 @@ class CountingService extends Service {
 		ThreadUtil.pause( shutdownPause );
 	}
 
-	public void reset() {
+	public void resetCounts() {
 		startServiceCount = 0;
 		stopServiceCount = 0;
 	}

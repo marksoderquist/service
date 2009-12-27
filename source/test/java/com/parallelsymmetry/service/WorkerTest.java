@@ -41,7 +41,7 @@ public class WorkerTest extends TestCase {
 		assertFalse( worker.isWorking() );
 		worker.startAndWait();
 		assertTrue( "Worker not working after start.", worker.isWorking() );
-		worker.restart();
+		worker.reset();
 		assertTrue( "Worker not working after restart.", worker.isWorking() );
 		worker.stopAndWait();
 		assertFalse( worker.isWorking() );
@@ -52,11 +52,11 @@ public class WorkerTest extends TestCase {
 		assertFalse( worker.isWorking() );
 		worker.startAndWait();
 		assertTrue( worker.isWorking() );
-		worker.restart();
-		worker.restart();
-		worker.restart();
-		worker.restart();
-		worker.restart();
+		worker.reset();
+		worker.reset();
+		worker.reset();
+		worker.reset();
+		worker.reset();
 		assertTrue( worker.isWorking() );
 		worker.stopAndWait();
 		assertFalse( worker.isWorking() );

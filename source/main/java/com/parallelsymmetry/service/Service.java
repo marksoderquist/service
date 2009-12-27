@@ -110,7 +110,7 @@ public abstract class Service {
 	 * 
 	 * @throws IOException
 	 */
-	public final void restart() throws Exception {
+	public final void reset() throws Exception {
 		// Don't use start() and stop() because they are asynchronous.
 		stopAndWait();
 		startAndWait();

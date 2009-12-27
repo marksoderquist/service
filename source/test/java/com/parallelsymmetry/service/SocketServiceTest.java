@@ -49,7 +49,7 @@ public class SocketServiceTest extends TestCase {
 		service.startAndWait();
 		assertTrue( "Service is not running.", service.isRunning() );
 
-		service.restart();
+		service.reset();
 		assertTrue( "Service is not running.", service.isRunning() );
 
 		service.stopAndWait();
