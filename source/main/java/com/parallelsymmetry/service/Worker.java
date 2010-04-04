@@ -10,6 +10,8 @@ public abstract class Worker extends Service implements Runnable {
 
 	private WorkerRunner runner;
 
+	private boolean interruptOnStop;
+
 	private final TripLock startlock = new TripLock();
 
 	public Worker() {
@@ -40,6 +42,14 @@ public abstract class Worker extends Service implements Runnable {
 
 	public boolean isWorkerThread() {
 		return runner != null && runner.isRunnerThread();
+	}
+
+	public boolean isInterruptOnStop() {
+		return interruptOnStop;
+	}
+
+	public void setInterruptOnStop( boolean flag ) {
+		this.interruptOnStop = flag;
 	}
 
 	@Override
@@ -122,6 +132,8 @@ public abstract class Worker extends Service implements Runnable {
 				Worker.this.exception = exception;
 				return;
 			}
+
+			if( interruptOnStop ) thread.interrupt();
 
 			if( Worker.this.daemon ) return;
 

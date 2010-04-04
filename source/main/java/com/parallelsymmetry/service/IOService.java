@@ -71,11 +71,19 @@ public abstract class IOService extends Service {
 		return output;
 	}
 
+	protected InputStream getRealInputStream() {
+		return realInput;
+	}
+
 	protected void setRealInputStream( InputStream input ) {
 		synchronized( this.input ) {
 			realInput = input;
 			this.input.notifyAll();
 		}
+	}
+
+	protected OutputStream getRealOutputStream() {
+		return realOutput;
 	}
 
 	protected void setRealOutputStream( OutputStream output ) {
@@ -217,6 +225,12 @@ public abstract class IOService extends Service {
 				return read( data, offset, length );
 			}
 		}
+
+		@Override
+		public void close() throws IOException {
+			realInput.close();
+		}
+
 	}
 
 	private class ServiceOutputStream extends OutputStream {
@@ -295,6 +309,11 @@ public abstract class IOService extends Service {
 				reconnect();
 				flush();
 			}
+		}
+
+		@Override
+		public void close() throws IOException {
+			realOutput.close();
 		}
 
 	}
