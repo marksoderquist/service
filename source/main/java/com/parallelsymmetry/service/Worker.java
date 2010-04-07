@@ -121,7 +121,11 @@ public abstract class Worker extends Service implements Runnable {
 
 		public void run() {
 			startlock.trip();
-			Worker.this.run();
+			try {
+				Worker.this.run();
+			} finally {
+				stop();
+			}
 		}
 
 		public void stop() {
