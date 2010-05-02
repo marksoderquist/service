@@ -108,17 +108,17 @@ public abstract class IOService extends Service implements Plug {
 	}
 
 	protected void reconnect( int attempts ) {
-		Log.write( Log.TRACE, getName(), " reconnecting..." );
+		Log.write( Log.DEBUG, getName(), " reconnecting..." );
 		int attempt = 0;
 		while( shouldExecute() && ( attempts == 0 || ( attempt < attempts ) ) ) {
 			if( attempts > 0 ) attempt++;
 			try {
-				internalDisconnect();
+				if( connected ) internalDisconnect();
 				internalConnect();
 				break;
 			} catch( Exception exception ) {
 				Log.write( getName() + " failed to connect! Waiting " + (int)( reconnectDelay / 1000.0 ) + " seconds..." );
-				Log.write( exception );
+				Log.write( Log.TRACE, exception );
 				try {
 					Thread.sleep( reconnectDelay );
 				} catch( InterruptedException sleepException ) {
@@ -126,6 +126,7 @@ public abstract class IOService extends Service implements Plug {
 				}
 			}
 		}
+		Log.write( Log.TRACE, getName(), " reconnected." );
 	}
 
 	protected abstract void connect() throws Exception;

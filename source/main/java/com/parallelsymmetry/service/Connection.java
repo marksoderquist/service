@@ -114,18 +114,29 @@ public class Connection implements ServerListener {
 			// Intentionally ignore exception.
 		}
 
-		a2bPump.stop( true );
-		b2aPump.stop( true );
+		try {
+			a2bPump.stopAndWait();
+		} catch( InterruptedException exception ) {
+			//Intentionally ignore exception.
+		}
 
-		Log.write( "Closing socket..." );
+		try {
+			b2aPump.stopAndWait();
+		} catch( InterruptedException exception ) {
+			//Intentionally ignore exception.
+		}
+
 		socket.close();
-		Log.write( "Socket closed." );
 	}
 
 	private void startPumps() throws InterruptedException {
 		// Create the IO pumps.
 		a2bPump = new IOPump( getName() + " dn", plugA.getInputStream(), plugB.getOutputStream() );
 		b2aPump = new IOPump( getName() + " up", plugB.getInputStream(), plugA.getOutputStream() );
+
+		// Set the interrupt on stop flag.
+		a2bPump.setInterruptOnStop( true );
+		b2aPump.setInterruptOnStop( true );
 
 		// Set the log enabled flag.
 		a2bPump.setLogEnabled( true );

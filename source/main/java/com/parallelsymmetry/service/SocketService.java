@@ -42,7 +42,7 @@ public class SocketService extends IOService {
 		socket.connect( new InetSocketAddress( server, port ), TIMEOUT * 1000 );
 		setRealInputStream( socket.getInputStream() );
 		setRealOutputStream( socket.getOutputStream() );
-		Log.write( getName() + ": Connected to: " + socket.getInetAddress() + ":" + socket.getPort() );
+		Log.write( getName() + ": Connected to: " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort() );
 	}
 
 	@Override

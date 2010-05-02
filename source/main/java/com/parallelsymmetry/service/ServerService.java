@@ -80,7 +80,7 @@ public class ServerService extends IOService {
 		runner.start();
 		startlock.hold();
 		startServer();
-		Log.write( Log.TRACE, getName() + ": Started on " + server.getLocalSocketAddress() + "." );
+		Log.write( Log.TRACE, getName() + ": Started on " + server.getInetAddress().getHostAddress() + ":" + server.getLocalPort() + "." );
 	}
 
 	@Override
