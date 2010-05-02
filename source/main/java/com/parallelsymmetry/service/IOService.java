@@ -6,7 +6,7 @@ import java.io.OutputStream;
 
 import com.parallelsymmetry.log.Log;
 
-public abstract class IOService extends Service {
+public abstract class IOService extends Service implements Plug {
 
 	private static final int DEFAULT_RECONNECT_DELAY = 5000;
 
@@ -113,7 +113,7 @@ public abstract class IOService extends Service {
 		while( shouldExecute() && ( attempts == 0 || ( attempt < attempts ) ) ) {
 			if( attempts > 0 ) attempt++;
 			try {
-				if( connected ) internalDisconnect();
+				internalDisconnect();
 				internalConnect();
 				break;
 			} catch( Exception exception ) {

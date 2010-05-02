@@ -204,7 +204,7 @@ public abstract class Service {
 	}
 
 	protected final void fireEvent( ServiceEvent event ) {
-		Log.write( Log.DEBUG, "- ", getName(), " Event: ", event.getState() );
+		Log.write( Log.DEBUG, "-", getName(), " Event: ", event.getState() );
 		for( ServiceListener listener : listeners ) {
 			listener.serviceEventOccurred( event );
 		}
@@ -212,21 +212,17 @@ public abstract class Service {
 
 	private final void startup() throws Exception {
 		try {
-			Log.write( Log.DEBUG, "+ ", getName(), " Starting..." );
 			startService();
 		} finally {
 			changeState( State.STARTED );
-			Log.write( Log.TRACE, "+ ", getName(), " Started." );
 		}
 	}
 
 	private final void shutdown() throws Exception {
 		try {
-			Log.write( Log.DEBUG, "+ ", getName(), " Stopping..." );
 			stopService();
 		} finally {
 			changeState( State.STOPPED );
-			Log.write( Log.TRACE, "+ ", getName(), " Stopped." );
 		}
 	}
 

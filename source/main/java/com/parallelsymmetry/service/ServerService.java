@@ -25,6 +25,8 @@ public class ServerService extends IOService {
 
 	private TripLock connectlock = new TripLock();
 
+	private ServerListener listener;
+
 	public ServerService() {
 		this( null, 0 );
 	}
@@ -60,6 +62,10 @@ public class ServerService extends IOService {
 		return server.getLocalPort();
 	}
 
+	public void setServerListener( ServerListener listener ) {
+		this.listener = listener;
+	}
+
 	@Override
 	protected final void connect() throws Exception {
 		InetSocketAddress address = host == null ? new InetSocketAddress( port ) : new InetSocketAddress( host, port );
@@ -91,14 +97,18 @@ public class ServerService extends IOService {
 
 	protected void handleSocket( Socket socket ) throws IOException {
 		Log.write( "Client connected: " + socket.getInetAddress() + ": " + socket.getPort() );
-		setRealInputStream( new BufferedInputStream( socket.getInputStream() ) );
-		setRealOutputStream( new BufferedOutputStream( socket.getOutputStream() ) );
+		if( listener == null ) {
+			setRealInputStream( new BufferedInputStream( socket.getInputStream() ) );
+			setRealOutputStream( new BufferedOutputStream( socket.getOutputStream() ) );
 
-		connectlock.hold();
+			connectlock.hold();
 
-		socket.close();
-		setRealInputStream( null );
-		setRealOutputStream( null );
+			socket.close();
+			setRealInputStream( null );
+			setRealOutputStream( null );
+		} else {
+			listener.handleSocket( socket );
+		}
 	}
 
 	private class ServerRunner implements Runnable {
