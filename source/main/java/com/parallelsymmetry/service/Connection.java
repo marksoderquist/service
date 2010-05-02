@@ -114,6 +114,9 @@ public class Connection implements ServerListener {
 			// Intentionally ignore exception.
 		}
 
+		a2bPump.stop();
+		b2aPump.stop();
+
 		socket.close();
 	}
 
