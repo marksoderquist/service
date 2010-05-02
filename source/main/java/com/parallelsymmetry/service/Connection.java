@@ -32,6 +32,7 @@ public class Connection implements ServerListener {
 
 		if( serviceA instanceof ServerService ) {
 			( (ServerService)serviceA ).setServerListener( this );
+			serviceB.setReconnectOnStop( false );
 			this.server = 1;
 		} else {
 			this.plugA = serviceA;
@@ -39,6 +40,7 @@ public class Connection implements ServerListener {
 
 		if( serviceB instanceof ServerService ) {
 			( (ServerService)serviceB ).setServerListener( this );
+			serviceA.setReconnectOnStop( false );
 			this.server = 2;
 		} else {
 			this.plugB = serviceB;

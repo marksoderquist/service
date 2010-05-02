@@ -12,9 +12,13 @@ public abstract class IOService extends Service implements Plug {
 
 	private static final boolean DEFAULT_STOP_ON_EXCEPTION = false;
 
+	private static final boolean DEFAULT_RECONNECT_ON_STOP = true;
+
 	private long reconnectDelay = DEFAULT_RECONNECT_DELAY;
 
 	private boolean stopOnException = DEFAULT_STOP_ON_EXCEPTION;
+
+	private boolean reconnectOnStop = DEFAULT_RECONNECT_ON_STOP;
 
 	private InputStream input = new ServiceInputStream();
 
@@ -53,6 +57,14 @@ public abstract class IOService extends Service implements Plug {
 
 	public void setReconnectDelay( long reconnectDelay ) {
 		this.reconnectDelay = reconnectDelay;
+	}
+
+	public boolean isReconnectOnStop() {
+		return reconnectOnStop;
+	}
+
+	public void setReconnectOnStop( boolean reconnectOnStop ) {
+		this.reconnectOnStop = reconnectOnStop;
 	}
 
 	public boolean isStopOnException() {
@@ -108,6 +120,7 @@ public abstract class IOService extends Service implements Plug {
 	}
 
 	protected void reconnect( int attempts ) {
+		if( !isReconnectOnStop() ) return;
 		Log.write( Log.DEBUG, getName(), " reconnecting..." );
 		int attempt = 0;
 		while( shouldExecute() && ( attempts == 0 || ( attempt < attempts ) ) ) {
