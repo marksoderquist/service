@@ -114,10 +114,12 @@ public class Connection implements ServerListener {
 			// Intentionally ignore exception.
 		}
 
-		a2bPump.stop();
-		b2aPump.stop();
+		a2bPump.stop( true );
+		b2aPump.stop( true );
 
+		Log.write( "Closing socket..." );
 		socket.close();
+		Log.write( "Socket closed." );
 	}
 
 	private void startPumps() throws InterruptedException {
