@@ -101,9 +101,20 @@ public class Connection implements ServerListener {
 
 		try {
 			startPumps();
+			switch( server ) {
+				case 1: {
+					a2bPump.waitFor();
+					break;
+				}
+				case 2: {
+					b2aPump.waitFor();
+				}
+			}
 		} catch( InterruptedException exception ) {
 			// Intentionally ignore exception.
 		}
+
+		socket.close();
 	}
 
 	private void startPumps() throws InterruptedException {
