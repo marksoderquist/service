@@ -55,7 +55,7 @@ public class SocketService extends IOService {
 		}
 		setRealInputStream( null );
 		setRealOutputStream( null );
-		Log.write( Log.TRACE, getName() + ": Disconnected." );
+		Log.write( getName() + ": Disconnected." );
 	}
 
 }

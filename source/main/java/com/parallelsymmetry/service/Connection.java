@@ -128,6 +128,8 @@ public class Connection implements ServerListener {
 			//Intentionally ignore exception.
 		}
 
+		Log.write( getName() + " IO pumps stopped." );
+
 		socket.close();
 
 		try {
