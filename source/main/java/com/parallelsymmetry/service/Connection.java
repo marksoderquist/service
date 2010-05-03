@@ -116,19 +116,9 @@ public class Connection implements ServerListener {
 			// Intentionally ignore exception.
 		}
 
-		try {
-			a2bPump.stopAndWait();
-		} catch( InterruptedException exception ) {
-			//Intentionally ignore exception.
-		}
-
-		try {
-			b2aPump.stopAndWait();
-		} catch( InterruptedException exception ) {
-			//Intentionally ignore exception.
-		}
-
-		Log.write( getName() + " IO pumps stopped." );
+		// Stop the pumps but don't wait for them.
+		a2bPump.stop();
+		b2aPump.stop();
 
 		socket.close();
 
@@ -145,6 +135,8 @@ public class Connection implements ServerListener {
 		} catch( Exception exception ) {
 			// Intentionally ignore exception.
 		}
+
+		Log.write( getName() + " IO pumps stopped." );
 	}
 
 	private void startPumps() throws InterruptedException {
