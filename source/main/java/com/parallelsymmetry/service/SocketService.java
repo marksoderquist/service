@@ -35,6 +35,11 @@ public class SocketService extends IOService {
 	}
 
 	@Override
+	public boolean stopAfterDisconnect() {
+		return true;
+	}
+
+	@Override
 	protected void connect() throws IOException {
 		Log.write( Log.DEBUG, getName() + ": Connecting..." );
 		String server = host == null ? InetAddress.getLocalHost().getHostName() : host;

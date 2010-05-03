@@ -75,6 +75,10 @@ public abstract class IOService extends Service implements Plug {
 		this.stopOnException = stopOnException;
 	}
 
+	public boolean stopAfterDisconnect() {
+		return false;
+	}
+
 	public InputStream getInputStream() {
 		return input;
 	}
