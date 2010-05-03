@@ -192,7 +192,7 @@ public abstract class IOService extends Service implements Plug {
 				return bite;
 			} catch( IOException exception ) {
 				if( !isRunning() ) return -1;
-				if( stopOnException ) {
+				if( stopOnException || !isReconnectOnStop() ) {
 					stop();
 					throw exception;
 				}
@@ -214,7 +214,7 @@ public abstract class IOService extends Service implements Plug {
 				return read;
 			} catch( IOException exception ) {
 				if( !isRunning() ) return -1;
-				if( stopOnException ) {
+				if( stopOnException || !isReconnectOnStop() ) {
 					stop();
 					throw exception;
 				}
@@ -235,7 +235,7 @@ public abstract class IOService extends Service implements Plug {
 				}
 				return read;
 			} catch( IOException exception ) {
-				if( !isRunning() ) return -1;
+				if( !isRunning() || !isReconnectOnStop() ) return -1;
 				if( stopOnException ) {
 					stop();
 					throw exception;
