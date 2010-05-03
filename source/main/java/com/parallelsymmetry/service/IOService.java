@@ -185,7 +185,7 @@ public abstract class IOService extends Service implements Plug {
 			try {
 				int bite = realInput.read();
 				if( bite < 0 ) {
-					if( !isRunning() ) return -1;
+					if( !isRunning() || !isReconnectOnStop() ) return -1;
 					reconnect();
 					return read();
 				}
@@ -207,7 +207,7 @@ public abstract class IOService extends Service implements Plug {
 			try {
 				int read = realInput.read( data );
 				if( read < 0 ) {
-					if( !isRunning() ) return -1;
+					if( !isRunning() || !isReconnectOnStop() ) return -1;
 					reconnect();
 					return read( data );
 				}
@@ -229,7 +229,7 @@ public abstract class IOService extends Service implements Plug {
 			try {
 				int read = realInput.read( data, offset, length );
 				if( read < 0 ) {
-					if( !isRunning() ) return -1;
+					if( !isRunning() || !isReconnectOnStop() ) return -1;
 					reconnect();
 					return read( data, offset, length );
 				}
@@ -272,7 +272,7 @@ public abstract class IOService extends Service implements Plug {
 			try {
 				realOutput.write( bite );
 			} catch( IOException exception ) {
-				if( !isRunning() ) return;
+				if( !isRunning() || !isReconnectOnStop() ) return;
 				if( stopOnException ) {
 					stop();
 					throw exception;
@@ -288,7 +288,7 @@ public abstract class IOService extends Service implements Plug {
 			try {
 				realOutput.write( data );
 			} catch( IOException exception ) {
-				if( !isRunning() ) return;
+				if( !isRunning() || !isReconnectOnStop() ) return;
 				if( stopOnException ) {
 					stop();
 					throw exception;
@@ -304,7 +304,7 @@ public abstract class IOService extends Service implements Plug {
 			try {
 				realOutput.write( data, offset, length );
 			} catch( IOException exception ) {
-				if( !isRunning() ) return;
+				if( !isRunning() || !isReconnectOnStop() ) return;
 				if( stopOnException ) {
 					stop();
 					throw exception;
@@ -320,7 +320,7 @@ public abstract class IOService extends Service implements Plug {
 			try {
 				realOutput.flush();
 			} catch( IOException exception ) {
-				if( !isRunning() ) return;
+				if( !isRunning() || !isReconnectOnStop() ) return;
 				if( stopOnException ) {
 					stop();
 					throw exception;
