@@ -128,7 +128,7 @@ public abstract class IOService extends Service implements Plug {
 	}
 
 	protected void reconnect( boolean start, int attempts ) {
-		if( !start && !isReconnectOnStop() ) return;
+		if( !start & !isReconnectOnStop() ) return;
 
 		Log.write( Log.DEBUG, getName(), " reconnecting..." );
 		int attempt = 0;
