@@ -90,7 +90,7 @@ public class Connection implements ServerListener {
 				}
 				case 2: {
 					plugB = new PlugAdapter( socket.getInputStream(), socket.getOutputStream() );
-					serviceB.startAndWait();
+					serviceA.startAndWait();
 					break;
 				}
 				default: {
@@ -129,6 +129,20 @@ public class Connection implements ServerListener {
 		}
 
 		socket.close();
+
+		try {
+			switch( server ) {
+				case 1: {
+					serviceB.stopAndWait();
+					break;
+				}
+				case 2: {
+					serviceA.stopAndWait();
+				}
+			}
+		} catch( Exception exception ) {
+			// Intentionally ignore exception.
+		}
 	}
 
 	private void startPumps() throws InterruptedException {
