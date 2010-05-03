@@ -107,7 +107,7 @@ public abstract class IOService extends Service implements Plug {
 
 	@Override
 	protected void startService() throws Exception {
-		reconnect( 0 );
+		reconnect( true );
 	}
 
 	@Override
@@ -116,11 +116,16 @@ public abstract class IOService extends Service implements Plug {
 	}
 
 	protected void reconnect() {
-		reconnect( 0 );
+		reconnect( false );
 	}
 
-	protected void reconnect( int attempts ) {
-		if( !isReconnectOnStop() ) return;
+	protected void reconnect( boolean start ) {
+		reconnect( start, 0 );
+	}
+
+	protected void reconnect( boolean start, int attempts ) {
+		if( !start && !isReconnectOnStop() ) return;
+
 		Log.write( Log.DEBUG, getName(), " reconnecting..." );
 		int attempt = 0;
 		while( shouldExecute() && ( attempts == 0 || ( attempt < attempts ) ) ) {
