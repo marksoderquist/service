@@ -14,11 +14,15 @@ public abstract class IOService extends Service implements Plug {
 
 	private static final boolean DEFAULT_RECONNECT_ON_STOP = true;
 
+	private static final boolean DEFAULT_STOP_AFTER_DISCONNECT = false;
+
 	private long reconnectDelay = DEFAULT_RECONNECT_DELAY;
 
 	private boolean stopOnException = DEFAULT_STOP_ON_EXCEPTION;
 
-	private boolean reconnectOnStop = DEFAULT_RECONNECT_ON_STOP;
+	private boolean connectImmediate = DEFAULT_RECONNECT_ON_STOP;
+
+	private boolean stopAfterDisconnect = DEFAULT_STOP_AFTER_DISCONNECT;
 
 	private InputStream input = new ServiceInputStream();
 
@@ -59,12 +63,12 @@ public abstract class IOService extends Service implements Plug {
 		this.reconnectDelay = reconnectDelay;
 	}
 
-	public boolean isReconnectOnStop() {
-		return reconnectOnStop;
+	public boolean isConnectImmediate() {
+		return connectImmediate;
 	}
 
-	public void setReconnectOnStop( boolean reconnectOnStop ) {
-		this.reconnectOnStop = reconnectOnStop;
+	public void setConnectImmediate( boolean connectOnce ) {
+		this.connectImmediate = connectOnce;
 	}
 
 	public boolean isStopOnException() {
@@ -76,7 +80,11 @@ public abstract class IOService extends Service implements Plug {
 	}
 
 	public boolean stopAfterDisconnect() {
-		return false;
+		return stopAfterDisconnect;
+	}
+
+	public void setStopAfterDisconnect( boolean stopAfterDisconnect ) {
+		this.stopAfterDisconnect = stopAfterDisconnect;
 	}
 
 	public InputStream getInputStream() {
@@ -128,8 +136,6 @@ public abstract class IOService extends Service implements Plug {
 	}
 
 	protected void reconnect( boolean start, int attempts ) {
-		if( !start & !isReconnectOnStop() ) return;
-
 		Log.write( Log.DEBUG, getName(), " reconnecting..." );
 		int attempt = 0;
 		while( shouldExecute() && ( attempts == 0 || ( attempt < attempts ) ) ) {
@@ -139,6 +145,10 @@ public abstract class IOService extends Service implements Plug {
 				internalConnect();
 				break;
 			} catch( Exception exception ) {
+				if( start && connectImmediate ) {
+					Log.write( getName() + " failed to connect!" );
+					break;
+				}
 				Log.write( getName() + " failed to connect! Waiting " + (int)( reconnectDelay / 1000.0 ) + " seconds..." );
 				Log.write( Log.TRACE, exception );
 				try {
@@ -189,14 +199,14 @@ public abstract class IOService extends Service implements Plug {
 			try {
 				int bite = realInput.read();
 				if( bite < 0 ) {
-					if( !isRunning() || !isReconnectOnStop() ) return -1;
+					if( !isRunning() || isConnectImmediate() ) return -1;
 					reconnect();
 					return read();
 				}
 				return bite;
 			} catch( IOException exception ) {
 				if( !isRunning() ) return -1;
-				if( stopOnException || !isReconnectOnStop() ) {
+				if( stopOnException || isConnectImmediate() ) {
 					stop();
 					throw exception;
 				}
@@ -211,14 +221,14 @@ public abstract class IOService extends Service implements Plug {
 			try {
 				int read = realInput.read( data );
 				if( read < 0 ) {
-					if( !isRunning() || !isReconnectOnStop() ) return -1;
+					if( !isRunning() || isConnectImmediate() ) return -1;
 					reconnect();
 					return read( data );
 				}
 				return read;
 			} catch( IOException exception ) {
 				if( !isRunning() ) return -1;
-				if( stopOnException || !isReconnectOnStop() ) {
+				if( stopOnException || isConnectImmediate() ) {
 					stop();
 					throw exception;
 				}
@@ -233,13 +243,13 @@ public abstract class IOService extends Service implements Plug {
 			try {
 				int read = realInput.read( data, offset, length );
 				if( read < 0 ) {
-					if( !isRunning() || !isReconnectOnStop() ) return -1;
+					if( !isRunning() || isConnectImmediate() ) return -1;
 					reconnect();
 					return read( data, offset, length );
 				}
 				return read;
 			} catch( IOException exception ) {
-				if( !isRunning() || !isReconnectOnStop() ) return -1;
+				if( !isRunning() || isConnectImmediate() ) return -1;
 				if( stopOnException ) {
 					stop();
 					throw exception;
@@ -276,7 +286,7 @@ public abstract class IOService extends Service implements Plug {
 			try {
 				realOutput.write( bite );
 			} catch( IOException exception ) {
-				if( !isRunning() || !isReconnectOnStop() ) return;
+				if( !isRunning() || isConnectImmediate() ) return;
 				if( stopOnException ) {
 					stop();
 					throw exception;
@@ -292,7 +302,7 @@ public abstract class IOService extends Service implements Plug {
 			try {
 				realOutput.write( data );
 			} catch( IOException exception ) {
-				if( !isRunning() || !isReconnectOnStop() ) return;
+				if( !isRunning() || isConnectImmediate() ) return;
 				if( stopOnException ) {
 					stop();
 					throw exception;
@@ -308,7 +318,7 @@ public abstract class IOService extends Service implements Plug {
 			try {
 				realOutput.write( data, offset, length );
 			} catch( IOException exception ) {
-				if( !isRunning() || !isReconnectOnStop() ) return;
+				if( !isRunning() || isConnectImmediate() ) return;
 				if( stopOnException ) {
 					stop();
 					throw exception;
@@ -324,7 +334,7 @@ public abstract class IOService extends Service implements Plug {
 			try {
 				realOutput.flush();
 			} catch( IOException exception ) {
-				if( !isRunning() || !isReconnectOnStop() ) return;
+				if( !isRunning() || isConnectImmediate() ) return;
 				if( stopOnException ) {
 					stop();
 					throw exception;

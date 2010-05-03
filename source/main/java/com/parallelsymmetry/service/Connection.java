@@ -32,7 +32,8 @@ public class Connection implements ServerListener {
 
 		if( serviceA instanceof ServerService ) {
 			( (ServerService)serviceA ).setServerListener( this );
-			serviceB.setReconnectOnStop( false );
+			if( serviceB instanceof SocketService ) serviceB.setStopAfterDisconnect( true );
+			serviceB.setConnectImmediate( false );
 			this.server = 1;
 		} else {
 			this.plugA = serviceA;
@@ -40,7 +41,8 @@ public class Connection implements ServerListener {
 
 		if( serviceB instanceof ServerService ) {
 			( (ServerService)serviceB ).setServerListener( this );
-			serviceA.setReconnectOnStop( false );
+			if( serviceA instanceof SocketService ) serviceA.setStopAfterDisconnect( true );
+			serviceA.setConnectImmediate( false );
 			this.server = 2;
 		} else {
 			this.plugB = serviceB;
