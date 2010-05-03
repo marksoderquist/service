@@ -135,11 +135,11 @@ public class Connection implements ServerListener {
 		try {
 			switch( server ) {
 				case 1: {
-					serviceB.stopAndWait();
+					if( serviceB instanceof SocketService ) serviceB.stopAndWait();
 					break;
 				}
 				case 2: {
-					serviceA.stopAndWait();
+					if( serviceA instanceof SocketService ) serviceA.stopAndWait();
 				}
 			}
 		} catch( Exception exception ) {
