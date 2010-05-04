@@ -96,18 +96,23 @@ public class ServerService extends IOService {
 	protected void stopServer() throws Exception {}
 
 	protected void handleSocket( Socket socket ) throws IOException {
-		Log.write( "Client connected: " + socket.getInetAddress() + ": " + socket.getPort() );
-		if( listener == null ) {
-			setRealInputStream( new BufferedInputStream( socket.getInputStream() ) );
-			setRealOutputStream( new BufferedOutputStream( socket.getOutputStream() ) );
+		String address = socket.getInetAddress() + ": " + socket.getPort();
+		Log.write( Log.TRACE, getName() + " Client connected: " + address );
+		try {
+			if( listener == null ) {
+				setRealInputStream( new BufferedInputStream( socket.getInputStream() ) );
+				setRealOutputStream( new BufferedOutputStream( socket.getOutputStream() ) );
 
-			connectlock.hold();
+				connectlock.hold();
 
-			socket.close();
-			setRealInputStream( null );
-			setRealOutputStream( null );
-		} else {
-			listener.handleSocket( socket );
+				socket.close();
+				setRealInputStream( null );
+				setRealOutputStream( null );
+			} else {
+				listener.handleSocket( socket );
+			}
+		} finally {
+			Log.write( Log.TRACE, getName() + " Client disconnected: " + address );
 		}
 	}
 
