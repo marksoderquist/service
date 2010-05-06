@@ -36,6 +36,7 @@ public class Connection implements ServerListener {
 			serviceB.setConnectOnce( false );
 			this.server = 1;
 		} else {
+			serviceB.setConnectOnce( true );
 			this.plugA = serviceA;
 		}
 
@@ -45,6 +46,7 @@ public class Connection implements ServerListener {
 			serviceA.setConnectOnce( false );
 			this.server = 2;
 		} else {
+			serviceA.setConnectOnce( true );
 			this.plugB = serviceB;
 		}
 	}
