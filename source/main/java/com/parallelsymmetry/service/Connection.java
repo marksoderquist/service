@@ -32,21 +32,25 @@ public class Connection implements ServerListener {
 
 		if( serviceA instanceof ServerService ) {
 			( (ServerService)serviceA ).setServerListener( this );
-			if( serviceB instanceof SocketService ) serviceB.setStopAfterDisconnect( true );
+			if( serviceB instanceof SocketService ) {
+				serviceB.setStopAfterDisconnect( true );
+				serviceB.setConnectOnce( true );
+			}
 			serviceB.setConnectOnce( false );
 			this.server = 1;
 		} else {
-			serviceB.setConnectOnce( true );
 			this.plugA = serviceA;
 		}
 
 		if( serviceB instanceof ServerService ) {
 			( (ServerService)serviceB ).setServerListener( this );
-			if( serviceA instanceof SocketService ) serviceA.setStopAfterDisconnect( true );
+			if( serviceA instanceof SocketService ) {
+				serviceA.setStopAfterDisconnect( true );
+				serviceA.setConnectOnce( true );
+			}
 			serviceA.setConnectOnce( false );
 			this.server = 2;
 		} else {
-			serviceA.setConnectOnce( true );
 			this.plugB = serviceB;
 		}
 	}
