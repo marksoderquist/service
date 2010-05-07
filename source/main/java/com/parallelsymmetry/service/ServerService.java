@@ -96,7 +96,7 @@ public class ServerService extends IOService {
 	protected void stopServer() throws Exception {}
 
 	protected void handleSocket( Socket socket ) throws IOException {
-		String address = socket.getInetAddress() + ": " + socket.getPort();
+		String address = socket.getInetAddress().getHostAddress() + ": " + socket.getPort();
 		Log.write( Log.TRACE, getName() + " Client connected: " + address );
 		try {
 			if( listener == null ) {

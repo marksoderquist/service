@@ -52,7 +52,6 @@ public class ServerSocketConnection implements Connection, ServerListener {
 
 	private void initialize() {
 		server.setServerListener( this );
-		socket.setStopAfterDisconnect( true );
 		socket.setConnectOnce( true );
 	}
 
@@ -104,14 +103,16 @@ public class ServerSocketConnection implements Connection, ServerListener {
 			// Intentionally ignore exception.
 		}
 
-		stopPumps();
 		socket.close();
+		stopPumps();
 
 		try {
 			this.socket.stopAndWait();
 		} catch( Exception exception ) {
 			// Intentionally ignore exception.
 		}
+
+		Log.write( Log.ERROR, "ServerSocketConnection.handleSocket() complete." );
 	}
 
 	private void startPumps() throws InterruptedException {

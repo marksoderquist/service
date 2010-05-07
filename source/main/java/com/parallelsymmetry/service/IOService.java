@@ -12,17 +12,17 @@ public abstract class IOService extends Service implements Plug {
 
 	private static final boolean DEFAULT_STOP_ON_EXCEPTION = false;
 
-	private static final boolean DEFAULT_CONNECT_ONCE = false;
+	private static final boolean DEFAULT_STOP_ON_CONNECT_EXCEPTION = false;
 
-	private static final boolean DEFAULT_STOP_AFTER_DISCONNECT = false;
+	private static final boolean DEFAULT_CONNECT_ONCE = false;
 
 	private long reconnectDelay = DEFAULT_RECONNECT_DELAY;
 
 	private boolean stopOnException = DEFAULT_STOP_ON_EXCEPTION;
 
-	private boolean connectOnce = DEFAULT_CONNECT_ONCE;
+	private boolean stopOnConnectException = DEFAULT_STOP_ON_CONNECT_EXCEPTION;
 
-	private boolean stopAfterDisconnect = DEFAULT_STOP_AFTER_DISCONNECT;
+	private boolean connectOnce = DEFAULT_CONNECT_ONCE;
 
 	private InputStream input = new ServiceInputStream();
 
@@ -79,12 +79,12 @@ public abstract class IOService extends Service implements Plug {
 		this.stopOnException = stopOnException;
 	}
 
-	public boolean stopAfterDisconnect() {
-		return stopAfterDisconnect;
+	public boolean isStopOnConnectException() {
+		return stopOnConnectException;
 	}
 
-	public void setStopAfterDisconnect( boolean stopAfterDisconnect ) {
-		this.stopAfterDisconnect = stopAfterDisconnect;
+	public void setStopOnConnectException( boolean stopOnConnectException ) {
+		this.stopOnConnectException = stopOnConnectException;
 	}
 
 	public InputStream getInputStream() {
@@ -145,7 +145,7 @@ public abstract class IOService extends Service implements Plug {
 				internalConnect();
 				break;
 			} catch( Exception exception ) {
-				if( start && connectOnce ) {
+				if( start && ( connectOnce || stopOnConnectException ) ) {
 					Log.write( getName() + " failed to connect!" );
 					break;
 				}
@@ -210,6 +210,7 @@ public abstract class IOService extends Service implements Plug {
 					stop();
 					throw exception;
 				}
+				Log.write( Log.DEBUG, exception );
 				reconnect();
 				return read();
 			}
@@ -232,6 +233,7 @@ public abstract class IOService extends Service implements Plug {
 					stop();
 					throw exception;
 				}
+				Log.write( Log.DEBUG, exception );
 				reconnect();
 				return read( data );
 			}
@@ -254,6 +256,7 @@ public abstract class IOService extends Service implements Plug {
 					stop();
 					throw exception;
 				}
+				Log.write( Log.DEBUG, exception );
 				reconnect();
 				return read( data, offset, length );
 			}
