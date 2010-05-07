@@ -112,7 +112,7 @@ public class ServerSocketConnection implements Connection, ServerListener {
 			// Intentionally ignore exception.
 		}
 
-		Log.write( Log.ERROR, "ServerSocketConnection.handleSocket() complete." );
+		Log.write( Log.DEBUG, "ServerSocketConnection.handleSocket() complete." );
 	}
 
 	private void startPumps() throws InterruptedException {
