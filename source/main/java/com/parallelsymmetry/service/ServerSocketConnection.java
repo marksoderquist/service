@@ -92,6 +92,11 @@ public class ServerSocketConnection implements Connection, ServerListener {
 			return;
 		}
 
+		if( !this.socket.isConnected() ) {
+			socket.close();
+			return;
+		}
+
 		try {
 			startPumps();
 			if( forward ) {
