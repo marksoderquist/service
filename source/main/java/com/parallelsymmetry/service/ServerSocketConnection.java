@@ -92,20 +92,17 @@ public class ServerSocketConnection implements Connection, ServerListener {
 			return;
 		}
 
-		if( !this.socket.isConnected() ) {
-			socket.close();
-			return;
-		}
-
-		try {
-			startPumps();
-			if( forward ) {
-				a2bPump.waitFor();
-			} else {
-				b2aPump.waitFor();
+		if( this.socket.isConnected() ) {
+			try {
+				startPumps();
+				if( forward ) {
+					a2bPump.waitFor();
+				} else {
+					b2aPump.waitFor();
+				}
+			} catch( InterruptedException exception ) {
+				// Intentionally ignore exception.
 			}
-		} catch( InterruptedException exception ) {
-			// Intentionally ignore exception.
 		}
 
 		socket.close();
@@ -147,7 +144,7 @@ public class ServerSocketConnection implements Connection, ServerListener {
 	private void stopPumps() {
 		if( b2aPump != null ) b2aPump.stop();
 		if( a2bPump != null ) a2bPump.stop();
-		Log.write( getName() + " IO pumps stopped." );
+		if( a2bPump != null && b2aPump != null ) Log.write( getName() + " IO pumps stopped." );
 	}
 
 }
