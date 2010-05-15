@@ -204,7 +204,7 @@ public abstract class Service {
 	}
 
 	protected final void fireEvent( ServiceEvent event ) {
-		Log.write( Log.DEBUG, "-", getName(), " Event: ", event.getState() );
+		Log.write( Log.DEBUG, getName(), " Event: ", event.getState() );
 		for( ServiceListener listener : listeners ) {
 			listener.serviceEventOccurred( event );
 		}
