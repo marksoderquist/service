@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>com.parallelsymmetry</groupId>
 		<artifactId>pom-parent-signed</artifactId>
-		<version>1.0.0</version>
+		<version>1.0.2-SNAPSHOT</version>
 	</parent>
 
 	<groupId>com.parallelsymmetry</groupId>
