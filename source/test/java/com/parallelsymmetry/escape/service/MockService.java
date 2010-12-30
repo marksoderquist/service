@@ -5,7 +5,7 @@ import com.parallelsymmetry.escape.utility.Parameters;
 public class MockService extends Service {
 
 	public static final void main( String[] commands ) {
-		new MockService().process( commands );
+		new MockService().call( commands );
 	}
 
 	@Override

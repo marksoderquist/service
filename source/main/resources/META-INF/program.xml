@@ -1,0 +1,15 @@
+<program>
+
+	<information>
+		<namespace>com.parallelsymmetry.escape.service</namespace>
+		<identifier>demo</identifier>
+		<version>1.0.0-a-01</version>
+		<name>Demo Service</name>
+		<timestamp>2010-12-30 20:10:22</timestamp>
+	</information>
+	
+	<resources>
+		<java version="1.6"/>
+	</resources>
+
+</program>

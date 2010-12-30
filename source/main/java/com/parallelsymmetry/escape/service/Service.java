@@ -3,16 +3,19 @@ package com.parallelsymmetry.escape.service;
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.security.InvalidParameterException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -23,10 +26,13 @@ import java.util.logging.LogRecord;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
-import com.parallelsymmetry.escape.utility.InvalidParameterException;
+import com.parallelsymmetry.escape.utility.DateUtil;
+import com.parallelsymmetry.escape.utility.Descriptor;
+import com.parallelsymmetry.escape.utility.JavaUtil;
 import com.parallelsymmetry.escape.utility.Parameters;
 import com.parallelsymmetry.escape.utility.Release;
 import com.parallelsymmetry.escape.utility.TextUtil;
+import com.parallelsymmetry.escape.utility.Version;
 import com.parallelsymmetry.escape.utility.agent.Agent;
 import com.parallelsymmetry.escape.utility.agent.ServerAgent;
 import com.parallelsymmetry.escape.utility.agent.Worker;
@@ -44,15 +50,25 @@ public abstract class Service extends Agent {
 
 	private static final String PEER_LOGGER_NAME = "peer";
 
+	private static final String APPLICATION_DESCRIPTOR_PATH = "/META-INF/program.xml";
+
+	private static final String REGULAR_PREFERENCE_FILE_PATH = "/META-INF/preferences.xml";
+
+	private static final String DEFAULT_PREFERENCE_FILE_PATH = "/META-INF/preferences.default.xml";
+
+	private static final String DESCRIPTOR_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+
 	private static final String JAVA_VERSION_MINIMUM = "1.6";
 
 	private static final String LOCALHOST = "127.0.0.1";
 
-	private PeerServer peerServer = new PeerServer( this );
+	private Parameters parameters = Parameters.parse( new String[0] );
 
 	private Thread shutdownHook = new ShutdownHook( this );
 
-	private Parameters parameters;
+	private PeerServer peerServer;
+
+	private Descriptor descriptor;
 
 	private String namespace = DEFAULT_NAMESPACE;
 
@@ -71,6 +87,39 @@ public abstract class Service extends Agent {
 	private Socket socket;
 
 	private File home;
+
+	private boolean process;
+
+	/**
+	 * Process the command line parameters. This method is the entry point for the
+	 * service and is normally called from the main() method of the implementing
+	 * class.
+	 * 
+	 * @param commands
+	 */
+	public synchronized void call( String[] commands ) {
+		try {
+			parameters = Parameters.parse( commands, getValidCommandLineFlags() );
+		} catch( InvalidParameterException exception ) {
+			Log.write( exception );
+
+			// FIXME Print the message then print the help then exit.
+		}
+
+		// Set log level.
+		setLogLevel( parameters );
+
+		// Load description.
+		describe( parameters );
+
+		// Find home.
+		home = findHome( parameters );
+
+		// Verify Java environment.
+		if( !verifyJavaEnvironment( parameters ) ) return;
+
+		processParameters( parameters, false );
+	}
 
 	public Release getRelease() {
 		return release;
@@ -182,39 +231,6 @@ public abstract class Service extends Agent {
 	}
 
 	/**
-	 * Process the command line parameters. This method should only be called from
-	 * the main() method of a subclass.
-	 * 
-	 * @param commands
-	 */
-	protected void process( String[] commands ) {
-		try {
-			parameters = Parameters.parse( commands, getValidCommandLineFlags() );
-		} catch( InvalidParameterException exception ) {
-			Log.write( exception );
-
-			// FIXME Print the message then print the help then exit.
-		}
-
-		// Set log level.
-		setLogLevel( parameters );
-
-		// Load description.
-		// FIXME describe( parameters );
-
-		// Find home.
-		// FIXME home = findHome( parameters );
-
-		// Verify Java environment.
-		if( !verifyJavaEnvironment( parameters ) ) return;
-
-		// Find the dependency versions.
-		// FIXME findDependencyVersions();
-
-		processParameters( parameters, false );
-	}
-
-	/**
 	 * Override this method and return a set of valid command line flags if you
 	 * want the service to validate command line flags. By default this method
 	 * returns null and allows all command line flags.
@@ -233,8 +249,11 @@ public abstract class Service extends Agent {
 
 	@Override
 	protected final void startAgent() throws Exception {
+		if( !process ) throw new RuntimeException( "Start should only be called from the Service.call() method." );
+
 		Log.write( Log.TRACE, getName() + " starting..." );
 		Runtime.getRuntime().addShutdownHook( shutdownHook );
+		peerServer = new PeerServer( this );
 		peerServer.startAndWait();
 		storeServicePortNumber();
 		startService( parameters );
@@ -243,6 +262,8 @@ public abstract class Service extends Agent {
 
 	@Override
 	protected final void stopAgent() throws Exception {
+		if( !process ) throw new RuntimeException( "Start should only be called from the Service.call() method." );
+
 		Log.write( Log.TRACE, getName() + " stopping..." );
 		if( socket != null ) socket.close();
 		stopService( parameters );
@@ -264,45 +285,48 @@ public abstract class Service extends Agent {
 	 * @param parameters
 	 */
 	private final void processParameters( Parameters parameters, boolean peer ) {
-		if( this.parameters == null ) this.parameters = parameters;
-
-		Log.write( Log.DEBUG, "Processing parameters: " + parameters.toString() );
-
+		process = true;
 		try {
-			if( !isRunning() ) printHeader();
+			if( this.parameters == null ) this.parameters = parameters;
 
-			// Check for existing peer.
-			if( !peer && peerExists( parameters ) ) return;
+			Log.write( Log.DEBUG, "Processing parameters: " + parameters.toString() );
 
-			// If the watch parameter is set then exit before doing anything else.
-			if( parameters.isSet( "watch" ) ) {
+			try {
+				if( !isRunning() ) printHeader();
+
+				// Check for existing peer.
+				if( !peer && peerExists( parameters ) ) return;
+
+				// If the watch parameter is set then exit before doing anything else.
+				if( parameters.isSet( "watch" ) ) return;
+
+				if( parameters.isSet( "stop" ) ) {
+					stopAndWait();
+					return;
+				} else if( parameters.isSet( "restart" ) ) {
+					restart();
+					return;
+				} else if( parameters.isSet( "status" ) ) {
+					printStatus();
+					return;
+				} else if( parameters.isSet( "version" ) ) {
+					return;
+				} else if( parameters.isSet( "help" ) ) {
+					help( parameters.get( "help" ) );
+					return;
+				}
+
+				// Start the application.
+				startAndWait();
+
+				// Process parameters.
+				process( parameters );
+			} catch( Exception exception ) {
+				Log.write( exception );
 				return;
 			}
-
-			if( parameters.isSet( "stop" ) ) {
-				stopAndWait();
-				return;
-			} else if( parameters.isSet( "restart" ) ) {
-				restart();
-				return;
-			} else if( parameters.isSet( "status" ) ) {
-				printStatus();
-				return;
-			} else if( parameters.isSet( "version" ) ) {
-				return;
-			} else if( parameters.isSet( "help" ) ) {
-				help( parameters.get( "help" ) );
-				return;
-			}
-
-			// Start the application.
-			startAndWait();
-
-			// Process parameters.
-			process( parameters );
-		} catch( Exception exception ) {
-			Log.write( exception );
-			return;
+		} finally {
+			process = false;
 		}
 	}
 
@@ -315,10 +339,11 @@ public abstract class Service extends Agent {
 			// Connect to the peer, if possible, and pass the parameters.
 			try {
 				socket = new Socket( host, port );
-				Log.write( "Connected to: " + socket.getInetAddress() + ":" + socket.getPort() );
+				Log.write( "Connected to peer: " + socket.getInetAddress() + ":" + socket.getPort() );
 				ObjectOutputStream output = new ObjectOutputStream( socket.getOutputStream() );
 				output.writeObject( parameters.getCommands() );
 				output.flush();
+				Log.write( Log.TRACE, "Parameters sent to peer." );
 			} catch( ConnectException exception ) {
 				Log.write( "Peer not found: " + host + ":" + port );
 				return false;
@@ -439,6 +464,103 @@ public abstract class Service extends Agent {
 		Log.setLevel( Log.parseLevel( parameters.get( "log.level" ) ) );
 	}
 
+	private final void describe( Parameters parameters ) {
+		descriptor = findApplicationDescriptor( parameters );
+
+		// Get the application attributes.
+		setName( descriptor.getValue( "/program/information/title", getName() ) );
+		namespace = descriptor.getValue( "/program/information/namespace", namespace );
+		identifier = descriptor.getValue( "/program/information/identifier", identifier );
+		Version version = Version.parse( descriptor.getValue( "/program/information/version", null ) );
+		Date timestamp = DateUtil.parse( descriptor.getValue( "/program/information/timestamp", null ), DESCRIPTOR_DATE_FORMAT );
+		javaVersionMinimum = descriptor.getValue( "/program/resources/java/@version", JAVA_VERSION_MINIMUM );
+		release = new Release( version, timestamp );
+
+		identifier = parameters.get( "identifier", identifier );
+		if( parameters.isSet( "development" ) ) identifier += "-dev";
+
+		try {
+			com.parallelsymmetry.escape.utility.Preferences preferences = (com.parallelsymmetry.escape.utility.Preferences)getPreferences();
+			// Only reset the preferences when you need to start with a clean slate.
+			if( parameters.isSet( "preferences.reset" ) ) preferences.reset();
+
+			InputStream defaultPreferencesStream = getClass().getResourceAsStream( DEFAULT_PREFERENCE_FILE_PATH );
+			if( defaultPreferencesStream != null ) {
+				preferences.loadDefaults( defaultPreferencesStream );
+			} else {
+				Log.write( Log.DEBUG, "Default preferences not found." );
+			}
+
+			InputStream regularPreferencesStream = getClass().getResourceAsStream( REGULAR_PREFERENCE_FILE_PATH );
+			if( regularPreferencesStream != null ) {
+				preferences.loadDefaults( regularPreferencesStream );
+			} else {
+				Log.write( Log.DEBUG, "Regular preferences not found." );
+			}
+		} catch( IOException exception ) {
+			error( exception );
+		}
+
+		try {
+			inceptionYear = Integer.parseInt( descriptor.getValue( "/jnlp/information/inception" ) );
+		} catch( NumberFormatException exception ) {
+			inceptionYear = Calendar.getInstance().get( Calendar.YEAR );
+		}
+		copyrightHolder = descriptor.getValue( "/jnlp/information/vendor", copyrightHolder );
+		licenseSummary = descriptor.getValue( "/jnlp/information/license/summary", licenseSummary );
+
+		// Create the identifier from the name if it is not set.
+		if( TextUtil.isEmpty( this.identifier ) ) identifier = getName().replace( ' ', '-' ).toLowerCase();
+	}
+
+	/**
+	 * Find the home directory.
+	 * 
+	 * @param parameters
+	 * @return
+	 */
+	private final File findHome( Parameters parameters ) {
+		File home = null;
+
+		try {
+			// Check the class path.
+			List<File> entries = JavaUtil.parseSystemClasspath( System.getProperty( "java.class.path" ) );
+			if( entries.size() > 0 && entries.get( 0 ).getName().endsWith( ".jar" ) ) {
+				home = entries.get( 0 ).getParentFile().getParentFile();
+			}
+
+			// If -home was specified on the command line use it.
+			if( home == null && parameters.get( HOME_PARAMETER_NAME ) != null ) {
+				home = new File( parameters.get( HOME_PARAMETER_NAME ) ).getCanonicalFile();
+			}
+
+			// If no home is found, use the current working directory.
+			if( home == null ) {
+				home = new File( System.getProperty( "user.dir" ) );
+			}
+
+			return home.getCanonicalFile();
+		} catch( IOException exception ) {
+			exception.printStackTrace();
+		}
+
+		return home;
+	}
+
+	private final Descriptor findApplicationDescriptor( Parameters parameters ) {
+		Descriptor descriptor = null;
+
+		try {
+			InputStream input = getClass().getResourceAsStream( APPLICATION_DESCRIPTOR_PATH );
+			if( input != null ) Log.write( Log.DEBUG, "Application descriptor found: " + APPLICATION_DESCRIPTOR_PATH );
+			descriptor = new Descriptor( input );
+		} catch( Exception exception ) {
+			Log.write( exception );
+		}
+
+		return descriptor;
+	}
+
 	private final void printHeader() {
 		String notice = getLicenseSummary();
 
@@ -460,21 +582,20 @@ public abstract class Service extends Agent {
 
 	private static final class PeerServer extends ServerAgent {
 
-		private Service daemon;
+		private Service service;
 
-		private List<PeerHandler> handlers;
+		private List<PeerHandler> handlers = new CopyOnWriteArrayList<PeerHandler>();
 
-		public PeerServer( Service daemon ) {
-			super( "Peer Server", LOCALHOST, 0 );
-			this.daemon = daemon;
-			handlers = new CopyOnWriteArrayList<PeerHandler>();
+		public PeerServer( Service service ) {
+			super( "Peer Server", LOCALHOST );
+			this.service = service;
 		}
 
 		@Override
 		protected void handleSocket( Socket socket ) throws IOException {
 			String peer = socket.getInetAddress().getHostAddress() + ":" + socket.getPort();
 			Log.write( Log.TRACE, "Peer connected: ", peer );
-			PeerHandler handler = new PeerHandler( peer, daemon, socket );
+			PeerHandler handler = new PeerHandler( peer, service, socket );
 			handlers.add( handler );
 			handler.start();
 		}
@@ -496,7 +617,7 @@ public abstract class Service extends Agent {
 
 	private static final class PeerHandler extends Worker {
 
-		private Service daemon;
+		private Service service;
 
 		private Socket socket;
 
@@ -506,10 +627,10 @@ public abstract class Service extends Agent {
 
 		private String peer;
 
-		public PeerHandler( String peer, Service daemon, Socket socket ) {
+		public PeerHandler( String peer, Service service, Socket socket ) {
 			super( "Peer Handler " + peer, false );
 			this.peer = peer;
-			this.daemon = daemon;
+			this.service = service;
 			this.socket = socket;
 		}
 
@@ -518,8 +639,10 @@ public abstract class Service extends Agent {
 			// Read the parameters from the input stream.
 			try {
 				input = new ObjectInputStream( socket.getInputStream() );
-				Parameters parameters = null;
 
+				Log.write( Log.TRACE, "Parameters read from peer." );
+
+				Parameters parameters = null;
 				try {
 					parameters = Parameters.parse( (String[])input.readObject() );
 				} catch( InvalidParameterException exception ) {
@@ -532,7 +655,7 @@ public abstract class Service extends Agent {
 				Log.addHandler( handler );
 
 				// Process the parameters.
-				daemon.processParameters( parameters, true );
+				service.processParameters( parameters, true );
 
 				// If the watch flag is set then just watch.
 				if( "true".equals( parameters.get( "watch" ) ) ) watch();
