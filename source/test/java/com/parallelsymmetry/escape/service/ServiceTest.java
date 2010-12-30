@@ -7,7 +7,11 @@ public class ServiceTest extends TestCase {
 	private MockService service = new MockService();
 
 	public void testStartStop() {
-		service.process( new String[] { "-start" } );
+		//service.process( new String[] { "-start" } );
+	}
+
+	public void testGetRelease() {
+		assertEquals( "", service.getRelease().toHumanString() );
 	}
 
 }
