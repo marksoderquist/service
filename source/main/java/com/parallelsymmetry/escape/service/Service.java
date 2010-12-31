@@ -91,8 +91,6 @@ public abstract class Service extends Agent {
 
 	private File home;
 
-	private boolean process;
-
 	/**
 	 * Construct the service with the default descriptor path of
 	 * &quot;/META-INF/program.xml&quot;.
@@ -275,10 +273,11 @@ public abstract class Service extends Agent {
 
 	protected abstract void stopService( Parameters parameters ) throws Exception;
 
+	/**
+	 * This method should only be called through the processParameters() method.
+	 */
 	@Override
 	protected final void startAgent() throws Exception {
-		//if( !process ) throw new RuntimeException( "Start should only be called from the Service.call() method." );
-
 		Log.write( Log.TRACE, getName() + " starting..." );
 		Runtime.getRuntime().addShutdownHook( shutdownHook );
 		peerServer = new PeerServer( this );
@@ -288,10 +287,11 @@ public abstract class Service extends Agent {
 		Log.write( getName() + " started." );
 	}
 
+	/**
+	 * This method should only be called through the processParameters() method.
+	 */
 	@Override
 	protected final void stopAgent() throws Exception {
-		//if( !process ) throw new RuntimeException( "Start should only be called from the Service.call() method." );
-
 		Log.write( Log.TRACE, getName() + " stopping..." );
 		if( socket != null ) socket.close();
 		stopService( parameters );
@@ -313,48 +313,43 @@ public abstract class Service extends Agent {
 	 * @param parameters
 	 */
 	private final void processParameters( Parameters parameters, boolean peer ) {
-		process = true;
+		if( this.parameters == null ) this.parameters = parameters;
+
+		Log.write( Log.DEBUG, "Processing parameters: " + parameters.toString() );
+
 		try {
-			if( this.parameters == null ) this.parameters = parameters;
+			if( !isRunning() ) printHeader();
 
-			Log.write( Log.DEBUG, "Processing parameters: " + parameters.toString() );
+			// Check for existing peer.
+			if( !peer && peerExists( parameters ) ) return;
 
-			try {
-				if( !isRunning() ) printHeader();
+			// If the watch parameter is set then exit before doing anything else.
+			if( parameters.isSet( "watch" ) ) return;
 
-				// Check for existing peer.
-				if( !peer && peerExists( parameters ) ) return;
-
-				// If the watch parameter is set then exit before doing anything else.
-				if( parameters.isSet( "watch" ) ) return;
-
-				if( parameters.isSet( "stop" ) ) {
-					stopAndWait();
-					return;
-				} else if( parameters.isSet( "restart" ) ) {
-					restart();
-					return;
-				} else if( parameters.isSet( "status" ) ) {
-					printStatus();
-					return;
-				} else if( parameters.isSet( "version" ) ) {
-					return;
-				} else if( parameters.isSet( "help" ) ) {
-					help( parameters.get( "help" ) );
-					return;
-				}
-
-				// Start the application.
-				startAndWait();
-
-				// Process parameters.
-				process( parameters );
-			} catch( Exception exception ) {
-				Log.write( exception );
+			if( parameters.isSet( "stop" ) ) {
+				stopAndWait();
+				return;
+			} else if( parameters.isSet( "restart" ) ) {
+				restart();
+				return;
+			} else if( parameters.isSet( "status" ) ) {
+				printStatus();
+				return;
+			} else if( parameters.isSet( "version" ) ) {
+				return;
+			} else if( parameters.isSet( "help" ) ) {
+				help( parameters.get( "help" ) );
 				return;
 			}
-		} finally {
-			process = false;
+
+			// Start the application.
+			startAndWait();
+
+			// Process parameters.
+			process( parameters );
+		} catch( Exception exception ) {
+			Log.write( exception );
+			return;
 		}
 	}
 
