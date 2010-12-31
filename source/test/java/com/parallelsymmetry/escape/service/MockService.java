@@ -4,6 +4,10 @@ import com.parallelsymmetry.escape.utility.Parameters;
 
 public class MockService extends Service {
 
+	public MockService() {
+		super( "/test.program.xml" );
+	}
+
 	public static final void main( String[] commands ) {
 		new MockService().call( commands );
 	}

@@ -1,6 +1,6 @@
 package com.parallelsymmetry.escape.service;
 
-import java.io.EOFException;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,7 +50,7 @@ public abstract class Service extends Agent {
 
 	private static final String PEER_LOGGER_NAME = "peer";
 
-	private static final String APPLICATION_DESCRIPTOR_PATH = "/META-INF/program.xml";
+	private static final String DEFAULT_DESCRIPTOR_PATH = "/META-INF/program.xml";
 
 	private static final String REGULAR_PREFERENCE_FILE_PATH = "/META-INF/preferences.xml";
 
@@ -67,6 +67,8 @@ public abstract class Service extends Agent {
 	private Thread shutdownHook = new ShutdownHook( this );
 
 	private PeerServer peerServer;
+
+	private String descriptorPath;
 
 	private Descriptor descriptor;
 
@@ -89,6 +91,25 @@ public abstract class Service extends Agent {
 	private File home;
 
 	private boolean process;
+
+	/**
+	 * Construct the service with the default descriptor path of
+	 * &quot;/META-INF/program.xml&quot;.
+	 */
+	public Service() {
+		this( DEFAULT_DESCRIPTOR_PATH );
+	}
+
+	/**
+	 * Construct the service with the specified descriptor path. The descriptor
+	 * must be found on the class path and the descriptor path must begin with a
+	 * '/' slash.
+	 * 
+	 * @param descriptorPath
+	 */
+	public Service( String descriptorPath ) {
+		this.descriptorPath = descriptorPath;
+	}
 
 	/**
 	 * Process the command line parameters. This method is the entry point for the
@@ -338,8 +359,9 @@ public abstract class Service extends Agent {
 		if( port != 0 ) {
 			// Connect to the peer, if possible, and pass the parameters.
 			try {
+				// FIXME Convert the Socket code to SocketChannel code and/or use SocketAgent.
 				socket = new Socket( host, port );
-				Log.write( "Connected to peer: " + socket.getInetAddress() + ":" + socket.getPort() );
+				Log.write( "Connected to peer: " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort() );
 				ObjectOutputStream output = new ObjectOutputStream( socket.getOutputStream() );
 				output.writeObject( parameters.getCommands() );
 				output.flush();
@@ -361,16 +383,18 @@ public abstract class Service extends Agent {
 			Log.setLevel( PEER_LOGGER_NAME, Log.ALL );
 			try {
 				Object object;
-				ObjectInputStream objectInput = new ObjectInputStream( socket.getInputStream() );
+				BufferedInputStream bufferedInput = new BufferedInputStream( socket.getInputStream() );
+				ObjectInputStream objectInput = new ObjectInputStream( bufferedInput );
 				while( ( object = objectInput.readObject() ) != null ) {
 					LogRecord entry = (LogRecord)object;
 					Log.writeTo( PEER_LOGGER_NAME, entry );
 				}
-				Log.write( Log.INFO, "Peer connection terminated." );
-			} catch( EOFException exception ) {
-				Log.write( Log.INFO, "Peer connection terminated." );
+				Log.write( Log.INFO, "Peer disconnected." );
+			} catch( SocketException exception ) {
+				Log.write( Log.INFO, "Peer disconnected." );
 			} catch( Exception exception ) {
-				Log.write( Log.INFO, "Peer connection forcefully terminated." );
+				Log.write( Log.INFO, "Peer connection terminated." );
+				Log.write( exception );
 			} finally {
 				if( socket != null ) {
 					try {
@@ -416,6 +440,7 @@ public abstract class Service extends Agent {
 	 * @return
 	 */
 	private final String getServicePortKey() {
+		// FIXME Move MD5 generation to TextUtil. Then this method can go away by storing the port key as a constant.
 		MessageDigest digest = null;
 		try {
 			digest = MessageDigest.getInstance( "MD5" );
@@ -465,10 +490,10 @@ public abstract class Service extends Agent {
 	}
 
 	private final void describe( Parameters parameters ) {
-		descriptor = findApplicationDescriptor( parameters );
+		descriptor = getApplicationDescriptor();
 
 		// Get the application attributes.
-		setName( descriptor.getValue( "/program/information/title", getName() ) );
+		setName( descriptor.getValue( "/program/information/name", getName() ) );
 		namespace = descriptor.getValue( "/program/information/namespace", namespace );
 		identifier = descriptor.getValue( "/program/information/identifier", identifier );
 		Version version = Version.parse( descriptor.getValue( "/program/information/version", null ) );
@@ -502,12 +527,12 @@ public abstract class Service extends Agent {
 		}
 
 		try {
-			inceptionYear = Integer.parseInt( descriptor.getValue( "/jnlp/information/inception" ) );
+			inceptionYear = Integer.parseInt( descriptor.getValue( "/program/information/inception" ) );
 		} catch( NumberFormatException exception ) {
 			inceptionYear = Calendar.getInstance().get( Calendar.YEAR );
 		}
-		copyrightHolder = descriptor.getValue( "/jnlp/information/vendor", copyrightHolder );
-		licenseSummary = descriptor.getValue( "/jnlp/information/license/summary", licenseSummary );
+		copyrightHolder = descriptor.getValue( "/program/information/vendor", copyrightHolder );
+		licenseSummary = descriptor.getValue( "/program/information/license/summary", licenseSummary );
 
 		// Create the identifier from the name if it is not set.
 		if( TextUtil.isEmpty( this.identifier ) ) identifier = getName().replace( ' ', '-' ).toLowerCase();
@@ -547,15 +572,15 @@ public abstract class Service extends Agent {
 		return home;
 	}
 
-	private final Descriptor findApplicationDescriptor( Parameters parameters ) {
-		Descriptor descriptor = null;
-
-		try {
-			InputStream input = getClass().getResourceAsStream( APPLICATION_DESCRIPTOR_PATH );
-			if( input != null ) Log.write( Log.DEBUG, "Application descriptor found: " + APPLICATION_DESCRIPTOR_PATH );
-			descriptor = new Descriptor( input );
-		} catch( Exception exception ) {
-			Log.write( exception );
+	private final Descriptor getApplicationDescriptor() {
+		if( descriptor == null ) {
+			try {
+				InputStream input = getClass().getResourceAsStream( descriptorPath );
+				if( input != null ) Log.write( Log.DEBUG, "Application descriptor found: " + descriptorPath );
+				descriptor = new Descriptor( input );
+			} catch( Exception exception ) {
+				Log.write( exception );
+			}
 		}
 
 		return descriptor;
@@ -621,7 +646,7 @@ public abstract class Service extends Agent {
 
 		private Socket socket;
 
-		private Handler handler;
+		private Handler logHandler;
 
 		private ObjectInputStream input;
 
@@ -650,9 +675,9 @@ public abstract class Service extends Agent {
 				}
 
 				// Set up the peer log handler.
-				handler = new PeerLogHandler( this, socket.getOutputStream() );
-				handler.setLevel( Log.parseLevel( parameters.get( "log.level" ) ) );
-				Log.addHandler( handler );
+				logHandler = new PeerLogHandler( this, socket.getOutputStream() );
+				logHandler.setLevel( Log.parseLevel( parameters.get( "log.level" ) ) );
+				Log.addHandler( logHandler );
 
 				// Process the parameters.
 				service.processParameters( parameters, true );
@@ -671,7 +696,10 @@ public abstract class Service extends Agent {
 				Log.write( exception );
 				return;
 			} finally {
-				if( handler != null ) handler.close();
+				if( logHandler != null ) {
+					Log.removeHandler( logHandler );
+					logHandler.close();
+				}
 				closeSocket();
 				Log.write( Log.TRACE, "Peer disconnected: " + peer );
 			}
@@ -690,7 +718,7 @@ public abstract class Service extends Agent {
 
 		@Override
 		protected void stopWorker() throws Exception {
-			if( handler != null ) handler.close();
+			if( logHandler != null ) logHandler.close();
 			closeSocket();
 
 			// Notify watching threads.

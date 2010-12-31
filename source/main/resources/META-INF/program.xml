@@ -3,9 +3,9 @@
 	<information>
 		<namespace>com.parallelsymmetry.escape.service</namespace>
 		<identifier>demo</identifier>
-		<version>1.0.0-a-01</version>
+		<version>1.0.0-a-00</version>
 		<name>Demo Service</name>
-		<timestamp>2010-12-30 20:10:22</timestamp>
+		<timestamp>1970-01-01 00:00:00</timestamp>
 	</information>
 	
 	<resources>
