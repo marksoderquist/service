@@ -76,30 +76,20 @@ public class ServiceTest extends TestCase {
 		assertEquals( "Options:", parser.next() );
 		assertEquals( "  -log.level <level>   Change the output log level. Levels are:", parser.next() );
 		assertEquals( "                       none, error, warn, info, trace, debug, all", parser.next() );
-
+		assertEquals( "", parser.next() );
+		assertNull( parser.next() );
 	}
 
-	//	public void testStartThrowsException() throws Exception {
-	//		MockService service = new MockService();
-	//		service.startAndWait( timeout );
-	//		assertFalse( "Calling start directly should not start the service.", service.isRunning() );
-	//	}
+	public void testStatusCommandLineOutput() throws Exception {
+		MockService service = new MockService();
+		LineParser parser = new LineParser( getCommandLineOutput( service, Log.INFO, "-status" ) );
 
-	//	public void testStopThrowsException() throws Exception {
-	//		MockService service = new MockService();
-	//		service.call();
-	//		service.waitForStartup( timeout );
-	//		assertTrue( service.isRunning() );
-	//
-	//		assertEquals( MOCK_RELEASE, service.getRelease().toHumanString() );
-	//
-	//		service.stopAndWait( timeout );
-	//		assertTrue( "Calling stop directly should should not stop the service.", service.isRunning() );
-	//
-	//		service.call( "-stop" );
-	//		service.waitForShutdown( timeout );
-	//		assertFalse( service.isRunning() );
-	//	}
+		assertCommandLineHeader( parser );
+
+		assertEquals( "Mock Service status: STOPPED", parser.next() );
+		assertEquals( "", parser.next() );
+		assertNull( parser.next() );
+	}
 
 	@Test
 	public void testLaunchWithStart() throws Exception {
