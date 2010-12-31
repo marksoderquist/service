@@ -8,8 +8,6 @@ import java.util.logging.Level;
 
 import junit.framework.TestCase;
 
-import org.junit.Test;
-
 import com.parallelsymmetry.escape.utility.LineParser;
 import com.parallelsymmetry.escape.utility.agent.Agent;
 import com.parallelsymmetry.escape.utility.log.DefaultHandler;
@@ -91,7 +89,22 @@ public class ServiceTest extends TestCase {
 		assertNull( parser.next() );
 	}
 
-	@Test
+	public void testRequiredJavaVersion() throws Exception {
+		String version = System.getProperty( "java.runtime.version" );
+		System.setProperty( "java.runtime.version", "1.5" );
+
+		LineParser parser = null;
+		MockService service = new MockService();
+		try {
+			parser = new LineParser( getCommandLineOutput( service, Log.INFO ) );
+		} finally {
+			System.setProperty( "java.runtime.version", version );
+		}
+		assertFalse( "Daemon should not be running and is.", service.isRunning() );
+
+		assertEquals( "Java 1.6 or higher is required, found: 1.5", parser.next() );
+	}
+
 	public void testLaunchWithStart() throws Exception {
 		//Log.write( "...testLaunchWithStart()..." );
 		MockService service = new MockService();
@@ -112,7 +125,6 @@ public class ServiceTest extends TestCase {
 		assertEquals( "Stop method was not called the right amount times.", 1, service.getStopCalledCount() );
 	}
 
-	@Test
 	public void testLaunchWithStop() throws Exception {
 		//Log.write( "...testLaunchWithStop()..." );
 		MockService service = new MockService();
@@ -133,7 +145,6 @@ public class ServiceTest extends TestCase {
 		assertEquals( "Stop method was not called the right amount times.", 1, service.getStopCalledCount() );
 	}
 
-	@Test
 	public void testLaunchWithRestart() throws Exception {
 		//Log.write( "...testLaunchWithRestart()..." );
 		MockService service = new MockService();
@@ -162,7 +173,6 @@ public class ServiceTest extends TestCase {
 		assertEquals( "Stop method was not called the right amount times.", 2, service.getStopCalledCount() );
 	}
 
-	@Test
 	public void testFastStartStop() throws Exception {
 		//Log.write( "...testFastStartStop()..." );
 		MockService service = new MockService();
@@ -195,7 +205,6 @@ public class ServiceTest extends TestCase {
 		assertFalse( "Daemon should not be running and is.", service.isRunning() );
 	}
 
-	@Test
 	public void testFastRestarts() throws Exception {
 		//Log.write( "...testFastRestarts()..." );
 		MockService service = new MockService();
