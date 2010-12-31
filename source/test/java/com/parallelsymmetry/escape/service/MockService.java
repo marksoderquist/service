@@ -19,12 +19,6 @@ public class MockService extends Service {
 	}
 
 	@Override
-	protected void process( Parameters parameters ) throws Exception {
-		// TODO Implement Service.process().
-
-	}
-
-	@Override
 	protected void stopService( Parameters parameters ) throws Exception {
 		// TODO Implement Service.stopService().
 

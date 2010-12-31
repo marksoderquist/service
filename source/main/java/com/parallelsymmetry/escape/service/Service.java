@@ -22,6 +22,7 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
@@ -118,7 +119,7 @@ public abstract class Service extends Agent {
 	 * 
 	 * @param commands
 	 */
-	public synchronized void call( String[] commands ) {
+	public synchronized void call( String... commands ) {
 		try {
 			parameters = Parameters.parse( commands, getValidCommandLineFlags() );
 		} catch( InvalidParameterException exception ) {
@@ -264,7 +265,7 @@ public abstract class Service extends Agent {
 
 	protected abstract void startService( Parameters parameters ) throws Exception;
 
-	protected abstract void process( Parameters parameters ) throws Exception;
+	protected void process( Parameters parameters ) throws Exception {}
 
 	protected abstract void stopService( Parameters parameters ) throws Exception;
 
@@ -676,7 +677,8 @@ public abstract class Service extends Agent {
 
 				// Set up the peer log handler.
 				logHandler = new PeerLogHandler( this, socket.getOutputStream() );
-				logHandler.setLevel( Log.parseLevel( parameters.get( "log.level" ) ) );
+				Level level = Log.parseLevel( parameters.get( "log.level" ) );
+				if( level != null ) logHandler.setLevel( level );
 				Log.addHandler( logHandler );
 
 				// Process the parameters.

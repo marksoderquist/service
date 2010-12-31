@@ -2,7 +2,9 @@ package com.parallelsymmetry.escape.service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.logging.Handler;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
 
 import junit.framework.TestCase;
 
@@ -25,26 +27,50 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testCall() throws Exception {
-		service.call( new String[] { "-log.level", "none" } );
+		service.call( "-log.level", "none" );
 		service.waitForStartup( timeout );
 		assertTrue( service.isRunning() );
 
 		assertEquals( MOCK_RELEASE, service.getRelease().toHumanString() );
 
-		service.call( new String[] { "-stop", "-log.level", "none" } );
+		service.call( "-stop", "-log.level", "none" );
 		service.waitForShutdown( timeout );
 		assertFalse( service.isRunning() );
 	}
 
-	public void testStartStopCommandLineOutput() throws Exception {
-		LineParser parser = new LineParser( getCommandLineOutput() );
+	public void testCommandLineOutput() throws Exception {
+		LineParser parser = new LineParser( getCommandLineOutput( Log.INFO ) );
 
 		assertCommandLineHeader( parser );
 
-		assertEquals( "Mock Service started.", parser.next() );
-		assertMatches( "Connected to peer: 127.0.0.1:[0-9]*", parser.next() );
-		assertEquals( "Peer disconnected.", parser.next() );
-		assertEquals( "Mock Service stopped.", parser.next() );
+		List<String> lines = parseCommandLineOutput( parser.getRemaining() );
+
+		int indexA = lines.indexOf( "Mock Service started." );
+		int indexB = lines.indexOf( "Mock Service stopped." );
+
+		assertTrue( indexA < indexB );
+	}
+
+	public void testHelpCommandLineOutput() throws Exception {
+		LineParser parser = new LineParser( getCommandLineOutput( Log.INFO, "-help" ) );
+
+		assertCommandLineHeader( parser );
+
+		assertEquals( "Usage: java -jar <jar file name> [<option>...]", parser.next() );
+		assertEquals( "", parser.next() );
+		assertEquals( "Options:", parser.next() );
+		assertEquals( "  -help [topic]    Show help information.", parser.next() );
+		assertEquals( "  -version         Show version and copyright information only.", parser.next() );
+		assertEquals( "", parser.next() );
+		assertEquals( "  -stop            Stop the application and exit the VM.", parser.next() );
+		assertEquals( "  -start           Start the application.", parser.next() );
+		assertEquals( "  -status          Print the application status.", parser.next() );
+		assertEquals( "  -restart         Restart the application without exiting VM.", parser.next() );
+		assertEquals( "  -watch           Watch an already running application.", parser.next() );
+		assertEquals( "", parser.next() );
+		assertEquals( "  -log.level <level>   Change the output log level. Levels are:", parser.next() );
+		assertEquals( "                       none, error, warn, info, trace, debug, all", parser.next() );
+
 	}
 
 	public void testStartThrowsException() throws Exception {
@@ -53,7 +79,7 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testStopThrowsException() throws Exception {
-		service.call( new String[] { "-start", "-log.level", "none" } );
+		service.call( "-log.level", "none" );
 		service.waitForStartup( timeout );
 		assertTrue( service.isRunning() );
 
@@ -62,37 +88,44 @@ public class ServiceTest extends TestCase {
 		service.stopAndWait( timeout );
 		assertTrue( "Calling stop directly should should not stop the service.", service.isRunning() );
 
-		service.call( new String[] { "-stop", "-log.level", "none" } );
+		service.call( "-stop", "-log.level", "none" );
 		service.waitForShutdown( timeout );
 		assertFalse( service.isRunning() );
 	}
 
-	private String getCommandLineOutput( String... commands ) throws Exception {
+	private List<String> parseCommandLineOutput( String output ) {
+		LineParser parser = new LineParser( output );
+
+		String line = null;
+		List<String> lines = new ArrayList<String>();
+		while( ( line = parser.next() ) != null ) {
+			lines.add( line );
+		}
+
+		return lines;
+	}
+
+	private String getCommandLineOutput( Level level, String... commands ) throws Exception {
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 		DefaultHandler handler = new DefaultHandler( new PrintStream( buffer ) );
-		Handler defaultHandler = Log.getDefaultHandler();
-
-		if( Log.getLevel() == Log.NONE ) Log.removeHandler( defaultHandler );
+		handler.setLevel( level );
 		Log.addHandler( handler );
 
 		try {
 			service.call( commands );
 			service.waitForStartup( timeout );
-			assertTrue( service.isRunning() );
+			//assertTrue( service.isRunning() );
 
-			service.call( new String[] { "-stop" } );
-			service.waitForShutdown( timeout );
-			assertFalse( service.isRunning() );
+			if( service.isRunning() ) {
+				service.call( new String[] { "-stop" } );
+				service.waitForShutdown( timeout );
+				assertFalse( service.isRunning() );
+			}
 		} finally {
 			Log.removeHandler( handler );
-			if( Log.getLevel() == Log.NONE ) Log.addHandler( defaultHandler );
 		}
 
 		return buffer.toString( "UTF-8" );
-	}
-
-	private void assertMatches( String pattern, String value ) {
-		assertTrue( value.matches( pattern ) );
 	}
 
 	private void assertCommandLineHeader( LineParser parser ) {
