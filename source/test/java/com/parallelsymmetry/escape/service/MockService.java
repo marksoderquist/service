@@ -1,11 +1,26 @@
 package com.parallelsymmetry.escape.service;
 
 import com.parallelsymmetry.escape.utility.Parameters;
+import com.parallelsymmetry.escape.utility.ThreadUtil;
 
 public class MockService extends Service {
 
+	private int startCount;
+
+	private int stopCount;
+
+	private int startupPause;
+
+	private int shutdownPause;
+
 	public MockService() {
+		this( 0, 0 );
+	}
+
+	public MockService( int startupPause, int shutdownPause ) {
 		super( "/test.program.xml" );
+		this.startupPause = startupPause;
+		this.shutdownPause = shutdownPause;
 	}
 
 	public static final void main( String[] commands ) {
@@ -14,14 +29,22 @@ public class MockService extends Service {
 
 	@Override
 	protected void startService( Parameters parameters ) throws Exception {
-		// TODO Implement Service.startService().
-
+		ThreadUtil.pause( startupPause );
+		startCount++;
 	}
 
 	@Override
 	protected void stopService( Parameters parameters ) throws Exception {
-		// TODO Implement Service.stopService().
+		ThreadUtil.pause( shutdownPause );
+		stopCount++;
+	}
 
+	public int getStartCalledCount() {
+		return startCount;
+	}
+
+	public int getStopCalledCount() {
+		return stopCount;
 	}
 
 }

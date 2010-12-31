@@ -8,7 +8,10 @@ import java.util.logging.Level;
 
 import junit.framework.TestCase;
 
+import org.junit.Test;
+
 import com.parallelsymmetry.escape.utility.LineParser;
+import com.parallelsymmetry.escape.utility.agent.Agent;
 import com.parallelsymmetry.escape.utility.log.DefaultHandler;
 import com.parallelsymmetry.escape.utility.log.Log;
 
@@ -18,28 +21,28 @@ public class ServiceTest extends TestCase {
 
 	private static final String MOCK_RELEASE = "1.0.0 Alpha 0  1970-01-01 00:00:00";
 
-	private MockService service = new MockService();
-
-	private int timeout = 1000;
+	private int timeout = 5000;
 
 	public void setUp() {
 		Log.setLevel( Log.NONE );
 	}
 
 	public void testCall() throws Exception {
-		service.call( "-log.level", "none" );
+		MockService service = new MockService();
+		service.call();
 		service.waitForStartup( timeout );
 		assertTrue( service.isRunning() );
 
 		assertEquals( MOCK_RELEASE, service.getRelease().toHumanString() );
 
-		service.call( "-stop", "-log.level", "none" );
+		service.call( "-stop" );
 		service.waitForShutdown( timeout );
 		assertFalse( service.isRunning() );
 	}
 
 	public void testCommandLineOutput() throws Exception {
-		LineParser parser = new LineParser( getCommandLineOutput( Log.INFO ) );
+		MockService service = new MockService();
+		LineParser parser = new LineParser( getCommandLineOutput( service, Log.INFO ) );
 
 		assertCommandLineHeader( parser );
 
@@ -52,45 +55,176 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testHelpCommandLineOutput() throws Exception {
-		LineParser parser = new LineParser( getCommandLineOutput( Log.INFO, "-help" ) );
+		MockService service = new MockService();
+		LineParser parser = new LineParser( getCommandLineOutput( service, Log.INFO, "-help" ) );
 
 		assertCommandLineHeader( parser );
 
 		assertEquals( "Usage: java -jar <jar file name> [<option>...]", parser.next() );
 		assertEquals( "", parser.next() );
-		assertEquals( "Options:", parser.next() );
+		assertEquals( "Commands:", parser.next() );
+		assertEquals( "  If no command is specified the program is started.", parser.next() );
+		assertEquals( "", parser.next() );
 		assertEquals( "  -help [topic]    Show help information.", parser.next() );
 		assertEquals( "  -version         Show version and copyright information only.", parser.next() );
 		assertEquals( "", parser.next() );
 		assertEquals( "  -stop            Stop the application and exit the VM.", parser.next() );
-		assertEquals( "  -start           Start the application.", parser.next() );
 		assertEquals( "  -status          Print the application status.", parser.next() );
 		assertEquals( "  -restart         Restart the application without exiting VM.", parser.next() );
 		assertEquals( "  -watch           Watch an already running application.", parser.next() );
 		assertEquals( "", parser.next() );
+		assertEquals( "Options:", parser.next() );
 		assertEquals( "  -log.level <level>   Change the output log level. Levels are:", parser.next() );
 		assertEquals( "                       none, error, warn, info, trace, debug, all", parser.next() );
 
 	}
 
-	public void testStartThrowsException() throws Exception {
-		service.startAndWait( timeout );
-		assertFalse( "Calling start directly should not start the service.", service.isRunning() );
+	//	public void testStartThrowsException() throws Exception {
+	//		MockService service = new MockService();
+	//		service.startAndWait( timeout );
+	//		assertFalse( "Calling start directly should not start the service.", service.isRunning() );
+	//	}
+
+	//	public void testStopThrowsException() throws Exception {
+	//		MockService service = new MockService();
+	//		service.call();
+	//		service.waitForStartup( timeout );
+	//		assertTrue( service.isRunning() );
+	//
+	//		assertEquals( MOCK_RELEASE, service.getRelease().toHumanString() );
+	//
+	//		service.stopAndWait( timeout );
+	//		assertTrue( "Calling stop directly should should not stop the service.", service.isRunning() );
+	//
+	//		service.call( "-stop" );
+	//		service.waitForShutdown( timeout );
+	//		assertFalse( service.isRunning() );
+	//	}
+
+	@Test
+	public void testLaunchWithStart() throws Exception {
+		//Log.write( "...testLaunchWithStart()..." );
+		MockService service = new MockService();
+		assertFalse( "Daemon should not be running and is.", service.isRunning() );
+		assertEquals( "Start method was not called the right amount times.", 0, service.getStartCalledCount() );
+		assertEquals( "Stop method was not called the right amount times.", 0, service.getStopCalledCount() );
+
+		service.call( "-start" );
+		service.waitForStartup( timeout );
+		assertTrue( "Daemon should be running and is not.", service.isRunning() );
+		assertEquals( "Start method was not called the right amount times.", 1, service.getStartCalledCount() );
+		assertEquals( "Stop method was not called the right amount times.", 0, service.getStopCalledCount() );
+
+		service.call( "-stop" );
+		service.waitForShutdown( timeout );
+		assertFalse( "Daemon should not be running and is.", service.isRunning() );
+		assertEquals( "Start method was not called the right amount times.", 1, service.getStartCalledCount() );
+		assertEquals( "Stop method was not called the right amount times.", 1, service.getStopCalledCount() );
 	}
 
-	public void testStopThrowsException() throws Exception {
-		service.call( "-log.level", "none" );
+	@Test
+	public void testLaunchWithStop() throws Exception {
+		//Log.write( "...testLaunchWithStop()..." );
+		MockService service = new MockService();
+		assertFalse( "Daemon should not be running and is.", service.isRunning() );
+		assertEquals( "Start method was not called the right amount times.", 0, service.getStartCalledCount() );
+		assertEquals( "Stop method was not called the right amount times.", 0, service.getStopCalledCount() );
+
+		service.call( "-start" );
 		service.waitForStartup( timeout );
-		assertTrue( service.isRunning() );
+		assertTrue( "Daemon should be running and is not.", service.isRunning() );
+		assertEquals( "Start method was not called the right amount times.", 1, service.getStartCalledCount() );
+		assertEquals( "Stop method was not called the right amount times.", 0, service.getStopCalledCount() );
 
-		assertEquals( MOCK_RELEASE, service.getRelease().toHumanString() );
-
-		service.stopAndWait( timeout );
-		assertTrue( "Calling stop directly should should not stop the service.", service.isRunning() );
-
-		service.call( "-stop", "-log.level", "none" );
+		service.call( "-stop" );
 		service.waitForShutdown( timeout );
-		assertFalse( service.isRunning() );
+		assertFalse( "Daemon should not be running and is.", service.isRunning() );
+		assertEquals( "Start method was not called the right amount times.", 1, service.getStartCalledCount() );
+		assertEquals( "Stop method was not called the right amount times.", 1, service.getStopCalledCount() );
+	}
+
+	@Test
+	public void testLaunchWithRestart() throws Exception {
+		//Log.write( "...testLaunchWithRestart()..." );
+		MockService service = new MockService();
+		assertFalse( "Daemon should not be running and is.", service.isRunning() );
+		assertEquals( "Start method was not called the right amount times.", 0, service.getStartCalledCount() );
+		assertEquals( "Stop method was not called the right amount times.", 0, service.getStopCalledCount() );
+
+		service.call( "-start" );
+		service.waitForStartup( timeout );
+		assertTrue( "Daemon should be running and is not.", service.isRunning() );
+		assertEquals( "Start method was not called the right amount times.", 1, service.getStartCalledCount() );
+		assertEquals( "Stop method was not called the right amount times.", 0, service.getStopCalledCount() );
+
+		service.call( "-restart" );
+		service.waitForStartup( timeout );
+
+		Agent.State state = service.getState();
+		assertTrue( "Daemon should be running and is not: " + state, service.isRunning() );
+		assertEquals( "Start method was not called the right amount times.", 2, service.getStartCalledCount() );
+		assertEquals( "Stop method was not called the right amount times.", 1, service.getStopCalledCount() );
+
+		service.call( "-stop" );
+		service.waitForShutdown( timeout );
+		assertFalse( "Daemon should not be running and is.", service.isRunning() );
+		assertEquals( "Start method was not called the right amount times.", 2, service.getStartCalledCount() );
+		assertEquals( "Stop method was not called the right amount times.", 2, service.getStopCalledCount() );
+	}
+
+	@Test
+	public void testFastStartStop() throws Exception {
+		//Log.write( "...testFastStartStop()..." );
+		MockService service = new MockService();
+		service.call( "-start" );
+		service.waitForStartup( timeout );
+		assertTrue( "Daemon should be running and is not.", service.isRunning() );
+		service.call( "-stop" );
+		service.waitForShutdown( timeout );
+		assertFalse( "Daemon should not be running and is.", service.isRunning() );
+
+		service.call( "-start" );
+		service.waitForStartup( timeout );
+		assertTrue( "Daemon should be running and is not.", service.isRunning() );
+		service.call( "-stop" );
+		service.waitForShutdown( timeout );
+		assertFalse( "Daemon should not be running and is.", service.isRunning() );
+
+		service.call( "-start" );
+		service.waitForStartup( timeout );
+		assertTrue( "Daemon should be running and is not.", service.isRunning() );
+		service.call( "-stop" );
+		service.waitForShutdown( timeout );
+		assertFalse( "Daemon should not be running and is.", service.isRunning() );
+
+		service.call( "-start" );
+		service.waitForStartup( timeout );
+		assertTrue( "Daemon should be running and is not.", service.isRunning() );
+		service.call( "-stop" );
+		service.waitForShutdown( timeout );
+		assertFalse( "Daemon should not be running and is.", service.isRunning() );
+	}
+
+	@Test
+	public void testFastRestarts() throws Exception {
+		//Log.write( "...testFastRestarts()..." );
+		MockService service = new MockService();
+		service.call( "-start" );
+		service.waitForStartup( timeout );
+		assertTrue( "Daemon should be running and is not.", service.isRunning() );
+		service.restart();
+		assertTrue( "Daemon should be running and is not.", service.isRunning() );
+		service.restart();
+		assertTrue( "Daemon should be running and is not.", service.isRunning() );
+		service.restart();
+		assertTrue( "Daemon should be running and is not.", service.isRunning() );
+		service.restart();
+		assertTrue( "Daemon should be running and is not.", service.isRunning() );
+		service.restart();
+		assertTrue( "Daemon should be running and is not.", service.isRunning() );
+		service.call( "-stop" );
+		service.waitForShutdown( timeout );
+		assertFalse( "Daemon should not be running and is.", service.isRunning() );
 	}
 
 	private List<String> parseCommandLineOutput( String output ) {
@@ -105,7 +239,7 @@ public class ServiceTest extends TestCase {
 		return lines;
 	}
 
-	private String getCommandLineOutput( Level level, String... commands ) throws Exception {
+	private String getCommandLineOutput( Service service, Level level, String... commands ) throws Exception {
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 		DefaultHandler handler = new DefaultHandler( new PrintStream( buffer ) );
 		handler.setLevel( level );

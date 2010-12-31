@@ -194,20 +194,26 @@ public abstract class Service extends Agent {
 		// ---------12345678901234567890123456789012345678901234567890123456789012345678901234567890
 		Log.write( "Usage: java -jar <jar file name> [<option>...]" );
 		Log.write();
-		Log.write( "Options:" );
+		helpCommands();
 		helpOptions();
 	}
 
-	public void helpOptions() {
+	public void helpCommands() {
+		Log.write( "Commands:" );
+		Log.write( "  If no command is specified the program is started." );
+		Log.write();
 		Log.write( "  -help [topic]    Show help information." );
 		Log.write( "  -version         Show version and copyright information only." );
 		Log.write();
 		Log.write( "  -stop            Stop the application and exit the VM." );
-		Log.write( "  -start           Start the application." );
 		Log.write( "  -status          Print the application status." );
 		Log.write( "  -restart         Restart the application without exiting VM." );
 		Log.write( "  -watch           Watch an already running application." );
 		Log.write();
+	}
+
+	public void helpOptions() {
+		Log.write( "Options:" );
 		Log.write( "  -log.level <level>   Change the output log level. Levels are:" );
 		Log.write( "                       none, error, warn, info, trace, debug, all" );
 	}
@@ -271,7 +277,7 @@ public abstract class Service extends Agent {
 
 	@Override
 	protected final void startAgent() throws Exception {
-		if( !process ) throw new RuntimeException( "Start should only be called from the Service.call() method." );
+		//if( !process ) throw new RuntimeException( "Start should only be called from the Service.call() method." );
 
 		Log.write( Log.TRACE, getName() + " starting..." );
 		Runtime.getRuntime().addShutdownHook( shutdownHook );
@@ -284,7 +290,7 @@ public abstract class Service extends Agent {
 
 	@Override
 	protected final void stopAgent() throws Exception {
-		if( !process ) throw new RuntimeException( "Start should only be called from the Service.call() method." );
+		//if( !process ) throw new RuntimeException( "Start should only be called from the Service.call() method." );
 
 		Log.write( Log.TRACE, getName() + " stopping..." );
 		if( socket != null ) socket.close();
