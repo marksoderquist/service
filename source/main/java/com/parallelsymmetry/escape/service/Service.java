@@ -42,8 +42,6 @@ import com.parallelsymmetry.escape.utility.log.Log;
 
 public abstract class Service extends Agent {
 
-	public static final String COPYRIGHT = "(C)";
-
 	private static final String DEFAULT_NAMESPACE = "com.parallelsymmetry";
 
 	private static final String DEFAULT_IDENTIFIER = "program";
@@ -63,6 +61,8 @@ public abstract class Service extends Agent {
 	private static final String JAVA_VERSION_MINIMUM = "1.6";
 
 	private static final String LOCALHOST = "127.0.0.1";
+
+	private static final String COPYRIGHT = "(C)";
 
 	private Parameters parameters = Parameters.parse( new String[0] );
 
@@ -213,6 +213,8 @@ public abstract class Service extends Agent {
 
 	public void helpOptions() {
 		Log.write( "Options:" );
+		// FIXME Need to enable color logging.
+		Log.write( "  -log.color           Use ANSI color in the console output." );
 		Log.write( "  -log.level <level>   Change the output log level. Levels are:" );
 		Log.write( "                       none, error, warn, info, trace, debug, all" );
 	}
@@ -535,7 +537,7 @@ public abstract class Service extends Agent {
 			inceptionYear = Calendar.getInstance().get( Calendar.YEAR );
 		}
 		copyrightHolder = descriptor.getValue( "/program/information/vendor", copyrightHolder );
-		licenseSummary = descriptor.getValue( "/program/information/license/summary", licenseSummary );
+		licenseSummary = TextUtil.reline( descriptor.getValue( "/program/information/license/summary", licenseSummary ), 79);
 
 		// Create the identifier from the name if it is not set.
 		if( TextUtil.isEmpty( this.identifier ) ) identifier = getName().replace( ' ', '-' ).toLowerCase();

@@ -74,6 +74,7 @@ public class ServiceTest extends TestCase {
 		assertEquals( "  -watch           Watch an already running application.", parser.next() );
 		assertEquals( "", parser.next() );
 		assertEquals( "Options:", parser.next() );
+		assertEquals( "  -log.color           Use ANSI color in the console output.", parser.next() );
 		assertEquals( "  -log.level <level>   Change the output log level. Levels are:", parser.next() );
 		assertEquals( "                       none, error, warn, info, trace, debug, all", parser.next() );
 		assertEquals( "", parser.next() );
@@ -293,8 +294,8 @@ public class ServiceTest extends TestCase {
 		assertEquals( MOCK_SERVICE_NAME + " " + MOCK_RELEASE, parser.next() );
 		assertEquals( "(C) 1973-" + currentYear + " Parallel Symmetry All rights reserved.", parser.next() );
 		assertEquals( "", parser.next() );
-		assertEquals( "Mock Service comes with ABSOLUTELY NO WARRANTY.  This is open software,", parser.next() );
-		assertEquals( "and you are welcome to redistribute it under certain conditions.", parser.next() );
+		assertEquals( "Mock Service comes with ABSOLUTELY NO WARRANTY. This is open software, and you", parser.next() );
+		assertEquals( "are welcome to redistribute it under certain conditions.", parser.next() );
 		assertEquals( "", parser.next() );
 	}
 
