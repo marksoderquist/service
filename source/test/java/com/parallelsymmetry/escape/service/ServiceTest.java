@@ -21,7 +21,7 @@ public class ServiceTest extends TestCase {
 
 	private static final String MOCK_RELEASE = "1.0.0 Alpha 0  1973-08-14 16:29:00";
 
-	private int timeout = 5000;
+	private int timeout = 1000;
 
 	public void setUp() {
 		Log.setLevel( Log.NONE );
@@ -42,7 +42,7 @@ public class ServiceTest extends TestCase {
 
 	public void testCommandLineOutput() throws Exception {
 		MockService service = new MockService();
-		LineParser parser = new LineParser( getCommandLineOutput( service, Log.INFO ) );
+		LineParser parser = new LineParser( getCommandLineOutput( service, Log.INFO, true ) );
 
 		assertCommandLineHeader( parser );
 
@@ -56,7 +56,7 @@ public class ServiceTest extends TestCase {
 
 	public void testHelpCommandLineOutput() throws Exception {
 		MockService service = new MockService();
-		LineParser parser = new LineParser( getCommandLineOutput( service, Log.INFO, "-help" ) );
+		LineParser parser = new LineParser( getCommandLineOutput( service, Log.INFO, true, "-help" ) );
 
 		assertCommandLineHeader( parser );
 
@@ -68,10 +68,10 @@ public class ServiceTest extends TestCase {
 		assertEquals( "  -help [topic]    Show help information.", parser.next() );
 		assertEquals( "  -version         Show version and copyright information only.", parser.next() );
 		assertEquals( "", parser.next() );
-		assertEquals( "  -stop            Stop the application and exit the VM.", parser.next() );
-		assertEquals( "  -status          Print the application status.", parser.next() );
-		assertEquals( "  -restart         Restart the application without exiting VM.", parser.next() );
-		assertEquals( "  -watch           Watch an already running application.", parser.next() );
+		assertEquals( "  -stop            Stop the program and exit the VM.", parser.next() );
+		assertEquals( "  -status          Print the program status.", parser.next() );
+		assertEquals( "  -restart         Restart the program without exiting VM.", parser.next() );
+		assertEquals( "  -watch           Watch an already running program.", parser.next() );
 		assertEquals( "", parser.next() );
 		assertEquals( "Options:", parser.next() );
 		assertEquals( "  -log.color           Use ANSI color in the console output.", parser.next() );
@@ -83,7 +83,7 @@ public class ServiceTest extends TestCase {
 
 	public void testStatusCommandLineOutput() throws Exception {
 		MockService service = new MockService();
-		LineParser parser = new LineParser( getCommandLineOutput( service, Log.INFO, "-status" ) );
+		LineParser parser = new LineParser( getCommandLineOutput( service, Log.INFO, true, "-status" ) );
 
 		assertCommandLineHeader( parser );
 
@@ -99,7 +99,7 @@ public class ServiceTest extends TestCase {
 		LineParser parser = null;
 		MockService service = new MockService();
 		try {
-			parser = new LineParser( getCommandLineOutput( service, Log.INFO ) );
+			parser = new LineParser( getCommandLineOutput( service, Log.INFO, true ) );
 		} finally {
 			System.setProperty( "java.runtime.version", version );
 		}
@@ -229,26 +229,67 @@ public class ServiceTest extends TestCase {
 		assertFalse( "Service should not be running and is.", service.isRunning() );
 	}
 
-	public void testPassParameters() throws Exception {
-		//Log.write( "...testPassParameters()..." );
-		MockService service1 = new MockService();
-		LineParser parser = new LineParser( getCommandLineOutput( service1, Log.INFO, "-status" ) );
-
-		assertCommandLineHeader( parser );
-
-		assertEquals( "Mock Service status: STOPPED", parser.next() );
-		assertEquals( "", parser.next() );
-		assertNull( parser.next() );
-
-		assertFalse( "Service should not be running and is.", service1.isRunning() );
-		service1.call( "-start", "-log.level", "debug" );
+	public void testAlreadyRunning() throws Exception {
+		//System.out.println( "...testPassParameters()..." );
+		String name1 = "Mock Service 1";
+		MockService service1 = new MockService( name1 );
+		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false, "-start" ) );
+		assertCommandLineHeader( name1, parser1 );
 		assertTrue( "Service should be running and is not.", service1.isRunning() );
 
-		MockService service2 = new MockService();
+		String name2 = "Mock Service 2";
+		MockService service2 = new MockService( name2 );
+		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.INFO, false ) );
+		service2.waitForShutdown( timeout );
+		assertCommandLineHeader( name2, parser2 );
+
+		assertEquals( name2 + " already running.", parser2.next() );
+		assertEquals( "", parser2.next() );
+		assertNull( parser2.next() );
+
 		service2.call( "-stop" );
 		service1.waitForShutdown( timeout );
 		assertEquals( Service.State.STOPPED, service1.getState() );
 		assertFalse( "Service should not be running and is.", service1.isRunning() );
+
+		service2.waitForShutdown( timeout );
+		assertEquals( Service.State.STOPPED, service2.getState() );
+		assertFalse( "Service should not be running and is.", service2.isRunning() );
+	}
+
+	public void testPassStatus() throws Exception {
+		//Log.write( "...testPassStatus()..." );
+		String name1 = "Mock Service 1";
+		MockService service1 = new MockService( name1 );
+		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false, "-status" ) );
+		assertCommandLineHeader( name1, parser1 );
+
+		assertEquals( name1 + " status: STOPPED", parser1.next() );
+		assertEquals( "", parser1.next() );
+		assertNull( parser1.next() );
+
+		// Start the service.
+		assertFalse( "Service should not be running and is.", service1.isRunning() );
+		service1.call( "-start" );
+		service1.waitForStartup( timeout );
+		assertTrue( "Service should be running and is not.", service1.isRunning() );
+
+		String name2 = "Mock Service 2";
+		MockService service2 = new MockService( name2 );
+		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.INFO, false, "-status" ) );
+		service2.waitForShutdown( timeout );
+		assertCommandLineHeader( name2, parser2 );
+
+		assertEquals( name1 + " status: STARTED", parser2.next() );
+		assertEquals( "", parser2.next() );
+		assertNull( parser2.next() );
+
+		service2.call( "-stop" );
+		service1.waitForShutdown( timeout );
+		assertEquals( Service.State.STOPPED, service1.getState() );
+		assertFalse( "Service should not be running and is.", service1.isRunning() );
+
+		service2.waitForShutdown( timeout );
 		assertEquals( Service.State.STOPPED, service2.getState() );
 		assertFalse( "Service should not be running and is.", service2.isRunning() );
 	}
@@ -265,7 +306,7 @@ public class ServiceTest extends TestCase {
 		return lines;
 	}
 
-	private String getCommandLineOutput( Service service, Level level, String... commands ) throws Exception {
+	private String getCommandLineOutput( Service service, Level level, boolean stop, String... commands ) throws Exception {
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 		DefaultHandler handler = new DefaultHandler( new PrintStream( buffer ) );
 		handler.setLevel( level );
@@ -274,9 +315,8 @@ public class ServiceTest extends TestCase {
 		try {
 			service.call( commands );
 			service.waitForStartup( timeout );
-			//assertTrue( service.isRunning() );
 
-			if( service.isRunning() ) {
+			if( stop && service.isRunning() ) {
 				service.call( new String[] { "-stop" } );
 				service.waitForShutdown( timeout );
 				assertFalse( service.isRunning() );
@@ -289,9 +329,13 @@ public class ServiceTest extends TestCase {
 	}
 
 	private void assertCommandLineHeader( LineParser parser ) {
+		assertCommandLineHeader( MOCK_SERVICE_NAME, parser );
+	}
+
+	private void assertCommandLineHeader( String name, LineParser parser ) {
 		int currentYear = Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ).get( Calendar.YEAR );
 
-		assertEquals( MOCK_SERVICE_NAME + " " + MOCK_RELEASE, parser.next() );
+		assertEquals( name + " " + MOCK_RELEASE, parser.next() );
 		assertEquals( "(C) 1973-" + currentYear + " Parallel Symmetry All rights reserved.", parser.next() );
 		assertEquals( "", parser.next() );
 		assertEquals( "Mock Service comes with ABSOLUTELY NO WARRANTY. This is open software, and you", parser.next() );

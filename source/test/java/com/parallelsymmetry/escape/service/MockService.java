@@ -17,8 +17,16 @@ public class MockService extends Service {
 		this( 0, 0 );
 	}
 
+	public MockService( String name ) {
+		this( name, 0, 0 );
+	}
+
 	public MockService( int startupPause, int shutdownPause ) {
-		super( "/test.program.xml" );
+		this( null, startupPause, shutdownPause );
+	}
+
+	public MockService( String name, int startupPause, int shutdownPause ) {
+		super( name, "/test.program.xml" );
 		this.startupPause = startupPause;
 		this.shutdownPause = shutdownPause;
 	}

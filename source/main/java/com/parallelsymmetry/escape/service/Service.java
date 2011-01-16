@@ -1,6 +1,7 @@
 package com.parallelsymmetry.escape.service;
 
 import java.io.BufferedInputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,8 +12,6 @@ import java.net.ConnectException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.security.InvalidParameterException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -64,6 +63,8 @@ public abstract class Service extends Agent {
 
 	private static final String COPYRIGHT = "(C)";
 
+	private static final String SERIVCE_PORT_KEY = TextUtil.toHexEncodedString( TextUtil.getMD5Sum( Service.class.getName() ) );
+
 	private Parameters parameters = Parameters.parse( new String[0] );
 
 	private Thread shutdownHook = new ShutdownHook( this );
@@ -90,6 +91,8 @@ public abstract class Service extends Agent {
 
 	private Socket socket;
 
+	private String name;
+
 	private File home;
 
 	/**
@@ -97,18 +100,31 @@ public abstract class Service extends Agent {
 	 * &quot;/META-INF/program.xml&quot;.
 	 */
 	public Service() {
-		this( DEFAULT_DESCRIPTOR_PATH );
+		this( null, null );
 	}
 
 	/**
-	 * Construct the service with the specified descriptor path. The descriptor
-	 * must be found on the class path and the descriptor path must begin with a
-	 * '/' slash.
+	 * Construct the service with the specified name and the default descriptor
+	 * path of &quot;/META-INF/program.xml&quot;.
 	 * 
+	 * @param name
+	 */
+	public Service( String name ) {
+		this( name, null );
+	}
+
+	/**
+	 * Construct the service with the specified name and descriptor path. The
+	 * descriptor path must be able to be found on the class path and must begin
+	 * with a '/' slash.
+	 * 
+	 * @param name
 	 * @param descriptorPath
 	 */
-	public Service( String descriptorPath ) {
-		this.descriptorPath = descriptorPath;
+	public Service( String name, String descriptorPath ) {
+		super( name );
+		this.name = name;
+		this.descriptorPath = descriptorPath == null ? DEFAULT_DESCRIPTOR_PATH : descriptorPath;
 	}
 
 	/**
@@ -123,12 +139,12 @@ public abstract class Service extends Agent {
 			parameters = Parameters.parse( commands, getValidCommandLineFlags() );
 		} catch( InvalidParameterException exception ) {
 			Log.write( exception );
-
-			// FIXME Print the message then print the help then exit.
+			printHelp( null );
+			return;
 		}
 
 		// Set log level.
-		setLogLevel( parameters );
+		configureLogging( parameters );
 
 		// Load description.
 		describe( parameters );
@@ -188,32 +204,33 @@ public abstract class Service extends Agent {
 		return home;
 	}
 
-	public void help( String topic ) {
+	public void printHelp( String topic ) {
 		// ---------0--------1---------2---------3---------4---------5---------6---------7---------8
 		// ---------12345678901234567890123456789012345678901234567890123456789012345678901234567890
-		Log.write( "Usage: java -jar <jar file name> [<option>...]" );
-		Log.write();
-		helpCommands();
-		helpOptions();
+		if( "true".equals( topic ) ) {
+			Log.write( "Usage: java -jar <jar file name> [<option>...]" );
+			Log.write();
+			printHelpCommands();
+			printHelpOptions();
+		}
 	}
 
-	public void helpCommands() {
+	public void printHelpCommands() {
 		Log.write( "Commands:" );
 		Log.write( "  If no command is specified the program is started." );
 		Log.write();
 		Log.write( "  -help [topic]    Show help information." );
 		Log.write( "  -version         Show version and copyright information only." );
 		Log.write();
-		Log.write( "  -stop            Stop the application and exit the VM." );
-		Log.write( "  -status          Print the application status." );
-		Log.write( "  -restart         Restart the application without exiting VM." );
-		Log.write( "  -watch           Watch an already running application." );
+		Log.write( "  -stop            Stop the program and exit the VM." );
+		Log.write( "  -status          Print the program status." );
+		Log.write( "  -restart         Restart the program without exiting VM." );
+		Log.write( "  -watch           Watch an already running program." );
 		Log.write();
 	}
 
-	public void helpOptions() {
+	public void printHelpOptions() {
 		Log.write( "Options:" );
-		// FIXME Need to enable color logging.
 		Log.write( "  -log.color           Use ANSI color in the console output." );
 		Log.write( "  -log.level <level>   Change the output log level. Levels are:" );
 		Log.write( "                       none, error, warn, info, trace, debug, all" );
@@ -341,11 +358,11 @@ public abstract class Service extends Agent {
 			} else if( parameters.isSet( "version" ) ) {
 				return;
 			} else if( parameters.isSet( "help" ) ) {
-				help( parameters.get( "help" ) );
+				printHelp( parameters.get( "help" ) );
 				return;
 			}
 
-			// Start the application.
+			// Start the program.
 			startAndWait();
 
 			// Process parameters.
@@ -358,15 +375,18 @@ public abstract class Service extends Agent {
 
 	private final boolean peerExists( Parameters parameters ) {
 		boolean exists = false;
+		String peer = null;
 		String host = parameters.get( "host", LOCALHOST );
 		int port = getServicePortNumber( parameters );
 
 		if( port != 0 ) {
 			// Connect to the peer, if possible, and pass the parameters.
 			try {
-				// FIXME Convert the Socket code to SocketChannel code and/or use SocketAgent.
+				// FIXME Convert the Socket code to use SocketAgent.
 				socket = new Socket( host, port );
-				Log.write( "Connected to peer: " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort() );
+				peer = socket.getInetAddress().getHostAddress() + ":" + socket.getPort();
+				if( parameters.size() == 0 ) Log.write( getName() + " already running." );
+				Log.write( Log.TRACE, "Connected to peer: " + peer );
 				ObjectOutputStream output = new ObjectOutputStream( socket.getOutputStream() );
 				output.writeObject( parameters.getCommands() );
 				output.flush();
@@ -394,11 +414,13 @@ public abstract class Service extends Agent {
 					LogRecord entry = (LogRecord)object;
 					Log.writeTo( PEER_LOGGER_NAME, entry );
 				}
-				Log.write( Log.INFO, "Peer disconnected." );
+				Log.write( Log.TRACE, "Disconnected from peer: " + peer );
+			} catch( EOFException exception ) {
+				Log.write( Log.TRACE, "Disconnected from peer: " + peer );
 			} catch( SocketException exception ) {
-				Log.write( Log.INFO, "Peer disconnected." );
+				Log.write( Log.TRACE, "Disconnected from peer: " + peer );
 			} catch( Exception exception ) {
-				Log.write( Log.INFO, "Peer connection terminated." );
+				Log.write( Log.TRACE, "Peer connection terminated." );
 				Log.write( exception );
 			} finally {
 				if( socket != null ) {
@@ -432,41 +454,23 @@ public abstract class Service extends Agent {
 
 		// Find the port from the preferences.
 		if( port == 0 ) {
-			port = getServicePortPreferenceNode().getInt( getServicePortKey(), port );
+			port = getServicePortPreferenceNode().getInt( SERIVCE_PORT_KEY, port );
 		}
 
 		return port;
 	}
 
-	/**
-	 * This method returns the class name as an MD5 hash code hex encoded. This is
-	 * intended to give a small amount of security to the program.
-	 * 
-	 * @return
-	 */
-	private final String getServicePortKey() {
-		// FIXME Move MD5 generation to TextUtil. Then this method can go away by storing the port key as a constant.
-		MessageDigest digest = null;
-		try {
-			digest = MessageDigest.getInstance( "MD5" );
-		} catch( NoSuchAlgorithmException exception ) {
-			return null;
-		}
-		digest.reset();
-		return TextUtil.toHexEncodedString( digest.digest( getClass().getName().getBytes() ) );
-	}
-
 	private final void storeServicePortNumber() throws IOException, BackingStoreException {
 		Preferences preferences = getServicePortPreferenceNode();
 		if( !preferences.isUserNode() ) return;
-		preferences.putInt( getServicePortKey(), peerServer.getLocalPort() );
+		preferences.putInt( SERIVCE_PORT_KEY, peerServer.getLocalPort() );
 		preferences.flush();
 	}
 
 	private final void resetServicePortNumber() throws BackingStoreException {
 		Preferences preferences = getServicePortPreferenceNode();
 		if( !preferences.isUserNode() ) return;
-		preferences.remove( getServicePortKey() );
+		preferences.remove( SERIVCE_PORT_KEY );
 		preferences.flush();
 	}
 
@@ -490,15 +494,16 @@ public abstract class Service extends Agent {
 		return true;
 	}
 
-	private final void setLogLevel( Parameters parameters ) {
+	private final void configureLogging( Parameters parameters ) {
+		Log.setShowColor( parameters.isSet( "log.color" ) );
 		Log.setLevel( Log.parseLevel( parameters.get( "log.level" ) ) );
 	}
 
 	private final void describe( Parameters parameters ) {
 		descriptor = getApplicationDescriptor();
 
-		// Get the application attributes.
-		setName( descriptor.getValue( "/program/information/name", getName() ) );
+		// Get the program attributes.
+		setName( name == null ? descriptor.getValue( "/program/information/name" ) : name );
 		namespace = descriptor.getValue( "/program/information/namespace", namespace );
 		identifier = descriptor.getValue( "/program/information/identifier", identifier );
 		Version version = Version.parse( descriptor.getValue( "/program/information/version", null ) );
@@ -537,7 +542,7 @@ public abstract class Service extends Agent {
 			inceptionYear = Calendar.getInstance().get( Calendar.YEAR );
 		}
 		copyrightHolder = descriptor.getValue( "/program/information/vendor", copyrightHolder );
-		licenseSummary = TextUtil.reline( descriptor.getValue( "/program/information/license/summary", licenseSummary ), 79);
+		licenseSummary = TextUtil.reline( descriptor.getValue( "/program/information/license/summary", licenseSummary ), 79 );
 
 		// Create the identifier from the name if it is not set.
 		if( TextUtil.isEmpty( this.identifier ) ) identifier = getName().replace( ' ', '-' ).toLowerCase();
@@ -763,6 +768,7 @@ public abstract class Service extends Agent {
 			if( closed || record.getLevel().intValue() < getLevel().intValue() ) return;
 
 			try {
+				// FIXME Change out ObjectOutputStream for other implementation.
 				output.writeObject( record );
 				output.flush();
 			} catch( Exception exception ) {
