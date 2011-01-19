@@ -19,7 +19,7 @@ public class ServiceTest extends TestCase {
 
 	private static final String MOCK_SERVICE_NAME = "Mock Service";
 
-	private static final String MOCK_RELEASE = "1.0.0 Alpha 0  1973-08-14 16:29:00";
+	private static final String MOCK_RELEASE = "1.0.0 Alpha 00  1973-08-14 16:29:00";
 
 	private int timeout = 1000;
 
