@@ -31,11 +31,10 @@ public class ServiceTest extends TestCase {
 	public void testBeforeCall() throws Exception {
 		MockService service = new MockService();
 
-		assertEquals( "com.parallelsymmetry", service.getGroup() );
-		assertEquals( "service", service.getArtifact() );
-		assertEquals( "unknown", service.getRelease().toString() );
-
-		assertEquals( "(C) " + DateUtil.getCurrentYear() + " Unknown", service.getCopyright() );
+		assertEquals( "com.parallelsymmetry.escape.service", service.getGroup() );
+		assertEquals( "mock", service.getArtifact() );
+		assertEquals( "1.0.0-a-00  1973-08-14 16:29:00", service.getRelease().toString() );
+		assertEquals( "(C) 1973-" + DateUtil.getCurrentYear() + " Parallel Symmetry", service.getCopyright() );
 		assertEquals( "All rights reserved.", service.getCopyrightNotice() );
 	}
 

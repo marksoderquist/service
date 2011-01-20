@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -121,6 +120,8 @@ public abstract class Service extends Agent {
 		super( name );
 		this.name = name;
 		this.descriptorPath = descriptorPath == null ? DEFAULT_DESCRIPTOR_PATH : descriptorPath;
+
+		describe( Parameters.parse( new String[] {} ) );
 	}
 
 	/**
