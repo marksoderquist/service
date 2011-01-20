@@ -6,12 +6,14 @@ import com.parallelsymmetry.escape.utility.log.Log;
 public class DemoService extends Service {
 
 	public static final void main( String[] commands ) {
-		new DemoService().call( "-log.tag", "-log.level", "trace");
+		new DemoService().call( "-log.tag", "-log.level", "trace" );
 	}
 
 	@Override
 	protected void startService( Parameters parameters ) throws Exception {
 		Log.write( "Welcome to the Demo service." );
+		Log.write( Log.WARN, "What a warning! I mean morning!" );
+		Log.write( new Throwable( "Just checking" ) );
 	}
 
 	@Override
