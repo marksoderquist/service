@@ -1,5 +1,6 @@
 package com.parallelsymmetry.escape.service;
 
+import java.beans.XMLEncoder;
 import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -616,12 +617,7 @@ public abstract class Service extends Agent {
 
 				Log.write( Log.TRACE, "Parameters read from peer." );
 
-				Parameters parameters = null;
-				try {
-					parameters = Parameters.parse( (String[])input.readObject() );
-				} catch( InvalidParameterException exception ) {
-					Log.write( exception );
-				}
+				Parameters parameters = Parameters.parse( (String[])input.readObject() );
 
 				// Set up the peer log handler.
 				logHandler = new PeerLogHandler( this, socket.getOutputStream() );
@@ -634,6 +630,8 @@ public abstract class Service extends Agent {
 
 				// If the watch flag is set then just watch.
 				if( "true".equals( parameters.get( "watch" ) ) ) watch();
+			} catch( InvalidParameterException exception ) {
+				Log.write( exception );
 			} catch( SocketException exception ) {
 				if( !"socket closed".equals( exception.getMessage().toLowerCase().trim() ) ) {
 					Log.write( exception );
@@ -654,6 +652,10 @@ public abstract class Service extends Agent {
 				Log.write( Log.TRACE, "Peer disconnected: " + peer );
 			}
 
+		}
+
+		public boolean isConnected() {
+			return !socket.isClosed();
 		}
 
 		public void closeSocket() {
@@ -707,36 +709,50 @@ public abstract class Service extends Agent {
 			if( closed || record.getLevel().intValue() < getLevel().intValue() ) return;
 
 			try {
-				// FIXME Change out ObjectOutputStream for other implementation.
 				output.writeObject( record );
 				output.flush();
-			} catch( Exception exception ) {
+			} catch( SocketException exception ) {
 				peer.stop();
+			} catch( Exception exception ) {
+				log(exception);
 			}
 		}
 
 		@Override
 		public void flush() {
+			if( closed ) return;
+
 			try {
 				output.flush();
-			} catch( Exception exception ) {
+			} catch( SocketException exception ) {
 				peer.stop();
+			} catch( Exception exception ) {
+				log(exception);
 			}
 		}
 
 		@Override
 		public void close() throws SecurityException {
 			if( closed ) return;
+
 			closed = true;
 
 			try {
 				output.close();
-			} catch( Exception exception ) {
+			} catch( SocketException exception ) {
 				peer.stop();
+			} catch( Exception exception ) {
+				log(exception);
 			} finally {
-
 				Log.removeHandler( this );
 			}
+		}
+
+		private void log( Throwable throwable ) {
+			Level level = getLevel();
+			setLevel( Log.NONE );
+			Log.write( throwable );
+			setLevel( level );
 		}
 
 	}
