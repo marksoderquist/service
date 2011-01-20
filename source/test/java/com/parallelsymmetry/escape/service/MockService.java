@@ -40,6 +40,9 @@ public class MockService extends Service {
 		ThreadUtil.pause( startupPause );
 		startCount++;
 	}
+	
+	@Override
+	protected void process( Parameters parameters ) throws Exception {}
 
 	@Override
 	protected void stopService( Parameters parameters ) throws Exception {

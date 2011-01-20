@@ -2,7 +2,6 @@ package com.parallelsymmetry.escape.service;
 
 import java.io.BufferedInputStream;
 import java.io.EOFException;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -29,7 +28,6 @@ import java.util.prefs.Preferences;
 
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
-import com.parallelsymmetry.escape.utility.JavaUtil;
 import com.parallelsymmetry.escape.utility.Parameters;
 import com.parallelsymmetry.escape.utility.Release;
 import com.parallelsymmetry.escape.utility.TextUtil;
@@ -48,8 +46,6 @@ public abstract class Service extends Agent {
 	private static final String DEFAULT_NAMESPACE = "com.parallelsymmetry";
 
 	private static final String DEFAULT_IDENTIFIER = "program";
-
-	private static final String HOME_PARAMETER_NAME = "home";
 
 	private static final String PEER_LOGGER_NAME = "peer";
 
@@ -94,8 +90,6 @@ public abstract class Service extends Agent {
 	private Socket socket;
 
 	private String name;
-
-	private File home;
 
 	/**
 	 * Construct the service with the default descriptor path of
@@ -151,9 +145,6 @@ public abstract class Service extends Agent {
 		// Load description.
 		describe( parameters );
 
-		// Find home.
-		home = findHome( parameters );
-
 		// Verify Java environment.
 		if( !verifyJavaEnvironment( parameters ) ) return;
 
@@ -200,10 +191,6 @@ public abstract class Service extends Agent {
 
 	public Settings getSettings() {
 		return settings;
-	}
-
-	public File getHome() {
-		return home;
 	}
 
 	public void printHelp( String topic ) {
@@ -291,7 +278,7 @@ public abstract class Service extends Agent {
 
 	protected abstract void startService( Parameters parameters ) throws Exception;
 
-	protected void process( Parameters parameters ) throws Exception {}
+	protected abstract void process( Parameters parameters ) throws Exception;
 
 	protected abstract void stopService( Parameters parameters ) throws Exception;
 
@@ -509,40 +496,6 @@ public abstract class Service extends Agent {
 		Log.setLevel( Log.parseLevel( parameters.get( "log.level" ) ) );
 	}
 
-	/**
-	 * Find the home directory.
-	 * 
-	 * @param parameters
-	 * @return
-	 */
-	private final File findHome( Parameters parameters ) {
-		File home = null;
-
-		try {
-			// Check the class path.
-			List<File> entries = JavaUtil.parseSystemClasspath( System.getProperty( "java.class.path" ) );
-			if( entries.size() > 0 && entries.get( 0 ).getName().endsWith( ".jar" ) ) {
-				home = entries.get( 0 ).getParentFile().getParentFile();
-			}
-
-			// If -home was specified on the command line use it.
-			if( home == null && parameters.get( HOME_PARAMETER_NAME ) != null ) {
-				home = new File( parameters.get( HOME_PARAMETER_NAME ) ).getCanonicalFile();
-			}
-
-			// If no home is found, use the current working directory.
-			if( home == null ) {
-				home = new File( System.getProperty( "user.dir" ) );
-			}
-
-			return home.getCanonicalFile();
-		} catch( IOException exception ) {
-			exception.printStackTrace();
-		}
-
-		return home;
-	}
-
 	private final Descriptor getApplicationDescriptor() {
 		if( descriptor == null ) {
 			try {
@@ -569,7 +522,6 @@ public abstract class Service extends Agent {
 		}
 
 		Log.write( Log.TRACE, "Java: " + System.getProperty( "java.runtime.version" ) );
-		Log.write( Log.TRACE, "Home: " + getHome() );
 	}
 
 	private final void printStatus() {
