@@ -30,14 +30,18 @@ import java.util.prefs.Preferences;
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.JavaUtil;
-import com.parallelsymmetry.escape.utility.Version;
 import com.parallelsymmetry.escape.utility.Parameters;
 import com.parallelsymmetry.escape.utility.Release;
 import com.parallelsymmetry.escape.utility.TextUtil;
+import com.parallelsymmetry.escape.utility.Version;
 import com.parallelsymmetry.escape.utility.agent.Agent;
 import com.parallelsymmetry.escape.utility.agent.ServerAgent;
 import com.parallelsymmetry.escape.utility.agent.Worker;
 import com.parallelsymmetry.escape.utility.log.Log;
+import com.parallelsymmetry.escape.utility.setting.DescriptorSettingProvider;
+import com.parallelsymmetry.escape.utility.setting.ParametersSettingProvider;
+import com.parallelsymmetry.escape.utility.setting.PreferencesSettingProvider;
+import com.parallelsymmetry.escape.utility.setting.Settings;
 
 public abstract class Service extends Agent {
 
@@ -51,9 +55,7 @@ public abstract class Service extends Agent {
 
 	private static final String DEFAULT_DESCRIPTOR_PATH = "/META-INF/program.xml";
 
-	private static final String REGULAR_PREFERENCE_FILE_PATH = "/META-INF/preferences.xml";
-
-	private static final String DEFAULT_PREFERENCE_FILE_PATH = "/META-INF/preferences.default.xml";
+	private static final String DEFAULT_SETTINGS_PATH = "/META-INF/settings.xml";
 
 	private static final String DESCRIPTOR_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
@@ -63,9 +65,9 @@ public abstract class Service extends Agent {
 
 	private static final String COPYRIGHT = "(C)";
 
-	private static final String SERIVCE_PORT_KEY = TextUtil.toHexEncodedString( TextUtil.getMD5Sum( Service.class.getName() ) );
+	private Parameters parameters;
 
-	private Parameters parameters = Parameters.parse( new String[0] );
+	private Settings settings;
 
 	private Thread shutdownHook = new ShutdownHook( this );
 
@@ -196,8 +198,8 @@ public abstract class Service extends Agent {
 		return parameters;
 	}
 
-	public Preferences getPreferences() {
-		return com.parallelsymmetry.escape.utility.Preferences.getApplicationRoot( getNamespace(), getIdentifier() );
+	public Settings getSettings() {
+		return settings;
 	}
 
 	public File getHome() {
@@ -325,6 +327,54 @@ public abstract class Service extends Agent {
 		Log.write( getName() + " stopped." );
 	}
 
+	private final void describe( Parameters parameters ) {
+		settings = new Settings();
+		descriptor = getApplicationDescriptor();
+
+		// Determine the program name.
+		setName( name == null ? descriptor.getValue( "/program/information/name" ) : name );
+
+		// Determine the program namespace.
+		namespace = descriptor.getValue( "/program/information/namespace", namespace );
+		namespace = parameters.get( "namespace", namespace );
+
+		// Determine the program identifier.
+		identifier = descriptor.getValue( "/program/information/identifier", identifier );
+		identifier = parameters.get( "identifier", identifier );
+		if( parameters.isSet( "development" ) ) identifier += "-dev";
+		if( TextUtil.isEmpty( this.identifier ) ) identifier = getName().replace( ' ', '-' ).toLowerCase();
+
+		// Determine the program release.
+		Version version = new Version( descriptor.getValue( "/program/information/version", null ) );
+		Date timestamp = DateUtil.parse( descriptor.getValue( "/program/information/timestamp", null ), DESCRIPTOR_DATE_FORMAT );
+		release = new Release( version, timestamp );
+
+		// Determine the program copyright information.
+		try {
+			inceptionYear = Integer.parseInt( descriptor.getValue( "/program/information/inception" ) );
+		} catch( NumberFormatException exception ) {
+			inceptionYear = Calendar.getInstance().get( Calendar.YEAR );
+		}
+		copyrightHolder = descriptor.getValue( "/program/information/vendor", copyrightHolder );
+		licenseSummary = TextUtil.reline( descriptor.getValue( "/program/information/license/summary", licenseSummary ), 79 );
+
+		// Minimum Java runtime version.
+		javaVersionMinimum = descriptor.getValue( "/program/resources/java/@version", JAVA_VERSION_MINIMUM );
+
+		// Add the setting providers.
+		try {
+			Descriptor defaultSettingDescriptor = null;
+			defaultSettingDescriptor = new Descriptor( getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH ) );
+			Preferences preferences = Preferences.userRoot().node( "/" + namespace.replace( '.', '/' ) + "/" + identifier );
+
+			settings.addProvider( new ParametersSettingProvider( parameters ) );
+			if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
+			if( defaultSettingDescriptor != null ) settings.setDefaultProvider( new DescriptorSettingProvider( defaultSettingDescriptor ) );
+		} catch( Exception exception ) {
+			Log.write( exception );
+		}
+	}
+
 	/**
 	 * Process the program parameters. This method is called from both the
 	 * process() method if another instance of the program is not running or the
@@ -377,7 +427,7 @@ public abstract class Service extends Agent {
 		boolean exists = false;
 		String peer = null;
 		String host = parameters.get( "host", LOCALHOST );
-		int port = getServicePortNumber( parameters );
+		int port = getSettings().getInt( "/port", 0 );
 
 		if( port != 0 ) {
 			// Connect to the peer, if possible, and pass the parameters.
@@ -437,52 +487,12 @@ public abstract class Service extends Agent {
 		return exists;
 	}
 
-	private final int getServicePortNumber( Parameters parameters ) {
-		int port = 0;
-
-		// Find the port from the parameters.
-		if( port == 0 ) {
-			String portString = parameters.get( "port" );
-			if( portString != null ) {
-				try {
-					port = Integer.parseInt( portString );
-				} catch( NumberFormatException exception ) {
-					throw new IllegalArgumentException( "Invalid port number: " + portString );
-				}
-			}
-		}
-
-		// Find the port from the preferences.
-		if( port == 0 ) {
-			port = getServicePortPreferenceNode().getInt( SERIVCE_PORT_KEY, port );
-		}
-
-		return port;
-	}
-
 	private final void storeServicePortNumber() throws IOException, BackingStoreException {
-		Preferences preferences = getServicePortPreferenceNode();
-		if( !preferences.isUserNode() ) return;
-		preferences.putInt( SERIVCE_PORT_KEY, peerServer.getLocalPort() );
-		preferences.flush();
+		getSettings().putInt( "/port", peerServer.getLocalPort() );
 	}
 
 	private final void resetServicePortNumber() throws BackingStoreException {
-		Preferences preferences = getServicePortPreferenceNode();
-		if( !preferences.isUserNode() ) return;
-		preferences.remove( SERIVCE_PORT_KEY );
-		preferences.flush();
-	}
-
-	private final Preferences getServicePortPreferenceNode() {
-		Preferences node = null;
-		try {
-			node = getPreferences().node( "port" );
-			node.sync();
-		} catch( BackingStoreException userNodeException ) {
-			// Allow method to continue.
-		}
-		return node;
+		getSettings().put( "/port", null );
 	}
 
 	private final boolean verifyJavaEnvironment( Parameters parameters ) {
@@ -497,55 +507,6 @@ public abstract class Service extends Agent {
 	private final void configureLogging( Parameters parameters ) {
 		Log.setShowColor( parameters.isSet( "log.color" ) );
 		Log.setLevel( Log.parseLevel( parameters.get( "log.level" ) ) );
-	}
-
-	private final void describe( Parameters parameters ) {
-		descriptor = getApplicationDescriptor();
-
-		// Get the program attributes.
-		setName( name == null ? descriptor.getValue( "/program/information/name" ) : name );
-		namespace = descriptor.getValue( "/program/information/namespace", namespace );
-		identifier = descriptor.getValue( "/program/information/identifier", identifier );
-		Version version = new Version( descriptor.getValue( "/program/information/version", null ) );
-		Date timestamp = DateUtil.parse( descriptor.getValue( "/program/information/timestamp", null ), DESCRIPTOR_DATE_FORMAT );
-		javaVersionMinimum = descriptor.getValue( "/program/resources/java/@version", JAVA_VERSION_MINIMUM );
-		release = new Release( version, timestamp );
-
-		identifier = parameters.get( "identifier", identifier );
-		if( parameters.isSet( "development" ) ) identifier += "-dev";
-
-		try {
-			com.parallelsymmetry.escape.utility.Preferences preferences = (com.parallelsymmetry.escape.utility.Preferences)getPreferences();
-			// Only reset the preferences when you need to start with a clean slate.
-			if( parameters.isSet( "preferences.reset" ) ) preferences.reset();
-
-			InputStream defaultPreferencesStream = getClass().getResourceAsStream( DEFAULT_PREFERENCE_FILE_PATH );
-			if( defaultPreferencesStream != null ) {
-				preferences.loadDefaults( defaultPreferencesStream );
-			} else {
-				Log.write( Log.DEBUG, "Default preferences not found." );
-			}
-
-			InputStream regularPreferencesStream = getClass().getResourceAsStream( REGULAR_PREFERENCE_FILE_PATH );
-			if( regularPreferencesStream != null ) {
-				preferences.loadDefaults( regularPreferencesStream );
-			} else {
-				Log.write( Log.DEBUG, "Regular preferences not found." );
-			}
-		} catch( IOException exception ) {
-			error( exception );
-		}
-
-		try {
-			inceptionYear = Integer.parseInt( descriptor.getValue( "/program/information/inception" ) );
-		} catch( NumberFormatException exception ) {
-			inceptionYear = Calendar.getInstance().get( Calendar.YEAR );
-		}
-		copyrightHolder = descriptor.getValue( "/program/information/vendor", copyrightHolder );
-		licenseSummary = TextUtil.reline( descriptor.getValue( "/program/information/license/summary", licenseSummary ), 79 );
-
-		// Create the identifier from the name if it is not set.
-		if( TextUtil.isEmpty( this.identifier ) ) identifier = getName().replace( ' ', '-' ).toLowerCase();
 	}
 
 	/**
