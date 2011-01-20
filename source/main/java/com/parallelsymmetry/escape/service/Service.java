@@ -534,8 +534,10 @@ public abstract class Service extends Agent {
 	}
 
 	private final void configureLogging( Parameters parameters ) {
-		Log.setLevel( Log.parseLevel( parameters.get( "log.level" ) ) );
-		Log.setShowColor( parameters.isSet( "log.color" ) );
+		if( parameters.isSpecified( "log.level" ) ) Log.setLevel( Log.parseLevel( parameters.get( "log.level" ) ) );
+		if( parameters.isSpecified( "log.tag" ) ) Log.setShowTag( parameters.isSet( "log.tag" ) );
+		if( parameters.isSpecified( "log.color" ) ) Log.setShowColor( parameters.isSet( "log.color" ) );
+		if( parameters.isSpecified( "log.prefix" ) ) Log.setShowPrefix( parameters.isSet( "log.prefix" ) );
 	}
 
 	private final Descriptor getApplicationDescriptor() {
