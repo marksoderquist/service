@@ -1,10 +1,10 @@
 <program>
 
 	<information>
-		<namespace>com.parallelsymmetry.escape.service</namespace>
-		<identifier>demo</identifier>
-		<version>1.0.0-a-00</version>
 		<name>Demo Service</name>
+		<group>com.parallelsymmetry.escape.service</group>
+		<artifact>demo</artifact>
+		<version>1.0.0-a-00</version>
 		<timestamp>1970-01-01 00:00:00</timestamp>
 	</information>
 	

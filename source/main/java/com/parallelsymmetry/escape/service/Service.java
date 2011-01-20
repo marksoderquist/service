@@ -45,7 +45,7 @@ public abstract class Service extends Agent {
 
 	private static final String DEFAULT_NAMESPACE = "com.parallelsymmetry";
 
-	private static final String DEFAULT_IDENTIFIER = "program";
+	private static final String DEFAULT_IDENTIFIER = "service";
 
 	private static final String PEER_LOGGER_NAME = "peer";
 
@@ -73,19 +73,19 @@ public abstract class Service extends Agent {
 
 	private Descriptor descriptor;
 
-	private String namespace = DEFAULT_NAMESPACE;
+	private String group = DEFAULT_NAMESPACE;
 
-	private String identifier = DEFAULT_IDENTIFIER;
+	private String artifact = DEFAULT_IDENTIFIER;
 
-	private String javaVersionMinimum = JAVA_VERSION_MINIMUM;
+	private Release release = new Release( new Version() );
+
+	private int inceptionYear = DateUtil.getCurrentYear();
 
 	private String copyrightHolder = "Unknown";
 
 	private String licenseSummary;
 
-	private int inceptionYear;
-
-	private Release release;
+	private String javaVersionMinimum = JAVA_VERSION_MINIMUM;
 
 	private Socket socket;
 
@@ -151,16 +151,16 @@ public abstract class Service extends Agent {
 		processParameters( parameters, false );
 	}
 
+	public String getGroup() {
+		return this.group;
+	}
+
+	public String getArtifact() {
+		return this.artifact;
+	}
+
 	public Release getRelease() {
 		return release;
-	}
-
-	public String getNamespace() {
-		return this.namespace;
-	}
-
-	public String getIdentifier() {
-		return this.identifier;
 	}
 
 	public String getCopyright() {
@@ -168,7 +168,7 @@ public abstract class Service extends Agent {
 	}
 
 	public String getCopyright( Locale locale ) {
-		int currentYear = Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ).get( Calendar.YEAR );
+		int currentYear = DateUtil.getCurrentYear();
 		return COPYRIGHT + " " + ( currentYear == inceptionYear ? currentYear : inceptionYear + "-" + currentYear ) + " " + copyrightHolder;
 	}
 
@@ -268,7 +268,7 @@ public abstract class Service extends Agent {
 	/**
 	 * Override this method and return a set of valid command line flags if you
 	 * want the service to validate command line flags. By default this method
-	 * returns null and allows all command line flags.
+	 * returns null and allows any command line flags.
 	 * 
 	 * @return
 	 */
@@ -322,14 +322,14 @@ public abstract class Service extends Agent {
 		setName( name == null ? descriptor.getValue( "/program/information/name" ) : name );
 
 		// Determine the program namespace.
-		namespace = descriptor.getValue( "/program/information/namespace", namespace );
-		namespace = parameters.get( "namespace", namespace );
+		group = descriptor.getValue( "/program/information/group", group );
+		group = parameters.get( "namespace", group );
 
 		// Determine the program identifier.
-		identifier = descriptor.getValue( "/program/information/identifier", identifier );
-		identifier = parameters.get( "identifier", identifier );
-		if( parameters.isSet( "development" ) ) identifier += "-dev";
-		if( TextUtil.isEmpty( this.identifier ) ) identifier = getName().replace( ' ', '-' ).toLowerCase();
+		artifact = descriptor.getValue( "/program/information/artifact", artifact );
+		artifact = parameters.get( "identifier", artifact );
+		if( parameters.isSet( "development" ) ) artifact += "-dev";
+		if( TextUtil.isEmpty( this.artifact ) ) artifact = getName().replace( ' ', '-' ).toLowerCase();
 
 		// Determine the program release.
 		Version version = new Version( descriptor.getValue( "/program/information/version", null ) );
@@ -352,7 +352,7 @@ public abstract class Service extends Agent {
 		try {
 			Descriptor defaultSettingDescriptor = null;
 			defaultSettingDescriptor = new Descriptor( getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH ) );
-			Preferences preferences = Preferences.userRoot().node( "/" + namespace.replace( '.', '/' ) + "/" + identifier );
+			Preferences preferences = Preferences.userRoot().node( "/" + group.replace( '.', '/' ) + "/" + artifact );
 
 			settings.addProvider( new ParametersSettingProvider( parameters ) );
 			if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );

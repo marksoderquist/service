@@ -10,6 +10,7 @@ import java.util.logging.Level;
 
 import junit.framework.TestCase;
 
+import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.LineParser;
 import com.parallelsymmetry.escape.utility.agent.Agent;
 import com.parallelsymmetry.escape.utility.log.DefaultHandler;
@@ -25,6 +26,17 @@ public class ServiceTest extends TestCase {
 
 	public void setUp() {
 		Log.setLevel( Log.NONE );
+	}
+
+	public void testBeforeCall() throws Exception {
+		MockService service = new MockService();
+
+		assertEquals( "com.parallelsymmetry", service.getGroup() );
+		assertEquals( "service", service.getArtifact() );
+		assertEquals( "unknown", service.getRelease().toString() );
+
+		assertEquals( "(C) " + DateUtil.getCurrentYear() + " Unknown", service.getCopyright() );
+		assertEquals( "All rights reserved.", service.getCopyrightNotice() );
 	}
 
 	public void testCall() throws Exception {

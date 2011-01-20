@@ -1,11 +1,10 @@
 <program>
 
 	<information>
-		<namespace>com.parallelsymmetry.escape.service</namespace>
-		<identifier>mock</identifier>
-		<version>1.0.0-a-00</version>
 		<name>Mock Service</name>
-
+		<group>com.parallelsymmetry.escape.service</group>
+		<artifact>mock</artifact>
+		<version>1.0.0-a-00</version>
 		<timestamp>1973-08-14 16:29:00</timestamp>
 
 		<inception>1973</inception>
