@@ -288,7 +288,7 @@ public abstract class Service extends Agent {
 	 */
 	@Override
 	protected final void startAgent() throws Exception {
-		Log.write( Log.TRACE, getName() + " starting..." );
+		Log.write( Log.DEBUG, getName() + " starting..." );
 		Runtime.getRuntime().addShutdownHook( shutdownHook );
 		peerServer = new PeerServer( this );
 		peerServer.startAndWait();
@@ -302,7 +302,7 @@ public abstract class Service extends Agent {
 	 */
 	@Override
 	protected final void stopAgent() throws Exception {
-		Log.write( Log.TRACE, getName() + " stopping..." );
+		Log.write( Log.DEBUG, getName() + " stopping..." );
 		if( socket != null ) socket.close();
 		stopService( parameters );
 		resetServicePortNumber();
@@ -396,7 +396,7 @@ public abstract class Service extends Agent {
 			if( parameters.isSet( "watch" ) ) return;
 
 			// Update if necessary.
-			if( !parameters.isSet( "noupdate" ) ) if( update() ) return;
+			if( !peer && !parameters.isSet( "noupdate" ) ) if( update() ) return;
 
 			if( parameters.isSet( "stop" ) ) {
 				stopAndWait();

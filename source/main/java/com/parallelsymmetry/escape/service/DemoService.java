@@ -6,7 +6,7 @@ import com.parallelsymmetry.escape.utility.log.Log;
 public class DemoService extends Service {
 
 	public static final void main( String[] commands ) {
-		new DemoService().call( commands );
+		new DemoService().call( "-log.level", "trace");
 	}
 
 	@Override
