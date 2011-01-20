@@ -1,6 +1,5 @@
 package com.parallelsymmetry.escape.service;
 
-import java.beans.XMLEncoder;
 import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -652,10 +651,6 @@ public abstract class Service extends Agent {
 				Log.write( Log.TRACE, "Peer disconnected: " + peer );
 			}
 
-		}
-
-		public boolean isConnected() {
-			return !socket.isClosed();
 		}
 
 		public void closeSocket() {
