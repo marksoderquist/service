@@ -272,7 +272,7 @@ public class ServiceTest extends TestCase {
 		//Log.write( "...testPassStatus()..." );
 		String name1 = "Mock Service 1";
 		MockService service1 = new MockService( name1 );
-		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false, "-status" ) );
+		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false, "-status", "-log.level", "none" ) );
 		assertCommandLineHeader( name1, parser1 );
 
 		assertEquals( name1 + " status: STOPPED", parser1.next() );
@@ -287,7 +287,7 @@ public class ServiceTest extends TestCase {
 
 		String name2 = "Mock Service 2";
 		MockService service2 = new MockService( name2 );
-		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.INFO, false, "-status" ) );
+		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.INFO, false, "-status", "-log.level", "none" ) );
 		service2.waitForShutdown( timeout );
 		assertCommandLineHeader( name2, parser2 );
 
@@ -349,8 +349,8 @@ public class ServiceTest extends TestCase {
 		assertEquals( name + " " + MOCK_RELEASE, parser.next() );
 		assertEquals( "(C) 1973-" + currentYear + " Parallel Symmetry All rights reserved.", parser.next() );
 		assertEquals( "", parser.next() );
-		assertEquals( "Mock Service comes with ABSOLUTELY NO WARRANTY. This is open software, and you", parser.next() );
-		assertEquals( "are welcome to redistribute it under certain conditions.", parser.next() );
+		assertEquals( "Mock Service comes with ABSOLUTELY NO WARRANTY. This is open software,", parser.next() );
+		assertEquals( "and you are welcome to redistribute it under certain conditions.", parser.next() );
 		assertEquals( "", parser.next() );
 	}
 

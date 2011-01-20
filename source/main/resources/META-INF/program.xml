@@ -2,10 +2,10 @@
 
 	<information>
 		<name>Demo Service</name>
-		<group>com.parallelsymmetry.escape.service</group>
+		<group>${project.groupId}</group>
 		<artifact>demo</artifact>
-		<version>1.0.0-a-00</version>
-		<timestamp>1970-01-01 00:00:00</timestamp>
+		<version>${project.version}</version>
+		<timestamp>${buildNumber}</timestamp>
 	</information>
 	
 	<resources>

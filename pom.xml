@@ -22,5 +22,26 @@
 			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
+	
+	<build>
+
+		<resources>
+			<resource>
+				<directory>source/main/resources</directory>
+				<filtering>false</filtering>
+				<excludes>
+					<exclude>**/program.xml</exclude>
+				</excludes>
+			</resource>
+			<resource>
+				<directory>source/main/resources</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>**/program.xml</include>
+				</includes>
+			</resource>
+		</resources>
+
+	</build>
 
 </project>

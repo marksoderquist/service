@@ -147,7 +147,7 @@ public abstract class Service extends Agent {
 		describe( parameters );
 
 		// Verify Java environment.
-		if( !verifyJavaEnvironment( parameters ) ) return;
+		if( !checkJava( parameters ) ) return;
 
 		processParameters( parameters, false );
 	}
@@ -344,7 +344,9 @@ public abstract class Service extends Agent {
 			inceptionYear = Calendar.getInstance().get( Calendar.YEAR );
 		}
 		copyrightHolder = descriptor.getValue( "/program/information/vendor", copyrightHolder );
-		licenseSummary = TextUtil.reline( descriptor.getValue( "/program/information/license/summary", licenseSummary ), 79 );
+
+		licenseSummary = descriptor.getValue( "/program/information/license/summary", licenseSummary );
+		if( licenseSummary != null ) licenseSummary = TextUtil.reline( licenseSummary, 72 );
 
 		// Minimum Java runtime version.
 		javaVersionMinimum = descriptor.getValue( "/program/resources/java/@version", JAVA_VERSION_MINIMUM );
@@ -361,6 +363,15 @@ public abstract class Service extends Agent {
 		} catch( Exception exception ) {
 			Log.write( exception );
 		}
+	}
+
+	private final boolean checkJava( Parameters parameters ) {
+		String javaRuntimeVersion = System.getProperty( "java.runtime.version" );
+		if( javaVersionMinimum.compareTo( javaRuntimeVersion ) > 0 ) {
+			error( "Java " + javaVersionMinimum + " or higher is required, found: " + javaRuntimeVersion );
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -383,6 +394,9 @@ public abstract class Service extends Agent {
 
 			// If the watch parameter is set then exit before doing anything else.
 			if( parameters.isSet( "watch" ) ) return;
+
+			// Update if necessary.
+			if( !parameters.isSet( "noupdate" ) ) if( update() ) return;
 
 			if( parameters.isSet( "stop" ) ) {
 				stopAndWait();
@@ -409,6 +423,42 @@ public abstract class Service extends Agent {
 			Log.write( exception );
 			return;
 		}
+	}
+
+	private final boolean update() {
+		Log.write( Log.DEBUG, "Checking for updates..." );
+
+		// Check if updates exists. If not, just return.
+		boolean found = false;
+
+		// TODO Detect updates.
+
+		Log.write( Log.TRACE, found ? "Updates detected." : "No updates detected." );
+
+		// Call the updater.
+		if( found ) {
+
+		}
+
+		return found;
+	}
+
+	private final void printHeader() {
+		String notice = getLicenseSummary();
+
+		Log.write( Log.NONE, getName() + " " + getRelease().toHumanString() );
+		Log.write( Log.NONE, getCopyright( Locale.ENGLISH ) + " " + getCopyrightNotice( Locale.ENGLISH ) );
+		Log.write( Log.NONE );
+		if( notice != null ) {
+			Log.write( Log.NONE, notice );
+			Log.write( Log.NONE );
+		}
+
+		Log.write( Log.TRACE, "Java: " + System.getProperty( "java.runtime.version" ) );
+	}
+
+	private final void printStatus() {
+		Log.write( getName() + " status: " + getStatus() );
 	}
 
 	private final boolean peerExists( Parameters parameters ) {
@@ -483,18 +533,9 @@ public abstract class Service extends Agent {
 		getSettings().put( "/port", null );
 	}
 
-	private final boolean verifyJavaEnvironment( Parameters parameters ) {
-		String javaRuntimeVersion = System.getProperty( "java.runtime.version" );
-		if( javaVersionMinimum.compareTo( javaRuntimeVersion ) > 0 ) {
-			error( "Java " + javaVersionMinimum + " or higher is required, found: " + javaRuntimeVersion );
-			return false;
-		}
-		return true;
-	}
-
 	private final void configureLogging( Parameters parameters ) {
-		Log.setShowColor( parameters.isSet( "log.color" ) );
 		Log.setLevel( Log.parseLevel( parameters.get( "log.level" ) ) );
+		Log.setShowColor( parameters.isSet( "log.color" ) );
 	}
 
 	private final Descriptor getApplicationDescriptor() {
@@ -509,24 +550,6 @@ public abstract class Service extends Agent {
 		}
 
 		return descriptor;
-	}
-
-	private final void printHeader() {
-		String notice = getLicenseSummary();
-
-		Log.write( Log.NONE, getName() + " " + getRelease().toHumanString() );
-		Log.write( Log.NONE, getCopyright( Locale.ENGLISH ) + " " + getCopyrightNotice( Locale.ENGLISH ) );
-		Log.write( Log.NONE );
-		if( notice != null ) {
-			Log.write( Log.NONE, notice );
-			Log.write( Log.NONE );
-		}
-
-		Log.write( Log.TRACE, "Java: " + System.getProperty( "java.runtime.version" ) );
-	}
-
-	private final void printStatus() {
-		Log.write( getName() + " status: " + getStatus() );
 	}
 
 	private static final class PeerServer extends ServerAgent {
@@ -601,7 +624,7 @@ public abstract class Service extends Agent {
 				// Set up the peer log handler.
 				logHandler = new PeerLogHandler( this, socket.getOutputStream() );
 				Level level = Log.parseLevel( parameters.get( "log.level" ) );
-				if( level != null ) logHandler.setLevel( level );
+				logHandler.setLevel( level == null ? Log.INFO : level );
 				Log.addHandler( logHandler );
 
 				// Process the parameters.
