@@ -2,6 +2,7 @@ package com.parallelsymmetry.escape.service;
 
 import java.io.BufferedInputStream;
 import java.io.EOFException;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -10,6 +11,8 @@ import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -27,6 +30,7 @@ import java.util.prefs.Preferences;
 
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
+import com.parallelsymmetry.escape.utility.JavaUtil;
 import com.parallelsymmetry.escape.utility.Parameters;
 import com.parallelsymmetry.escape.utility.Release;
 import com.parallelsymmetry.escape.utility.TextUtil;
@@ -60,11 +64,13 @@ public abstract class Service extends Agent {
 
 	private static final String COPYRIGHT = "(C)";
 
+	private Thread shutdownHook = new ShutdownHook( this );
+
+	private UpdateHandler updateHandler = new UpdateHandler();
+
 	private Parameters parameters;
 
 	private Settings settings;
-
-	private Thread shutdownHook = new ShutdownHook( this );
 
 	private PeerServer peerServer;
 
@@ -89,6 +95,8 @@ public abstract class Service extends Agent {
 	private Socket socket;
 
 	private String name;
+
+	private File home;
 
 	/**
 	 * Construct the service with the default descriptor path of
@@ -140,8 +148,8 @@ public abstract class Service extends Agent {
 			return;
 		}
 
-		// Set log level.
-		configureLogging( parameters );
+		// Initialize the log.
+		initLog( parameters );
 
 		// Load description.
 		describe( parameters );
@@ -192,6 +200,17 @@ public abstract class Service extends Agent {
 
 	public Settings getSettings() {
 		return settings;
+	}
+
+	/**
+	 * Get the home folder. If the home folder is null that means that the program
+	 * is not installed locally and was most likely started with a technology like
+	 * Java Web Start.
+	 * 
+	 * @return
+	 */
+	public File getHomeFolder() {
+		return home;
 	}
 
 	public void printHelp( String topic ) {
@@ -315,6 +334,13 @@ public abstract class Service extends Agent {
 		Log.write( getName() + " stopped." );
 	}
 
+	private final void initLog( Parameters parameters ) {
+		if( parameters.isSpecified( "log.level" ) ) Log.setLevel( Log.parseLevel( parameters.get( "log.level" ) ) );
+		if( parameters.isSpecified( "log.tag" ) ) Log.setShowTag( parameters.isSet( "log.tag" ) );
+		if( parameters.isSpecified( "log.color" ) ) Log.setShowColor( parameters.isSet( "log.color" ) );
+		if( parameters.isSpecified( "log.prefix" ) ) Log.setShowPrefix( parameters.isSet( "log.prefix" ) );
+	}
+
 	private final void describe( Parameters parameters ) {
 		settings = new Settings();
 		descriptor = getApplicationDescriptor();
@@ -350,6 +376,9 @@ public abstract class Service extends Agent {
 
 		// Minimum Java runtime version.
 		javaVersionMinimum = descriptor.getValue( "/program/resources/java/@version", JAVA_VERSION_MINIMUM );
+
+		// Set the program home folder.
+		home = findHome( parameters );
 
 		// Add the setting providers.
 		try {
@@ -425,22 +454,45 @@ public abstract class Service extends Agent {
 		}
 	}
 
-	private final boolean update() {
-		Log.write( Log.DEBUG, "Checking for updates..." );
+	/**
+	 * Find the home directory. This method expects the program jar file to be
+	 * installed in a sub-directory of the home directory. Example:
+	 * <code>$HOME/lib/program.jar</code>
+	 * 
+	 * @param parameters
+	 * @return
+	 */
+	private final File findHome( Parameters parameters ) {
+		File home = null;
 
-		// Check if updates exists. If not, just return.
-		boolean found = false;
+		try {
+			// If -home was specified on the command line use it.
+			if( home == null && parameters.get( "home" ) != null ) {
+				home = new File( parameters.get( "home" ) ).getCanonicalFile();
+			}
 
-		// TODO Detect updates.
+			// Check the class path.
+			if( home == null ) {
+				try {
+					List<URI> uris = JavaUtil.parseSystemClasspath( System.getProperty( "java.class.path" ) );
+					for( URI uri : uris ) {
+						if( "file".equals( uri.getScheme() ) && uri.getPath().endsWith( ".jar" ) ) {
+							home = new File( uri ).getParentFile().getParentFile();
+							break;
+						}
+					}
+				} catch( URISyntaxException exception ) {
+					Log.write( exception );
+				}
+			}
 
-		Log.write( Log.TRACE, found ? "Updates detected." : "No updates detected." );
-
-		// Call the updater.
-		if( found ) {
-
+			if( home != null ) return home.getCanonicalFile();
+		} catch( IOException exception ) {
+			exception.printStackTrace();
 		}
 
-		return found;
+		// If no home is found leave it null.
+		return home;
 	}
 
 	private final void printHeader() {
@@ -455,6 +507,7 @@ public abstract class Service extends Agent {
 		}
 
 		Log.write( Log.TRACE, "Java: " + System.getProperty( "java.runtime.version" ) );
+		Log.write( Log.TRACE, "Home: " + getHomeFolder() );
 	}
 
 	private final void printStatus() {
@@ -533,13 +586,6 @@ public abstract class Service extends Agent {
 		getSettings().put( "/port", null );
 	}
 
-	private final void configureLogging( Parameters parameters ) {
-		if( parameters.isSpecified( "log.level" ) ) Log.setLevel( Log.parseLevel( parameters.get( "log.level" ) ) );
-		if( parameters.isSpecified( "log.tag" ) ) Log.setShowTag( parameters.isSet( "log.tag" ) );
-		if( parameters.isSpecified( "log.color" ) ) Log.setShowColor( parameters.isSet( "log.color" ) );
-		if( parameters.isSpecified( "log.prefix" ) ) Log.setShowPrefix( parameters.isSet( "log.prefix" ) );
-	}
-
 	private final Descriptor getApplicationDescriptor() {
 		if( descriptor == null ) {
 			try {
@@ -552,6 +598,20 @@ public abstract class Service extends Agent {
 		}
 
 		return descriptor;
+	}
+
+	private final boolean update() {
+		Log.write( Log.DEBUG, "Checking for updates..." );
+
+		// Detect updates.
+		boolean found = updateHandler.updatesDetected();
+
+		Log.write( Log.TRACE, found ? "Updates detected." : "No updates detected." );
+
+		// Apply updates.
+		if( found ) updateHandler.applyUpdates();
+
+		return found;
 	}
 
 	private static final class PeerServer extends ServerAgent {
@@ -709,7 +769,7 @@ public abstract class Service extends Agent {
 			} catch( SocketException exception ) {
 				peer.stop();
 			} catch( Exception exception ) {
-				log(exception);
+				log( exception );
 			}
 		}
 
@@ -722,7 +782,7 @@ public abstract class Service extends Agent {
 			} catch( SocketException exception ) {
 				peer.stop();
 			} catch( Exception exception ) {
-				log(exception);
+				log( exception );
 			}
 		}
 
@@ -737,7 +797,7 @@ public abstract class Service extends Agent {
 			} catch( SocketException exception ) {
 				peer.stop();
 			} catch( Exception exception ) {
-				log(exception);
+				log( exception );
 			} finally {
 				Log.removeHandler( this );
 			}
