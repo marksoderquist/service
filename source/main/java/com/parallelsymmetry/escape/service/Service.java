@@ -66,7 +66,7 @@ public abstract class Service extends Agent {
 
 	private Thread shutdownHook = new ShutdownHook( this );
 
-	private UpdateHandler updateHandler = new UpdateHandler();
+	private UpdateHandler updateHandler;
 
 	private Parameters parameters;
 
@@ -341,8 +341,10 @@ public abstract class Service extends Agent {
 		if( parameters.isSpecified( "log.prefix" ) ) Log.setShowPrefix( parameters.isSet( "log.prefix" ) );
 	}
 
-	private final void describe( Parameters parameters ) {
-		settings = new Settings();
+	private final synchronized void describe( Parameters parameters ) {
+		// This method should only be called once.
+		if( descriptor != null ) return;
+
 		descriptor = getApplicationDescriptor();
 
 		// Determine the program name.
@@ -381,6 +383,7 @@ public abstract class Service extends Agent {
 		home = findHome( parameters );
 
 		// Add the setting providers.
+		settings = new Settings();
 		try {
 			Descriptor defaultSettingDescriptor = null;
 			defaultSettingDescriptor = new Descriptor( getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH ) );
@@ -392,6 +395,9 @@ public abstract class Service extends Agent {
 		} catch( Exception exception ) {
 			Log.write( exception );
 		}
+
+		// Create the update handler. Depends on the settings object.
+		updateHandler = new UpdateHandler( this );
 	}
 
 	private final boolean checkJava( Parameters parameters ) {
@@ -425,7 +431,7 @@ public abstract class Service extends Agent {
 			if( parameters.isSet( "watch" ) ) return;
 
 			// Update if necessary.
-			if( !peer && !parameters.isSet( "noupdate" ) ) if( update() ) return;
+			if( !peer && parameters.isSet( "update" ) ) if( update() ) return;
 
 			if( parameters.isSet( "stop" ) ) {
 				stopAndWait();
@@ -523,7 +529,6 @@ public abstract class Service extends Agent {
 		if( port != 0 ) {
 			// Connect to the peer, if possible, and pass the parameters.
 			try {
-				// FIXME Convert the Socket code to use SocketAgent.
 				socket = new Socket( host, port );
 				peer = socket.getInetAddress().getHostAddress() + ":" + socket.getPort();
 				if( parameters.size() == 0 ) Log.write( getName() + " already running." );
@@ -601,6 +606,11 @@ public abstract class Service extends Agent {
 	}
 
 	private final boolean update() {
+		if( home == null && parameters.isSpecified( "update" ) && !parameters.isSet( "update" ) ) {
+			Log.write( Log.WARN, "Program not executed from libraries; updates disabled." );
+			return false;
+		}
+
 		Log.write( Log.DEBUG, "Checking for updates..." );
 
 		// Detect updates.

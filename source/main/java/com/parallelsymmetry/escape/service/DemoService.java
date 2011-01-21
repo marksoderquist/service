@@ -9,7 +9,7 @@ public class DemoService extends Service {
 
 	public static final void main( String[] commands ) {
 		DemoService service = new DemoService();
-		service.call( service.getHomeFolder() == null ? new String[] { "-log.tag" } : commands );
+		service.call( service.getHomeFolder() == null ? new String[] { "-log.tag", "-log.level", "trace", "-update", "true" } : commands );
 	}
 
 	@Override

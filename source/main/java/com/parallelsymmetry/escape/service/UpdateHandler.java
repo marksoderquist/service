@@ -4,12 +4,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import com.parallelsymmetry.escape.utility.setting.Settings;
+
 public class UpdateHandler implements Iterable<UpdatePackage> {
+	
+	private Service service;
 
 	private List<UpdatePackage> updates;
 
-	public UpdateHandler() {
+	public UpdateHandler( Service service ) {
+		this.service = service;
 		updates = new CopyOnWriteArrayList<UpdatePackage>();
+		loadUpdaterSettings();
 	}
 
 	@Override
@@ -19,10 +25,12 @@ public class UpdateHandler implements Iterable<UpdatePackage> {
 
 	public void addUpdateItem( UpdatePackage item ) {
 		updates.add( item );
+		saveUpdaterSettings();
 	}
 
 	public void removeUpdateItem( UpdatePackage item ) {
 		updates.remove( item );
+		saveUpdaterSettings();
 	}
 
 	public boolean updatesDetected() {
@@ -34,6 +42,17 @@ public class UpdateHandler implements Iterable<UpdatePackage> {
 
 	public void applyUpdates() {
 		// Need to start a new VM with the updater.
+	}
+	
+	private void loadUpdaterSettings() {
+		// TODO Load the updater settings.
+		//Settings settings = service.getSettings().node("/updates");
+		//List<String> packages = settings.getList("packages");
+	}
+	
+	private void saveUpdaterSettings() {
+		// TODO Save the updater settings.
+		Settings settings = service.getSettings();
 	}
 	
 }
