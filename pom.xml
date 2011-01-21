@@ -42,6 +42,36 @@
 			</resource>
 		</resources>
 
+		<plugins>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.2</version>
+
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<descriptors>
+						<descriptor>source/main/assembly/demo.xml</descriptor>
+					</descriptors>
+          <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <mainClass>com.parallelsymmetry.escape.service.DemoService</mainClass>
+            </manifest>
+          </archive>
+				</configuration>
+			</plugin>
+
+		</plugins>
+
 	</build>
 
 </project>
