@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
@@ -14,15 +15,23 @@
 	<packaging>jar</packaging>
 
 	<name>Escape Service</name>
-	
+
 	<dependencies>
+
 		<dependency>
 			<groupId>com.parallelsymmetry.escape</groupId>
 			<artifactId>utility</artifactId>
 			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
+
+		<dependency>
+			<groupId>com.parallelsymmetry.escape</groupId>
+			<artifactId>updater</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
+
 	</dependencies>
-	
+
 	<build>
 
 		<resources>
@@ -61,13 +70,32 @@
 					<descriptors>
 						<descriptor>source/main/assembly/demo.xml</descriptor>
 					</descriptors>
-          <archive>
-            <manifest>
-              <addClasspath>true</addClasspath>
-              <mainClass>com.parallelsymmetry.escape.service.DemoService</mainClass>
-            </manifest>
-          </archive>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<mainClass>com.parallelsymmetry.escape.service.DemoService</mainClass>
+						</manifest>
+					</archive>
 				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy-dependencies</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/lib</outputDirectory>
+							<includeScope>runtime</includeScope>
+							<stripVersion>true</stripVersion>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 
 		</plugins>

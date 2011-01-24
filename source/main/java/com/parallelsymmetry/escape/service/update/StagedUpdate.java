@@ -1,18 +1,18 @@
-package com.parallelsymmetry.escape.service;
+package com.parallelsymmetry.escape.service.update;
 
 import java.io.File;
 
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
-public class UpdatePackage {
+public class StagedUpdate {
 
 	private File source;
 
 	private File target;
 
-	UpdatePackage() {}
+	StagedUpdate() {}
 
-	public UpdatePackage( File source, File target ) {
+	public StagedUpdate( File source, File target ) {
 		this.source = source;
 		this.target = target;
 	}
@@ -25,13 +25,13 @@ public class UpdatePackage {
 		return target;
 	}
 
-	UpdatePackage load( Settings settings ) {
+	StagedUpdate load( Settings settings ) {
 		source = new File( settings.get( "/source" ) );
 		target = new File( settings.get( "/target" ) );
 		return this;
 	}
 
-	UpdatePackage save( Settings settings ) {
+	StagedUpdate save( Settings settings ) {
 		settings.put( "/source", source.getPath() );
 		settings.put( "/target", target.getPath() );
 		return this;

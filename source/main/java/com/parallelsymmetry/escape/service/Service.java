@@ -28,6 +28,7 @@ import java.util.logging.LogRecord;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
+import com.parallelsymmetry.escape.service.update.UpdateHandler;
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.JavaUtil;
@@ -158,6 +159,8 @@ public abstract class Service extends Agent {
 		if( !checkJava( parameters ) ) return;
 
 		processParameters( parameters, false );
+
+		Log.write( Log.TRACE, "Method call() complete." );
 	}
 
 	public String getGroup() {
@@ -616,10 +619,20 @@ public abstract class Service extends Agent {
 		// Detect updates.
 		boolean found = updateHandler.updatesDetected();
 
-		Log.write( Log.TRACE, found ? "Updates detected." : "No updates detected." );
+		if( found ) {
+			Log.write( "Updates detected." );
+		} else {
+			Log.write( Log.TRACE, "No updates detected." );
+		}
 
 		// Apply updates.
-		if( found ) updateHandler.applyUpdates();
+		if( found ) {
+			try {
+				updateHandler.applyUpdates();
+			} catch( IOException exception ) {
+				Log.write( exception );
+			}
+		}
 
 		return found;
 	}

@@ -305,6 +305,18 @@ public class ServiceTest extends TestCase {
 		assertFalse( "Service should not be running and is.", service2.isRunning() );
 	}
 
+	public void testUpdate() throws Exception {
+		Log.setLevel( Log.TRACE );
+		MockService service = new MockService();
+		LineParser parser = new LineParser( getCommandLineOutput( service, Log.INFO, true, "-update", "true" ) );
+
+		assertCommandLineHeader( parser );
+
+		assertEquals( "Updates detected.", parser.next() );
+		assertEquals( "", parser.next() );
+		assertNull( parser.next() );
+	}
+
 	private List<String> parseCommandLineOutput( String output ) {
 		LineParser parser = new LineParser( output );
 

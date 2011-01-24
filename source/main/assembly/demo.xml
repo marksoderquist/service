@@ -11,6 +11,9 @@
 		<dependencySet>
 			<outputDirectory>/</outputDirectory>
 			<useProjectArtifact>true</useProjectArtifact>
+			<excludes>
+				<exclude>**/updater*.jar</exclude>
+			</excludes>
 			<unpack>true</unpack>
 			<scope>runtime</scope>
 		</dependencySet>

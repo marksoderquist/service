@@ -26,7 +26,7 @@ public class MockService extends Service {
 	}
 
 	public MockService( String name, int startupPause, int shutdownPause ) {
-		super( name, "/test.program.xml" );
+		super( name );
 		this.startupPause = startupPause;
 		this.shutdownPause = shutdownPause;
 	}
