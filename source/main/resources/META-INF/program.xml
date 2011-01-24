@@ -3,7 +3,7 @@
 	<information>
 		<name>Demo Service</name>
 		<group>${project.groupId}</group>
-		<artifact>demo</artifact>
+		<artifact>${project.artifactId}</artifact>
 		<version>${project.version}</version>
 		<timestamp>${buildNumber}</timestamp>
 	</information>

@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import com.parallelsymmetry.escape.utility.log.Log;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
 public class UpdateHandler implements Iterable<UpdatePackage> {
@@ -46,20 +45,19 @@ public class UpdateHandler implements Iterable<UpdatePackage> {
 	}
 
 	private void loadUpdaterSettings() {
-		// TODO Load the updater settings.
 		List<Settings> settings = service.getSettings().getList( "/services/update/updates" );
 
-		Log.write( Log.WARN, "Count: " + settings.size() );
-
 		for( Settings packageSettings : settings ) {
-			Log.write( "Name: " + packageSettings.get( "/name" ) );
-			Log.write( "URL: " + packageSettings.get( "/url" ) );
+			updates.add( new UpdatePackage().load( packageSettings ) );
 		}
 	}
 
 	private void saveUpdaterSettings() {
-		// TODO Save the updater settings.
-		Settings settings = service.getSettings();
+		service.getSettings().removeNode( "/services/update/updates" );
+
+		for( UpdatePackage update : updates ) {
+			update.save( service.getSettings().addListNode( "/services/update/updates" ) );
+		}
 	}
 
 }

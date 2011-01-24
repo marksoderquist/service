@@ -5,6 +5,7 @@
 			<updates>
 				<item-count>1</item-count>
 				<item-0>
+					<id>service</id>
 					<name>Demo Service</name>
 					<url>http://www.parallelsymmetry.com/software/updates/service/demo</url>
 				</item-0>
