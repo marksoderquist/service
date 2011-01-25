@@ -11,7 +11,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import com.parallelsymmetry.escape.service.Service;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.Parameters;
-import com.parallelsymmetry.escape.utility.log.Log;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
 public class UpdateHandler implements Iterable<StagedUpdate> {
@@ -82,7 +81,7 @@ public class UpdateHandler implements Iterable<StagedUpdate> {
 				builder.command().add( command );
 			}
 		}
-		builder.command().add( "program.jar" );
+		builder.command().add( "service.jar" );
 		for( String command : service.getParameters().getCommands() ) {
 			if( command.startsWith( Parameters.SINGLE ) ) {
 				builder.command().add( "\\" + command );
@@ -91,9 +90,12 @@ public class UpdateHandler implements Iterable<StagedUpdate> {
 			}
 		}
 
+		// Print the process commands.
 		for( String command : builder.command() ) {
-			Log.write( Log.TRACE, "Command: " + command );
+			System.out.print( command );
+			System.out.print( " " );
 		}
+		System.out.println();
 
 		builder.start();
 
