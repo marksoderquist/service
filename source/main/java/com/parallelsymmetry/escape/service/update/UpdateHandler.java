@@ -53,7 +53,7 @@ public class UpdateHandler implements Iterable<StagedUpdate> {
 	public void applyUpdates() throws IOException {
 		// Copy the updater to a temporary location.
 		File updaterSource = new File( service.getHomeFolder(), UPDATER );
-		File updaterTarget = File.createTempFile( "updater", ".jar" );
+		File updaterTarget = new File( FileUtil.TEMP_FOLDER, service.getArtifact() + "-updater.jar" );
 		FileUtil.copy( updaterSource, updaterTarget );
 
 		RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
