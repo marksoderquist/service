@@ -353,7 +353,7 @@ public abstract class Service extends Agent {
 		// Determine the program identifier.
 		artifact = descriptor.getValue( "/program/information/artifact", artifact );
 		artifact = parameters.get( "identifier", artifact );
-		if( parameters.isSet( "development" ) ) artifact += "-dev";
+		if( parameters.isTrue( "development" ) ) artifact += "-dev";
 		if( TextUtil.isEmpty( this.artifact ) ) artifact = getName().replace( ' ', '-' ).toLowerCase();
 
 		// Determine the program release.
@@ -424,23 +424,23 @@ public abstract class Service extends Agent {
 			if( !peer && peerExists( parameters ) ) return;
 
 			// If the watch parameter is set then exit before doing anything else.
-			if( parameters.isSet( "watch" ) ) return;
+			if( parameters.isTrue( "watch" ) ) return;
 
 			// Update if necessary.
-			if( !peer && parameters.isSet( "update" ) ) if( update() ) return;
+			if( !peer && parameters.isTrue( "update" ) ) if( update() ) return;
 
-			if( parameters.isSet( "stop" ) ) {
+			if( parameters.isTrue( "stop" ) ) {
 				stopAndWait();
 				return;
-			} else if( parameters.isSet( "restart" ) ) {
+			} else if( parameters.isTrue( "restart" ) ) {
 				restart();
 				return;
-			} else if( parameters.isSet( "status" ) ) {
+			} else if( parameters.isTrue( "status" ) ) {
 				printStatus();
 				return;
-			} else if( parameters.isSet( "version" ) ) {
+			} else if( parameters.isTrue( "version" ) ) {
 				return;
-			} else if( parameters.isSet( "help" ) ) {
+			} else if( parameters.isTrue( "help" ) ) {
 				printHelp( parameters.get( "help" ) );
 				return;
 			}
@@ -602,7 +602,7 @@ public abstract class Service extends Agent {
 	}
 
 	private final boolean update() {
-		if( home == null && parameters.isSpecified( "update" ) && !parameters.isSet( "update" ) ) {
+		if( home == null && parameters.isSet( "update" ) && !parameters.isTrue( "update" ) ) {
 			Log.write( Log.WARN, "Program not executed from libraries; updates disabled." );
 			return false;
 		}
