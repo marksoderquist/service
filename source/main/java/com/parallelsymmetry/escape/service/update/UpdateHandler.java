@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.parallelsymmetry.escape.service.Service;
@@ -24,7 +26,7 @@ public class UpdateHandler implements Iterable<StagedUpdate> {
 	public UpdateHandler( Service service ) {
 		this.service = service;
 		updates = new CopyOnWriteArrayList<StagedUpdate>();
-		loadUpdaterSettings();
+		loadSettings();
 	}
 
 	@Override
@@ -34,19 +36,32 @@ public class UpdateHandler implements Iterable<StagedUpdate> {
 
 	public void addUpdateItem( StagedUpdate item ) {
 		updates.add( item );
-		saveUpdaterSettings();
+		saveSettings();
 	}
 
 	public void removeUpdateItem( StagedUpdate item ) {
 		updates.remove( item );
-		saveUpdaterSettings();
+		saveSettings();
 	}
 
 	public boolean updatesDetected() {
-		//		for( StagedUpdate update : updates ) {
-		//			if( update.getSource().exists() ) return true;
-		//		}
-		return updates.size() > 0;
+		Set<StagedUpdate> staged = new HashSet<StagedUpdate>();
+		Set<StagedUpdate> cleanup = new HashSet<StagedUpdate>();
+
+		for( StagedUpdate update : updates ) {
+			if( update.getSource().exists() ) {
+				staged.add( update );
+			} else {
+				cleanup.add( update );
+			}
+		}
+		
+		for( StagedUpdate update : cleanup ) {
+			updates.remove( update );
+		}
+		if( cleanup.size() > 0 ) saveSettings();
+		
+		return staged.size() > 0;
 	}
 
 	public void applyUpdates() throws IOException {
@@ -102,19 +117,19 @@ public class UpdateHandler implements Iterable<StagedUpdate> {
 		// The program should be allowed, but not forced, to exit at this point.
 	}
 
-	private void loadUpdaterSettings() {
+	private void loadSettings() {
 		List<Settings> settings = service.getSettings().getList( "/services/update/updates" );
 
 		for( Settings updateSettings : settings ) {
-			updates.add( new StagedUpdate().load( updateSettings ) );
+			updates.add( new StagedUpdate().loadSettings( updateSettings ) );
 		}
 	}
 
-	private void saveUpdaterSettings() {
+	private void saveSettings() {
 		service.getSettings().removeNode( "/services/update/updates" );
 
 		for( StagedUpdate update : updates ) {
-			update.save( service.getSettings().addListNode( "/services/update/updates" ) );
+			update.saveSettings( service.getSettings().addListNode( "/services/update/updates" ) );
 		}
 	}
 

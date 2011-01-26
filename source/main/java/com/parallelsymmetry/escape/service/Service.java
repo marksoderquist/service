@@ -150,7 +150,7 @@ public abstract class Service extends Agent {
 		}
 
 		// Initialize the log.
-		initLog( parameters );
+		Log.init( parameters );
 
 		// Load description.
 		describe( parameters );
@@ -335,13 +335,6 @@ public abstract class Service extends Agent {
 			// Intentionally ignore exception.
 		}
 		Log.write( getName() + " stopped." );
-	}
-
-	private final void initLog( Parameters parameters ) {
-		if( parameters.isSpecified( "log.level" ) ) Log.setLevel( Log.parseLevel( parameters.get( "log.level" ) ) );
-		if( parameters.isSpecified( "log.tag" ) ) Log.setShowTag( parameters.isSet( "log.tag" ) );
-		if( parameters.isSpecified( "log.color" ) ) Log.setShowColor( parameters.isSet( "log.color" ) );
-		if( parameters.isSpecified( "log.prefix" ) ) Log.setShowPrefix( parameters.isSet( "log.prefix" ) );
 	}
 
 	private final synchronized void describe( Parameters parameters ) {

@@ -2,9 +2,10 @@ package com.parallelsymmetry.escape.service.update;
 
 import java.io.File;
 
+import com.parallelsymmetry.escape.service.Persistent;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
-public class StagedUpdate {
+public class StagedUpdate implements Persistent<StagedUpdate>{
 
 	private File source;
 
@@ -25,13 +26,13 @@ public class StagedUpdate {
 		return target;
 	}
 
-	StagedUpdate load( Settings settings ) {
+	public StagedUpdate loadSettings( Settings settings ) {
 		source = new File( settings.get( "/source" ) );
 		target = new File( settings.get( "/target" ) );
 		return this;
 	}
 
-	StagedUpdate save( Settings settings ) {
+	public StagedUpdate saveSettings( Settings settings ) {
 		settings.put( "/source", source.getPath() );
 		settings.put( "/target", target.getPath() );
 		return this;

@@ -2,11 +2,15 @@
 
 	<services>
 		<update>
+
+			<!-- Usually this list is not in the default settings but this one is here for 
+				integration testing purposes. See the com.parallelsymmetry.escape.service.ServiceUpdateTest 
+				class in the escape/test/service project for implementation details. -->
 			<updates>
 				<item-count>1</item-count>
 				<item-0>
-					<source>/test/source.jar</source>
-					<target>/test/target</target>
+					<source>../update/update.jar</source>
+					<target>.</target>
 				</item-0>
 			</updates>
 		</update>
