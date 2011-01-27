@@ -10,10 +10,12 @@ import java.util.concurrent.CopyOnWriteArraySet;
  */
 public class UpdateFinder {
 	
-	private Set<UpdateLocation> locations;
+	private Set<UpdateSource> sources;
 	
 	private UpdateFinder() {
-		locations = new CopyOnWriteArraySet<UpdateLocation>();
+		sources = new CopyOnWriteArraySet<UpdateSource>();
 	}
 
+	
+	
 }
