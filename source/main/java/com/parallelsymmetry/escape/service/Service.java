@@ -220,32 +220,32 @@ public abstract class Service extends Agent {
 		// ---------0--------1---------2---------3---------4---------5---------6---------7---------8
 		// ---------12345678901234567890123456789012345678901234567890123456789012345678901234567890
 		if( "true".equals( topic ) ) {
-			Log.write( "Usage: java -jar <jar file name> [<option>...]" );
-			Log.write();
+			Log.write( Log.NONE, "Usage: java -jar <jar file name> [<option>...]" );
+			Log.write( Log.NONE );
 			printHelpCommands();
 			printHelpOptions();
 		}
 	}
 
 	public void printHelpCommands() {
-		Log.write( "Commands:" );
-		Log.write( "  If no command is specified the program is started." );
-		Log.write();
-		Log.write( "  -help [topic]    Show help information." );
-		Log.write( "  -version         Show version and copyright information only." );
-		Log.write();
-		Log.write( "  -stop            Stop the program and exit the VM." );
-		Log.write( "  -status          Print the program status." );
-		Log.write( "  -restart         Restart the program without exiting VM." );
-		Log.write( "  -watch           Watch an already running program." );
-		Log.write();
+		Log.write( Log.NONE, "Commands:" );
+		Log.write( Log.NONE, "  If no command is specified the program is started." );
+		Log.write( Log.NONE );
+		Log.write( Log.NONE, "  -help [topic]    Show help information." );
+		Log.write( Log.NONE, "  -version         Show version and copyright information only." );
+		Log.write( Log.NONE );
+		Log.write( Log.NONE, "  -stop            Stop the program and exit the VM." );
+		Log.write( Log.NONE, "  -status          Print the program status." );
+		Log.write( Log.NONE, "  -restart         Restart the program without exiting VM." );
+		Log.write( Log.NONE, "  -watch           Watch an already running program." );
+		Log.write( Log.NONE );
 	}
 
 	public void printHelpOptions() {
-		Log.write( "Options:" );
-		Log.write( "  -log.color           Use ANSI color in the console output." );
-		Log.write( "  -log.level <level>   Change the output log level. Levels are:" );
-		Log.write( "                       none, error, warn, info, trace, debug, all" );
+		Log.write( Log.NONE, "Options:" );
+		Log.write( Log.NONE, "  -log.color           Use ANSI color in the console output." );
+		Log.write( Log.NONE, "  -log.level <level>   Change the output log level. Levels are:" );
+		Log.write( Log.NONE, "                       none, error, warn, info, trace, debug, all" );
 	}
 
 	public void error( String message ) {

@@ -1,10 +1,8 @@
 package com.parallelsymmetry.escape.service.update;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -12,7 +10,6 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.parallelsymmetry.escape.service.Service;
-import com.parallelsymmetry.escape.utility.ConsoleReader;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.Parameters;
 import com.parallelsymmetry.escape.utility.TextUtil;
@@ -69,7 +66,7 @@ public class UpdateHandler implements Iterable<StagedUpdate> {
 	}
 
 	public void applyUpdates() throws Exception {
-		Log.write( Log.DEBUG, "Applying updates..." );
+		Log.write( Log.DEBUG, "Starting update process..." );
 
 		// Copy the updater to a temporary location.
 		File updaterSource = new File( service.getHomeFolder(), UPDATER );
@@ -120,13 +117,11 @@ public class UpdateHandler implements Iterable<StagedUpdate> {
 		// Print the process commands.
 		Log.write( Log.DEBUG, TextUtil.toString( builder.command(), " " ) );
 
-		Process process = builder.start();
-		// FIXME Use a console reader to figure out what is happening.
-//		new ConsoleReader( process.getInputStream() ).start();
-//		Log.write( "Result: " + process.waitFor() );
-		Log.write( Log.DEBUG, "Updates started." );
+		builder.start();
+		Log.write( Log.TRACE, "Update process started." );
 
 		// The program should be allowed, but not forced, to exit at this point.
+		Log.write( "Program exiting to allow updates to be processed." );
 	}
 
 	private void loadSettings() {

@@ -59,8 +59,8 @@ public class ServiceTest extends TestCase {
 
 		List<String> lines = parseCommandLineOutput( parser.getRemaining() );
 
-		int indexA = lines.indexOf( "Mock Service started." );
-		int indexB = lines.indexOf( "Mock Service stopped." );
+		int indexA = lines.indexOf( "[I] Mock Service started." );
+		int indexB = lines.indexOf( "[I] Mock Service stopped." );
 
 		assertTrue( indexA < indexB );
 	}
@@ -98,7 +98,7 @@ public class ServiceTest extends TestCase {
 
 		assertCommandLineHeader( parser );
 
-		assertEquals( "Mock Service status: STOPPED", parser.next() );
+		assertEquals( "[I] Mock Service status: STOPPED", parser.next() );
 		assertEquals( "", parser.next() );
 		assertNull( parser.next() );
 	}
@@ -116,7 +116,7 @@ public class ServiceTest extends TestCase {
 		}
 		assertFalse( "Service should not be running and is.", service.isRunning() );
 
-		assertEquals( "Java 1.6 or higher is required, found: 1.5", parser.next() );
+		assertEquals( "[E] Java 1.6 or higher is required, found: 1.5", parser.next() );
 	}
 
 	public void testLaunchWithStart() throws Exception {
@@ -254,7 +254,7 @@ public class ServiceTest extends TestCase {
 		service2.waitForShutdown( timeout );
 		assertCommandLineHeader( name2, parser2 );
 
-		assertEquals( name2 + " already running.", parser2.next() );
+		assertEquals( "[I] " + name2 + " already running.", parser2.next() );
 		assertEquals( "", parser2.next() );
 		assertNull( parser2.next() );
 
@@ -275,7 +275,7 @@ public class ServiceTest extends TestCase {
 		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false, "-status", "-log.level", "none" ) );
 		assertCommandLineHeader( name1, parser1 );
 
-		assertEquals( name1 + " status: STOPPED", parser1.next() );
+		assertEquals( "[I] " + name1 + " status: STOPPED", parser1.next() );
 		assertEquals( "", parser1.next() );
 		assertNull( parser1.next() );
 
@@ -291,7 +291,7 @@ public class ServiceTest extends TestCase {
 		service2.waitForShutdown( timeout );
 		assertCommandLineHeader( name2, parser2 );
 
-		assertEquals( name1 + " status: STARTED", parser2.next() );
+		assertEquals( "[I] " + name1 + " status: STARTED", parser2.next() );
 		assertEquals( "", parser2.next() );
 		assertNull( parser2.next() );
 
