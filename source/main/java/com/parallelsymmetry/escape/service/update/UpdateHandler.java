@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -11,13 +12,16 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.parallelsymmetry.escape.service.Service;
+import com.parallelsymmetry.escape.utility.ConsoleReader;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.Parameters;
+import com.parallelsymmetry.escape.utility.TextUtil;
+import com.parallelsymmetry.escape.utility.log.Log;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
 public class UpdateHandler implements Iterable<StagedUpdate> {
 
-	private static final String UPDATER = "lib/updater.jar";
+	private static final String UPDATER = "lib/updater-standalone.jar";
 
 	private Service service;
 
@@ -55,20 +59,26 @@ public class UpdateHandler implements Iterable<StagedUpdate> {
 				cleanup.add( update );
 			}
 		}
-		
+
 		for( StagedUpdate update : cleanup ) {
 			updates.remove( update );
 		}
 		if( cleanup.size() > 0 ) saveSettings();
-		
+
 		return staged.size() > 0;
 	}
 
-	public void applyUpdates() throws IOException {
+	public void applyUpdates() throws Exception {
+		Log.write( Log.DEBUG, "Applying updates..." );
+
 		// Copy the updater to a temporary location.
 		File updaterSource = new File( service.getHomeFolder(), UPDATER );
 		File updaterTarget = new File( FileUtil.TEMP_FOLDER, service.getArtifact() + "-updater.jar" );
-		FileUtil.copy( updaterSource, updaterTarget );
+
+		if( !FileUtil.copy( updaterSource, updaterTarget ) ) {
+			Log.write( Log.WARN, "Update library not staged, update aborted." );
+			return;
+		}
 
 		RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
 		List<String> commands = runtimeBean.getInputArguments();
@@ -81,6 +91,8 @@ public class UpdateHandler implements Iterable<StagedUpdate> {
 		builder.command().add( "java" );
 		builder.command().add( "-jar" );
 		builder.command().add( updaterTarget.toString() );
+		builder.command().add( "-log.file" );
+		builder.command().add( new File( "updater.log.txt" ).getAbsolutePath() );
 		builder.command().add( "--update" );
 		for( StagedUpdate update : updates ) {
 			builder.command().add( update.getSource().getAbsolutePath() );
@@ -106,13 +118,13 @@ public class UpdateHandler implements Iterable<StagedUpdate> {
 		}
 
 		// Print the process commands.
-		for( String command : builder.command() ) {
-			System.out.print( command );
-			System.out.print( " " );
-		}
-		System.out.println();
+		Log.write( Log.DEBUG, TextUtil.toString( builder.command(), " " ) );
 
-		builder.start();
+		Process process = builder.start();
+		// FIXME Use a console reader to figure out what is happening.
+//		new ConsoleReader( process.getInputStream() ).start();
+//		Log.write( "Result: " + process.waitFor() );
+		Log.write( Log.DEBUG, "Updates started." );
 
 		// The program should be allowed, but not forced, to exit at this point.
 	}

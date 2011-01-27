@@ -622,7 +622,7 @@ public abstract class Service extends Agent {
 		if( found ) {
 			try {
 				updateHandler.applyUpdates();
-			} catch( IOException exception ) {
+			} catch( Exception exception ) {
 				Log.write( exception );
 			}
 		}
