@@ -2,11 +2,11 @@ package com.parallelsymmetry.escape.service.update;
 
 import java.net.URI;
 
-public class UpdateSource {
+public class UpdateLocation {
 
 	private URI uri;
 
-	public UpdateSource( URI uri ) {
+	public UpdateLocation( URI uri ) {
 		this.uri = uri;
 	}
 
@@ -16,8 +16,8 @@ public class UpdateSource {
 
 	@Override
 	public boolean equals( Object object ) {
-		if( !( object instanceof UpdateSource ) ) return false;
-		UpdateSource that = (UpdateSource)object;
+		if( !( object instanceof UpdateLocation ) ) return false;
+		UpdateLocation that = (UpdateLocation)object;
 		return getUri().toString().equals( that.getUri().toString() );
 	}
 
