@@ -5,10 +5,10 @@ import java.util.logging.Level;
 import com.parallelsymmetry.escape.utility.Parameters;
 import com.parallelsymmetry.escape.utility.log.Log;
 
-public class DemoService extends Service {
+public class VerifyService extends Service {
 
 	public static final void main( String[] commands ) {
-		DemoService service = new DemoService();
+		VerifyService service = new VerifyService();
 		if( commands.length == 0 ) Log.setLevel( Log.TRACE );
 		service.call( commands );
 	}
@@ -21,8 +21,8 @@ public class DemoService extends Service {
 		// -------------------0--------1---------2---------3---------4---------5---------6---------7---------8
 		// -------------------12345678901234567890123456789012345678901234567890123456789012345678901234567890
 		Log.write();
-		Log.write( "Welcome to the Demo Service. The Demo service is provided for reference" );
-		Log.write( "purposes only. Please note the Demo Service automatically stops regardless" );
+		Log.write( "Welcome to the Verfiy service. The Verfiy service is provided for reference" );
+		Log.write( "purposes only. Please note the Verfiy service automatically stops regardless" );
 		Log.write( "of what parameters are specified on the command line." );
 		Log.write();
 

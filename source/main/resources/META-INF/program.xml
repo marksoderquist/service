@@ -1,7 +1,7 @@
 <program>
 
 	<information>
-		<name>Demo Service</name>
+		<name>Verify Service</name>
 		<group>${project.groupId}</group>
 		<artifact>${project.artifactId}</artifact>
 		<version>${project.version}</version>
