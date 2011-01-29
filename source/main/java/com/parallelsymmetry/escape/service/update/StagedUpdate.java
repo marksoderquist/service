@@ -2,7 +2,7 @@ package com.parallelsymmetry.escape.service.update;
 
 import java.io.File;
 
-import com.parallelsymmetry.escape.service.Persistent;
+import com.parallelsymmetry.escape.utility.setting.Persistent;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
 public class StagedUpdate implements Persistent<StagedUpdate>{
