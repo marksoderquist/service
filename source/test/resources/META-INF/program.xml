@@ -1,23 +1,20 @@
-<program>
+<pack>
 
-	<information>
-		<name>Mock Service</name>
-		<group>com.parallelsymmetry.escape.service</group>
-		<artifact>mock</artifact>
-		<version>1.0.0-a-00</version>
-		<timestamp>1973-08-14 16:29:00</timestamp>
+	<group>com.parallelsymmetry.escape.service</group>
+	<artifact>mock</artifact>
+	<version>1.0.0-a-00</version>
+	<timestamp>1973-08-14 16:29:00</timestamp>
 
-		<inception>1973</inception>
+	<name>Mock Service</name>
+	<provider>Parallel Symmetry</provider>
+	<inception>1973</inception>
 
-		<vendor>Parallel Symmetry</vendor>
-
-		<license>
-			<summary>Mock Service comes with ABSOLUTELY NO WARRANTY.  This is open software,&#10;and you are welcome to redistribute it under certain conditions.</summary>
-		</license>
-	</information>
+	<license>
+		<summary>Mock Service comes with ABSOLUTELY NO WARRANTY. This is open software,&#10;and you are welcome to redistribute it under certain conditions.</summary>
+	</license>
 
 	<resources>
 		<java version="1.6" />
 	</resources>
 
-</program>
+</pack>

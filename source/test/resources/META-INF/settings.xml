@@ -1,15 +1,3 @@
 <settings>
 
-	<services>
-		<update>
-			<updates>
-				<item-count>1</item-count>
-				<item-0>
-					<source>/test/source.jar</source>
-					<target>/test/target</target>
-				</item-0>
-			</updates>
-		</update>
-	</services>
-
 </settings>

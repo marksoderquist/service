@@ -14,42 +14,44 @@ import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.Parameters;
 import com.parallelsymmetry.escape.utility.TextUtil;
 import com.parallelsymmetry.escape.utility.log.Log;
+import com.parallelsymmetry.escape.utility.setting.Persistent;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
-public class UpdateHandler implements Iterable<StagedUpdate> {
+public class UpdateManager implements Iterable<UpdateInfo>, Persistent<UpdateManager> {
 
 	private static final String UPDATER = "lib/updater-standalone.jar";
 
 	private Service service;
 
-	private List<StagedUpdate> updates;
+	private List<UpdateInfo> updates;
 
-	public UpdateHandler( Service service ) {
+	private Settings settings;
+
+	public UpdateManager( Service service ) {
 		this.service = service;
-		updates = new CopyOnWriteArrayList<StagedUpdate>();
-		loadSettings();
+		updates = new CopyOnWriteArrayList<UpdateInfo>();
 	}
 
 	@Override
-	public Iterator<StagedUpdate> iterator() {
+	public Iterator<UpdateInfo> iterator() {
 		return updates.iterator();
 	}
 
-	public void addUpdateItem( StagedUpdate item ) {
+	public void addUpdateItem( UpdateInfo item ) {
 		updates.add( item );
-		saveSettings();
+		saveSettings( settings );
 	}
 
-	public void removeUpdateItem( StagedUpdate item ) {
+	public void removeUpdateItem( UpdateInfo item ) {
 		updates.remove( item );
-		saveSettings();
+		saveSettings( settings );
 	}
 
 	public boolean updatesDetected() {
-		Set<StagedUpdate> staged = new HashSet<StagedUpdate>();
-		Set<StagedUpdate> cleanup = new HashSet<StagedUpdate>();
+		Set<UpdateInfo> staged = new HashSet<UpdateInfo>();
+		Set<UpdateInfo> cleanup = new HashSet<UpdateInfo>();
 
-		for( StagedUpdate update : updates ) {
+		for( UpdateInfo update : updates ) {
 			if( update.getSource().exists() ) {
 				staged.add( update );
 			} else {
@@ -57,10 +59,10 @@ public class UpdateHandler implements Iterable<StagedUpdate> {
 			}
 		}
 
-		for( StagedUpdate update : cleanup ) {
+		for( UpdateInfo update : cleanup ) {
 			updates.remove( update );
 		}
-		if( cleanup.size() > 0 ) saveSettings();
+		if( cleanup.size() > 0 ) saveSettings( settings );
 
 		return staged.size() > 0;
 	}
@@ -91,7 +93,7 @@ public class UpdateHandler implements Iterable<StagedUpdate> {
 		builder.command().add( "-log.file" );
 		builder.command().add( new File( "updater.log.txt" ).getAbsolutePath() );
 		builder.command().add( "--update" );
-		for( StagedUpdate update : updates ) {
+		for( UpdateInfo update : updates ) {
 			builder.command().add( update.getSource().getAbsolutePath() );
 			builder.command().add( update.getTarget().getAbsolutePath() );
 		}
@@ -124,20 +126,27 @@ public class UpdateHandler implements Iterable<StagedUpdate> {
 		Log.write( "Program exiting to allow updates to be processed." );
 	}
 
-	private void loadSettings() {
-		List<Settings> settings = service.getSettings().getList( "/services/update/updates" );
+	@Override
+	public UpdateManager loadSettings( Settings settings ) {
+		this.settings = settings;
 
-		for( Settings updateSettings : settings ) {
-			updates.add( new StagedUpdate().loadSettings( updateSettings ) );
+		List<Settings> updates = settings.getList( "/updates" );
+		for( Settings updateSettings : updates ) {
+			this.updates.add( new UpdateInfo().loadSettings( updateSettings ) );
 		}
+
+		return this;
 	}
 
-	private void saveSettings() {
-		service.getSettings().removeNode( "/services/update/updates" );
+	@Override
+	public UpdateManager saveSettings( Settings settings ) {
+		settings.removeNode( "/updates" );
 
-		for( StagedUpdate update : updates ) {
-			update.saveSettings( service.getSettings().addListNode( "/services/update/updates" ) );
+		for( UpdateInfo update : updates ) {
+			update.saveSettings( settings.addListNode( "/updates" ) );
 		}
+
+		return this;
 	}
 
 }

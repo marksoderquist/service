@@ -28,7 +28,7 @@ import java.util.logging.LogRecord;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
-import com.parallelsymmetry.escape.service.update.UpdateHandler;
+import com.parallelsymmetry.escape.service.update.UpdateManager;
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.JavaUtil;
@@ -67,7 +67,7 @@ public abstract class Service extends Agent {
 
 	private Thread shutdownHook = new ShutdownHook( this );
 
-	private UpdateHandler updateHandler;
+	private UpdateManager updateManager;
 
 	private Parameters parameters;
 
@@ -362,36 +362,36 @@ public abstract class Service extends Agent {
 		if( described ) return;
 
 		// Determine the program name.
-		setName( name == null ? descriptor.getValue( "/program/information/name" ) : name );
+		setName( name == null ? descriptor.getValue( "/pack/name" ) : name );
 
 		// Determine the program namespace.
-		group = descriptor.getValue( "/program/information/group", group );
+		group = descriptor.getValue( "/pack/group", group );
 		group = parameters.get( "namespace", group );
 
 		// Determine the program identifier.
-		artifact = descriptor.getValue( "/program/information/artifact", artifact );
+		artifact = descriptor.getValue( "/pack/artifact", artifact );
 		artifact = parameters.get( "identifier", artifact );
 		if( parameters.isTrue( "development" ) ) artifact += "-dev";
 		if( TextUtil.isEmpty( this.artifact ) ) artifact = getName().replace( ' ', '-' ).toLowerCase();
 
 		// Determine the program release.
-		Version version = new Version( descriptor.getValue( "/program/information/version", null ) );
-		Date timestamp = DateUtil.parse( descriptor.getValue( "/program/information/timestamp", null ), DESCRIPTOR_DATE_FORMAT );
+		Version version = new Version( descriptor.getValue( "/pack/version", null ) );
+		Date timestamp = DateUtil.parse( descriptor.getValue( "/pack/timestamp", null ), DESCRIPTOR_DATE_FORMAT );
 		release = new Release( version, timestamp );
 
 		// Determine the program copyright information.
 		try {
-			inceptionYear = Integer.parseInt( descriptor.getValue( "/program/information/inception" ) );
+			inceptionYear = Integer.parseInt( descriptor.getValue( "/pack/inception" ) );
 		} catch( NumberFormatException exception ) {
 			inceptionYear = Calendar.getInstance().get( Calendar.YEAR );
 		}
-		copyrightHolder = descriptor.getValue( "/program/information/vendor", copyrightHolder );
+		copyrightHolder = descriptor.getValue( "/pack/provider", copyrightHolder );
 
-		licenseSummary = descriptor.getValue( "/program/information/license/summary", licenseSummary );
+		licenseSummary = descriptor.getValue( "/pack/license/summary", licenseSummary );
 		if( licenseSummary != null ) licenseSummary = TextUtil.reline( licenseSummary, 72 );
 
 		// Minimum Java runtime version.
-		javaVersionMinimum = descriptor.getValue( "/program/resources/java/@version", JAVA_VERSION_MINIMUM );
+		javaVersionMinimum = descriptor.getValue( "/pack/resources/java/@version", JAVA_VERSION_MINIMUM );
 
 		// Set the program home folder.
 		home = findHome( parameters );
@@ -410,8 +410,9 @@ public abstract class Service extends Agent {
 			Log.write( exception );
 		}
 
-		// Create the update handler. Depends on the settings object.
-		updateHandler = new UpdateHandler( this );
+		// Create the update manager. Requires the settings to be initialized.
+		updateManager = new UpdateManager( this );
+		updateManager.loadSettings( getSettings().getNode( "/services/update" ) );
 
 		described = true;
 	}
@@ -616,7 +617,7 @@ public abstract class Service extends Agent {
 		Log.write( Log.DEBUG, "Checking for updates..." );
 
 		// Detect updates.
-		boolean found = updateHandler.updatesDetected();
+		boolean found = updateManager.updatesDetected();
 
 		if( found ) {
 			Log.write( "Updates detected." );
@@ -627,7 +628,7 @@ public abstract class Service extends Agent {
 		// Apply updates.
 		if( found ) {
 			try {
-				updateHandler.applyUpdates();
+				updateManager.applyUpdates();
 			} catch( Exception exception ) {
 				Log.write( exception );
 			}
