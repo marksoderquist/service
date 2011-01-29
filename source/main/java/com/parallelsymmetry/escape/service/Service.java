@@ -75,7 +75,7 @@ public abstract class Service extends Agent {
 
 	private PeerServer peerServer;
 
-	private String descriptorPath;
+	private boolean described;
 
 	private Descriptor descriptor;
 
@@ -118,17 +118,37 @@ public abstract class Service extends Agent {
 	}
 
 	/**
-	 * Construct the service with the specified name and descriptor path. The
-	 * descriptor path must be able to be found on the class path and must begin
-	 * with a '/' slash.
+	 * Construct the service with the specified descriptor. The descriptor must
+	 * conform to the Escape service descriptor specification.
+	 * 
+	 * @param descriptor
+	 */
+	public Service( Descriptor descriptor ) {
+		this( null, descriptor );
+	}
+
+	/**
+	 * Construct the service with the specified name and descriptor. The
+	 * descriptor must conform to the Escape service descriptor specification.
 	 * 
 	 * @param name
-	 * @param descriptorPath
+	 * @param descriptor
 	 */
-	public Service( String name, String descriptorPath ) {
+	public Service( String name, Descriptor descriptor ) {
 		super( name );
 		this.name = name;
-		this.descriptorPath = descriptorPath == null ? DEFAULT_DESCRIPTOR_PATH : descriptorPath;
+
+		if( descriptor == null ) {
+			try {
+				InputStream input = getClass().getResourceAsStream( DEFAULT_DESCRIPTOR_PATH );
+				if( input != null ) Log.write( Log.DEBUG, "Application descriptor found: " + DEFAULT_DESCRIPTOR_PATH );
+				this.descriptor = new Descriptor( input );
+			} catch( Exception exception ) {
+				Log.write( exception );
+			}
+		} else {
+			this.descriptor = descriptor;
+		}
 
 		describe( Parameters.parse( new String[] {} ) );
 	}
@@ -339,9 +359,7 @@ public abstract class Service extends Agent {
 
 	private final synchronized void describe( Parameters parameters ) {
 		// This method should only be called once.
-		if( descriptor != null ) return;
-
-		descriptor = getApplicationDescriptor();
+		if( described ) return;
 
 		// Determine the program name.
 		setName( name == null ? descriptor.getValue( "/program/information/name" ) : name );
@@ -394,6 +412,8 @@ public abstract class Service extends Agent {
 
 		// Create the update handler. Depends on the settings object.
 		updateHandler = new UpdateHandler( this );
+
+		described = true;
 	}
 
 	private final boolean checkJava( Parameters parameters ) {
@@ -585,20 +605,6 @@ public abstract class Service extends Agent {
 
 	private final void resetServicePortNumber() throws BackingStoreException {
 		getSettings().put( "/port", null );
-	}
-
-	private final Descriptor getApplicationDescriptor() {
-		if( descriptor == null ) {
-			try {
-				InputStream input = getClass().getResourceAsStream( descriptorPath );
-				if( input != null ) Log.write( Log.DEBUG, "Application descriptor found: " + descriptorPath );
-				descriptor = new Descriptor( input );
-			} catch( Exception exception ) {
-				Log.write( exception );
-			}
-		}
-
-		return descriptor;
 	}
 
 	private final boolean update() {
