@@ -19,7 +19,7 @@ import com.parallelsymmetry.escape.utility.setting.Settings;
 
 public class UpdateManager implements Iterable<UpdateInfo>, Persistent<UpdateManager> {
 
-	private static final String UPDATER = "lib/updater-standalone.jar";
+	private static final String UPDATER = "lib/updater.jar";
 
 	private Service service;
 
@@ -74,10 +74,8 @@ public class UpdateManager implements Iterable<UpdateInfo>, Persistent<UpdateMan
 		File updaterSource = new File( service.getHomeFolder(), UPDATER );
 		File updaterTarget = new File( FileUtil.TEMP_FOLDER, service.getArtifact() + "-updater.jar" );
 
-		if( !FileUtil.copy( updaterSource, updaterTarget ) ) {
-			Log.write( Log.WARN, "Update library not staged, update aborted." );
-			return;
-		}
+		if( !updaterSource.exists() ) throw new RuntimeException( "Update library not found: " + updaterSource );
+		if( !FileUtil.copy( updaterSource, updaterTarget ) ) throw new RuntimeException( "Update library not staged: " + updaterTarget );
 
 		RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
 		List<String> commands = runtimeBean.getInputArguments();
