@@ -1,5 +1,6 @@
 package com.parallelsymmetry.escape.service.pack;
 
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -24,14 +25,24 @@ public class PackFinder implements Persistent<PackFinder> {
 	@Override
 	public PackFinder loadSettings( Settings settings ) {
 		this.settings = settings;
-		// TODO Implement Persistent<PackFinder>.loadSettings().
-		return null;
+
+		List<Settings> sites = settings.getList( "/sites" );
+		for( Settings siteSettings : sites ) {
+			this.sites.add( new PackSite().loadSettings( siteSettings ) );
+		}
+
+		return this;
 	}
 
 	@Override
 	public PackFinder saveSettings( Settings settings ) {
-		// TODO Implement Persistent<PackFinder>.saveSettings().
-		return null;
+		settings.removeNode( "/sites" );
+
+		for( PackSite site : sites ) {
+			site.saveSettings( settings.addListNode( "/sites" ) );
+		}
+
+		return this;
 	}
 
 }
