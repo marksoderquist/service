@@ -16,7 +16,6 @@ import java.net.URISyntaxException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -28,6 +27,8 @@ import java.util.logging.LogRecord;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
+import com.parallelsymmetry.escape.service.pack.Pack;
+import com.parallelsymmetry.escape.service.pack.PackManager;
 import com.parallelsymmetry.escape.service.update.UpdateManager;
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
@@ -57,8 +58,6 @@ public abstract class Service extends Agent {
 
 	private static final String DEFAULT_SETTINGS_PATH = "/META-INF/settings.xml";
 
-	private static final String DESCRIPTOR_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
-
 	private static final String JAVA_VERSION_MINIMUM = "1.6";
 
 	private static final String LOCALHOST = "127.0.0.1";
@@ -69,6 +68,8 @@ public abstract class Service extends Agent {
 
 	private UpdateManager updateManager;
 
+	private PackManager packManager;
+
 	private Parameters parameters;
 
 	private Settings settings;
@@ -76,6 +77,8 @@ public abstract class Service extends Agent {
 	private PeerServer peerServer;
 
 	private boolean described;
+
+	private Pack pack;
 
 	private Descriptor descriptor;
 
@@ -225,6 +228,10 @@ public abstract class Service extends Agent {
 		return settings;
 	}
 
+	public Pack getPack() {
+		return pack;
+	}
+
 	/**
 	 * Get the home folder. If the home folder is null that means that the program
 	 * is not installed locally and was most likely started with a technology like
@@ -234,6 +241,14 @@ public abstract class Service extends Agent {
 	 */
 	public File getHomeFolder() {
 		return home;
+	}
+
+	public PackManager getPackManager() {
+		return packManager;
+	}
+
+	public UpdateManager getUpdateManager() {
+		return updateManager;
 	}
 
 	public void printHelp( String topic ) {
@@ -361,23 +376,21 @@ public abstract class Service extends Agent {
 		// This method should only be called once.
 		if( described ) return;
 
+		pack = Pack.load( descriptor );
+
 		// Determine the program name.
-		setName( name == null ? descriptor.getValue( "/pack/name" ) : name );
+		setName( name == null ? pack.getName() : name );
 
-		// Determine the program namespace.
-		group = descriptor.getValue( "/pack/group", group );
-		group = parameters.get( "namespace", group );
+		// Determine the program group.
+		group = parameters.get( "group", pack.getGroup() );
 
-		// Determine the program identifier.
-		artifact = descriptor.getValue( "/pack/artifact", artifact );
-		artifact = parameters.get( "identifier", artifact );
+		// Determine the program artifact.
+		artifact = parameters.get( "artifact", pack.getArtifact() );
 		if( parameters.isTrue( "development" ) ) artifact += "-dev";
-		if( TextUtil.isEmpty( this.artifact ) ) artifact = getName().replace( ' ', '-' ).toLowerCase();
+		if( TextUtil.isEmpty( artifact ) ) artifact = getName().replace( ' ', '-' ).toLowerCase();
 
 		// Determine the program release.
-		Version version = new Version( descriptor.getValue( "/pack/version", null ) );
-		Date timestamp = DateUtil.parse( descriptor.getValue( "/pack/timestamp", null ), DESCRIPTOR_DATE_FORMAT );
-		release = new Release( version, timestamp );
+		release = pack.getRelease();
 
 		// Determine the program copyright information.
 		try {
@@ -391,7 +404,7 @@ public abstract class Service extends Agent {
 		if( licenseSummary != null ) licenseSummary = TextUtil.reline( licenseSummary, 72 );
 
 		// Minimum Java runtime version.
-		javaVersionMinimum = descriptor.getValue( "/pack/resources/java/@version", JAVA_VERSION_MINIMUM );
+		javaVersionMinimum = descriptor.getValue( "/pack/resources/java/version", JAVA_VERSION_MINIMUM );
 
 		// Set the program home folder.
 		home = findHome( parameters );
@@ -413,6 +426,12 @@ public abstract class Service extends Agent {
 		// Create the update manager. Requires the settings to be initialized.
 		updateManager = new UpdateManager( this );
 		updateManager.loadSettings( getSettings().getNode( "/services/update" ) );
+
+		// Create the pack manager. Requires the settings to be initialized.
+		packManager = new PackManager( this );
+		packManager.loadSettings( getSettings().getNode( "/services/pack" ) );
+
+		// TODO Load the update check schedule from the settings.
 
 		described = true;
 	}

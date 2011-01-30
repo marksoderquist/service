@@ -37,6 +37,8 @@ public class VerifyService extends Service {
 		Log.write();
 		Log.setLevel( level );
 
+		getPackManager().getNewPacks();
+
 		call( new String[] { "-stop" } );
 	}
 
