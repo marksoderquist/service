@@ -32,6 +32,26 @@ public class UpdateManager implements Persistent<UpdateManager> {
 		updater = new File( service.getHomeFolder(), "updater.jar" );
 	}
 
+	public boolean hasUpdates() {
+		Set<UpdateInfo> staged = new HashSet<UpdateInfo>();
+		Set<UpdateInfo> cleanup = new HashSet<UpdateInfo>();
+	
+		for( UpdateInfo update : updates ) {
+			if( update.getSource().exists() ) {
+				staged.add( update );
+			} else {
+				cleanup.add( update );
+			}
+		}
+	
+		for( UpdateInfo update : cleanup ) {
+			updates.remove( update );
+		}
+		if( cleanup.size() > 0 ) saveSettings( settings );
+	
+		return staged.size() > 0;
+	}
+
 	public void applyUpdates() throws Exception {
 		Log.write( Log.DEBUG, "Starting update process..." );
 
@@ -87,26 +107,6 @@ public class UpdateManager implements Persistent<UpdateManager> {
 
 		// The program should be allowed, but not forced, to exit at this point.
 		Log.write( "Program exiting to allow updates to be processed." );
-	}
-
-	public boolean updatesDetected() {
-		Set<UpdateInfo> staged = new HashSet<UpdateInfo>();
-		Set<UpdateInfo> cleanup = new HashSet<UpdateInfo>();
-
-		for( UpdateInfo update : updates ) {
-			if( update.getSource().exists() ) {
-				staged.add( update );
-			} else {
-				cleanup.add( update );
-			}
-		}
-
-		for( UpdateInfo update : cleanup ) {
-			updates.remove( update );
-		}
-		if( cleanup.size() > 0 ) saveSettings( settings );
-
-		return staged.size() > 0;
 	}
 
 	public void addUpdateItem( UpdateInfo item ) {

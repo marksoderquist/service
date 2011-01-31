@@ -636,7 +636,7 @@ public abstract class Service extends Agent {
 		Log.write( Log.DEBUG, "Checking for updates..." );
 
 		// Detect updates.
-		boolean found = updateManager.updatesDetected();
+		boolean found = updateManager.hasUpdates();
 
 		if( found ) {
 			Log.write( "Updates detected." );
