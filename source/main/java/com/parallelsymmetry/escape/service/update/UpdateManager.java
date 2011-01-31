@@ -4,7 +4,6 @@ import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -17,9 +16,7 @@ import com.parallelsymmetry.escape.utility.log.Log;
 import com.parallelsymmetry.escape.utility.setting.Persistent;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
-public class UpdateManager implements Iterable<UpdateInfo>, Persistent<UpdateManager> {
-
-	private static final String UPDATER = "lib/updater.jar";
+public class UpdateManager implements Persistent<UpdateManager> {
 
 	private Service service;
 
@@ -27,51 +24,19 @@ public class UpdateManager implements Iterable<UpdateInfo>, Persistent<UpdateMan
 
 	private Settings settings;
 
+	private File updater;
+
 	public UpdateManager( Service service ) {
 		this.service = service;
 		updates = new CopyOnWriteArrayList<UpdateInfo>();
-	}
-
-	@Override
-	public Iterator<UpdateInfo> iterator() {
-		return updates.iterator();
-	}
-
-	public void addUpdateItem( UpdateInfo item ) {
-		updates.add( item );
-		saveSettings( settings );
-	}
-
-	public void removeUpdateItem( UpdateInfo item ) {
-		updates.remove( item );
-		saveSettings( settings );
-	}
-
-	public boolean updatesDetected() {
-		Set<UpdateInfo> staged = new HashSet<UpdateInfo>();
-		Set<UpdateInfo> cleanup = new HashSet<UpdateInfo>();
-
-		for( UpdateInfo update : updates ) {
-			if( update.getSource().exists() ) {
-				staged.add( update );
-			} else {
-				cleanup.add( update );
-			}
-		}
-
-		for( UpdateInfo update : cleanup ) {
-			updates.remove( update );
-		}
-		if( cleanup.size() > 0 ) saveSettings( settings );
-
-		return staged.size() > 0;
+		updater = new File( service.getHomeFolder(), "updater.jar" );
 	}
 
 	public void applyUpdates() throws Exception {
 		Log.write( Log.DEBUG, "Starting update process..." );
 
 		// Copy the updater to a temporary location.
-		File updaterSource = new File( service.getHomeFolder(), UPDATER );
+		File updaterSource = updater;
 		File updaterTarget = new File( FileUtil.TEMP_FOLDER, service.getArtifact() + "-updater.jar" );
 
 		if( !updaterSource.exists() ) throw new RuntimeException( "Update library not found: " + updaterSource );
@@ -122,6 +87,54 @@ public class UpdateManager implements Iterable<UpdateInfo>, Persistent<UpdateMan
 
 		// The program should be allowed, but not forced, to exit at this point.
 		Log.write( "Program exiting to allow updates to be processed." );
+	}
+
+	public boolean updatesDetected() {
+		Set<UpdateInfo> staged = new HashSet<UpdateInfo>();
+		Set<UpdateInfo> cleanup = new HashSet<UpdateInfo>();
+
+		for( UpdateInfo update : updates ) {
+			if( update.getSource().exists() ) {
+				staged.add( update );
+			} else {
+				cleanup.add( update );
+			}
+		}
+
+		for( UpdateInfo update : cleanup ) {
+			updates.remove( update );
+		}
+		if( cleanup.size() > 0 ) saveSettings( settings );
+
+		return staged.size() > 0;
+	}
+
+	public void addUpdateItem( UpdateInfo item ) {
+		updates.add( item );
+		saveSettings( settings );
+	}
+
+	public void removeUpdateItem( UpdateInfo item ) {
+		updates.remove( item );
+		saveSettings( settings );
+	}
+
+	/**
+	 * Get the path to the updater library.
+	 * 
+	 * @return
+	 */
+	public File getUpdaterPath() {
+		return updater;
+	}
+
+	/**
+	 * Get the path to the updater library.
+	 * 
+	 * @param file
+	 */
+	public void setUpdaterPath( File file ) {
+		this.updater = file;
 	}
 
 	@Override
