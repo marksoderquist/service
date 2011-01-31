@@ -35,7 +35,7 @@ public class UpdateManager implements Persistent<UpdateManager> {
 	public boolean hasUpdates() {
 		Set<UpdateInfo> staged = new HashSet<UpdateInfo>();
 		Set<UpdateInfo> cleanup = new HashSet<UpdateInfo>();
-	
+
 		for( UpdateInfo update : updates ) {
 			if( update.getSource().exists() ) {
 				staged.add( update );
@@ -43,12 +43,12 @@ public class UpdateManager implements Persistent<UpdateManager> {
 				cleanup.add( update );
 			}
 		}
-	
+
 		for( UpdateInfo update : cleanup ) {
 			updates.remove( update );
 		}
 		if( cleanup.size() > 0 ) saveSettings( settings );
-	
+
 		return staged.size() > 0;
 	}
 
@@ -73,13 +73,20 @@ public class UpdateManager implements Persistent<UpdateManager> {
 		builder.command().add( "java" );
 		builder.command().add( "-jar" );
 		builder.command().add( updaterTarget.toString() );
+
+		// TODO The logging should be configurable.
 		builder.command().add( "-log.file" );
-		builder.command().add( new File( "updater.log.txt" ).getAbsolutePath() );
+		builder.command().add( new File( "updater.log" ).getAbsolutePath() );
+		builder.command().add( "-log.append" );
+
+		// Add the updates.
 		builder.command().add( "--update" );
 		for( UpdateInfo update : updates ) {
 			builder.command().add( update.getSource().getAbsolutePath() );
 			builder.command().add( update.getTarget().getAbsolutePath() );
 		}
+
+		// FIXME The launch parameters should come from the original command line.
 		builder.command().add( "--launch" );
 		builder.command().add( "java" );
 		builder.command().add( "\\-jar" );
@@ -90,7 +97,8 @@ public class UpdateManager implements Persistent<UpdateManager> {
 				builder.command().add( command );
 			}
 		}
-		builder.command().add( "service.jar" );
+
+		builder.command().add( "verify.jar" );
 		for( String command : service.getParameters().getCommands() ) {
 			if( command.startsWith( Parameters.SINGLE ) ) {
 				builder.command().add( "\\" + command );
@@ -99,8 +107,14 @@ public class UpdateManager implements Persistent<UpdateManager> {
 			}
 		}
 
+		builder.command().add( "\\-update" );
+		builder.command().add( "false" );
+
+		builder.command().add( "-launch.home" );
+		builder.command().add( System.getProperty( "user.dir" ) );
+
 		// Print the process commands.
-		Log.write( Log.DEBUG, TextUtil.toString( builder.command(), " " ) );
+		Log.write( Log.DEBUG, "Launching: " + TextUtil.toString( builder.command(), " " ) );
 
 		builder.start();
 		Log.write( Log.TRACE, "Update process started." );

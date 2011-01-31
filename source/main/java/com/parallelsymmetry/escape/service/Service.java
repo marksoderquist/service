@@ -467,7 +467,7 @@ public abstract class Service extends Agent {
 			if( parameters.isTrue( "watch" ) ) return;
 
 			// Update if necessary.
-			if( !peer && parameters.isTrue( "update" ) ) if( update() ) return;
+			if( ( parameters.isSet( "update" ) & parameters.isTrue( "update" ) ) | ( !parameters.isSet( "update" ) & !peer ) ) if( update() ) return;
 
 			if( parameters.isTrue( "stop" ) ) {
 				stopAndWait();
@@ -519,7 +519,8 @@ public abstract class Service extends Agent {
 					List<URI> uris = JavaUtil.parseSystemClasspath( System.getProperty( "java.class.path" ) );
 					for( URI uri : uris ) {
 						if( "file".equals( uri.getScheme() ) && uri.getPath().endsWith( ".jar" ) ) {
-							home = new File( uri ).getParentFile().getParentFile();
+							// The following line assumes that the jar is in the home folder.
+							home = new File( uri ).getParentFile();
 							break;
 						}
 					}
