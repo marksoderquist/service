@@ -1,6 +1,6 @@
 package com.parallelsymmetry.escape.service.pack;
 
-import java.io.IOException;
+import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +14,10 @@ import com.parallelsymmetry.escape.utility.setting.Settings;
 
 public class PackManager implements Persistent<PackManager> {
 
+	private static final String DEFAULT_PACK_DESCRIPTOR = "pack.xml";
+
+	private static final String DEFAULT_SITE_DESCRIPTOR = "content.xml";
+
 	private Service service;
 
 	private List<PackSite> sites;
@@ -25,19 +29,20 @@ public class PackManager implements Persistent<PackManager> {
 		sites = new CopyOnWriteArrayList<PackSite>();
 	}
 
-	public boolean packsDetected() throws IOException {
-		// Get all the packs.
-		List<Pack> availablePacks = getAvailablePacks();
-		List<Pack> installedPacks = getInstalledPacks();
-
-		// Compare the versions.
-
-		return false;
+	public boolean newPacksDetected() throws Exception {
+		return getPackUpdates().size() > 0;
 	}
 
-	public List<Pack> getAvailablePacks() throws IOException {
+	public List<Pack> getAvailablePacks() throws Exception {
 		for( PackSite site : sites ) {
-
+			URI uri = site.getUri();
+			if( uri.getScheme() == null ) uri = new File( uri.getPath() ).toURI();
+			
+			// Load the site content descriptor.
+			URI siteUri = uri.resolve( DEFAULT_SITE_DESCRIPTOR );
+			
+			// If there is not a site content descriptor try a pack descriptor.
+			URI packUri = uri.resolve( DEFAULT_PACK_DESCRIPTOR );
 		}
 		return null;
 	}
@@ -50,22 +55,28 @@ public class PackManager implements Persistent<PackManager> {
 		return packs;
 	}
 
-	public List<Pack> getNewPacks() throws Exception {
-		List<Pack> packs = getInstalledPacks();
+	public List<Pack> getPackUpdates() throws Exception {
+		List<Pack> newPacks = new ArrayList<Pack>();
+		List<Pack> oldPacks = getInstalledPacks();
 
-		for( Pack oldPack : packs ) {
+		for( Pack oldPack : oldPacks ) {
+			// This URI should be a direct link to the pack descriptor.
 			URI uri = oldPack.getUpdateUri();
 			if( uri == null ) {
 				Log.write( Log.WARN, "Installed pack does not have an update URI: " + oldPack.toString() );
 				continue;
 			}
 
+			if( uri.getScheme() == null ) uri = new File( uri.getPath() ).toURI();
+
+			Log.write( Log.WARN, "Pack URI: " + uri );
+
 			Pack newPack = Pack.load( new Descriptor( uri.toString() ) );
 
-			if( newPack.getRelease().compareTo( oldPack.getRelease() ) > 0 ) packs.add( newPack );
+			if( newPack.getRelease().compareTo( oldPack.getRelease() ) > 0 ) newPacks.add( newPack );
 		}
 
-		return packs;
+		return newPacks;
 	}
 
 	public int getSiteCount() {

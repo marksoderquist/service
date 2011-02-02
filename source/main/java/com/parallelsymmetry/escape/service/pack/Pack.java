@@ -77,7 +77,7 @@ public class Pack {
 
 	@Override
 	public String toString() {
-		return group + "." + artifact;
+		return group + "|" + artifact;
 	}
 
 }
