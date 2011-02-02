@@ -413,7 +413,8 @@ public abstract class Service extends Agent {
 		settings = new Settings();
 		try {
 			Descriptor defaultSettingDescriptor = null;
-			defaultSettingDescriptor = new Descriptor( getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH ) );
+			InputStream input = getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH );
+			if( input != null ) defaultSettingDescriptor = new Descriptor( input );
 			Preferences preferences = Preferences.userRoot().node( "/" + group.replace( '.', '/' ) + "/" + artifact );
 
 			settings.addProvider( new ParametersSettingProvider( parameters ) );
