@@ -429,8 +429,8 @@ public abstract class Service extends Agent {
 		updateManager.loadSettings( getSettings().getNode( "/services/update" ) );
 
 		// Create the pack manager. Requires the settings to be initialized.
-		packManager = new PackManager( this );
-		packManager.loadSettings( getSettings().getNode( "/services/pack" ) );
+//		packManager = new PackManager( this );
+//		packManager.loadSettings( getSettings().getNode( "/services/pack" ) );
 
 		// TODO Load the update check schedule from the settings.
 
