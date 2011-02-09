@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Level;
 
 import com.parallelsymmetry.escape.service.Service;
 import com.parallelsymmetry.escape.utility.FileUtil;
@@ -36,7 +37,10 @@ public class UpdateManager implements Persistent<UpdateManager> {
 
 	public boolean hasUpdates() {
 		// Reload the settings in the event they have changed.
+		Level level = Log.getLevel();
+		Log.setLevel( Log.DEBUG );
 		loadSettings( settings );
+		Log.setLevel( level );
 
 		Set<UpdateInfo> staged = new HashSet<UpdateInfo>();
 		Set<UpdateInfo> remove = new HashSet<UpdateInfo>();
@@ -132,8 +136,6 @@ public class UpdateManager implements Persistent<UpdateManager> {
 		// Remove the updates settings.
 		updates.clear();
 		saveSettings( settings );
-
-		Log.write( Log.ERROR, "Has updates: " + hasUpdates() );
 
 		// The program should be allowed, but not forced, to exit at this point.
 		Log.write( "Program exiting to allow updates to be processed." );
