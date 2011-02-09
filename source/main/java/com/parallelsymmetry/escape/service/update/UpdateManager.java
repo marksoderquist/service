@@ -18,6 +18,8 @@ import com.parallelsymmetry.escape.utility.setting.Settings;
 
 public class UpdateManager implements Persistent<UpdateManager> {
 
+	private static final String UPDATE_LIST = "/updates";
+
 	private Service service;
 
 	private List<UpdateInfo> updates;
@@ -33,21 +35,29 @@ public class UpdateManager implements Persistent<UpdateManager> {
 	}
 
 	public boolean hasUpdates() {
+		// Reload the settings in the event they have changed.
+		loadSettings( settings );
+
 		Set<UpdateInfo> staged = new HashSet<UpdateInfo>();
-		Set<UpdateInfo> cleanup = new HashSet<UpdateInfo>();
+		Set<UpdateInfo> remove = new HashSet<UpdateInfo>();
 
 		for( UpdateInfo update : updates ) {
 			if( update.getSource().exists() ) {
 				staged.add( update );
+				Log.write( Log.DEBUG, "Update found: " + update.getSource() );
 			} else {
-				cleanup.add( update );
+				remove.add( update );
+				Log.write( Log.WARN, "Update missing: " + update.getSource() );
 			}
 		}
 
-		for( UpdateInfo update : cleanup ) {
-			updates.remove( update );
+		// Remove updates that cannot be found.
+		if( remove.size() > 0 ) {
+			for( UpdateInfo update : remove ) {
+				updates.remove( update );
+			}
+			saveSettings( settings );
 		}
-		if( cleanup.size() > 0 ) saveSettings( settings );
 
 		return staged.size() > 0;
 	}
@@ -118,10 +128,12 @@ public class UpdateManager implements Persistent<UpdateManager> {
 
 		builder.start();
 		Log.write( Log.TRACE, "Update process started." );
-		
+
 		// Remove the updates settings.
 		updates.clear();
 		saveSettings( settings );
+
+		Log.write( Log.ERROR, "Has updates: " + hasUpdates() );
 
 		// The program should be allowed, but not forced, to exit at this point.
 		Log.write( "Program exiting to allow updates to be processed." );
@@ -159,7 +171,8 @@ public class UpdateManager implements Persistent<UpdateManager> {
 	public UpdateManager loadSettings( Settings settings ) {
 		this.settings = settings;
 
-		List<Settings> updates = settings.getList( "/updates" );
+		this.updates.clear();
+		List<Settings> updates = settings.getList( UPDATE_LIST );
 		for( Settings updateSettings : updates ) {
 			this.updates.add( new UpdateInfo().loadSettings( updateSettings ) );
 		}
@@ -169,10 +182,10 @@ public class UpdateManager implements Persistent<UpdateManager> {
 
 	@Override
 	public UpdateManager saveSettings( Settings settings ) {
-		settings.removeNode( "/updates" );
+		settings.removeNode( UPDATE_LIST );
 
 		for( UpdateInfo update : updates ) {
-			update.saveSettings( settings.addListNode( "/updates" ) );
+			update.saveSettings( settings.addListNode( UPDATE_LIST ) );
 		}
 
 		return this;

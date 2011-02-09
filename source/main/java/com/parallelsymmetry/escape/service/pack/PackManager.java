@@ -14,9 +14,11 @@ import com.parallelsymmetry.escape.utility.setting.Settings;
 
 public class PackManager implements Persistent<PackManager> {
 
+	private static final String DEFAULT_SITE_DESCRIPTOR = "content.xml";
+
 	private static final String DEFAULT_PACK_DESCRIPTOR = "pack.xml";
 
-	private static final String DEFAULT_SITE_DESCRIPTOR = "content.xml";
+	private static final String SITE_LIST = "/sites";
 
 	private Service service;
 
@@ -101,7 +103,7 @@ public class PackManager implements Persistent<PackManager> {
 	public PackManager loadSettings( Settings settings ) {
 		this.settings = settings;
 
-		List<Settings> sites = settings.getList( "/sites" );
+		List<Settings> sites = settings.getList( SITE_LIST );
 		for( Settings siteSettings : sites ) {
 			this.sites.add( new PackSite().loadSettings( siteSettings ) );
 		}
@@ -111,10 +113,10 @@ public class PackManager implements Persistent<PackManager> {
 
 	@Override
 	public PackManager saveSettings( Settings settings ) {
-		settings.removeNode( "/sites" );
+		settings.removeNode( SITE_LIST );
 
 		for( PackSite site : sites ) {
-			site.saveSettings( settings.addListNode( "/sites" ) );
+			site.saveSettings( settings.addListNode( SITE_LIST ) );
 		}
 
 		return this;

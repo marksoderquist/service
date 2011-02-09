@@ -456,10 +456,10 @@ public abstract class Service extends Agent {
 	private final void processParameters( Parameters parameters, boolean peer ) {
 		if( this.parameters == null ) this.parameters = parameters;
 
-		Log.write( Log.DEBUG, "Processing parameters: " + parameters.toString() );
-
 		try {
 			if( !isRunning() ) printHeader();
+
+			Log.write( Log.DEBUG, "Processing parameters: " + parameters.toString() );
 
 			// Check for existing peer.
 			if( !peer && peerExists( parameters ) ) return;
