@@ -118,6 +118,10 @@ public class UpdateManager implements Persistent<UpdateManager> {
 
 		builder.start();
 		Log.write( Log.TRACE, "Update process started." );
+		
+		// Remove the updates settings.
+		updates.clear();
+		saveSettings( settings );
 
 		// The program should be allowed, but not forced, to exit at this point.
 		Log.write( "Program exiting to allow updates to be processed." );
