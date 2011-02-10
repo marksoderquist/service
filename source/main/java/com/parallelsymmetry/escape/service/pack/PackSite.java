@@ -13,7 +13,7 @@ public class PackSite implements Persistent<PackSite> {
 
 	private Settings settings;
 
-	PackSite() {}
+	public PackSite() {}
 
 	public PackSite( URI uri ) {
 		this.uri = uri;

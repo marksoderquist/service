@@ -103,10 +103,7 @@ public class PackManager implements Persistent<PackManager> {
 	public PackManager loadSettings( Settings settings ) {
 		this.settings = settings;
 
-		List<Settings> sites = settings.getList( SITE_LIST );
-		for( Settings siteSettings : sites ) {
-			this.sites.add( new PackSite().loadSettings( siteSettings ) );
-		}
+		this.sites = settings.getList( PackSite.class, SITE_LIST );
 
 		return this;
 	}
@@ -115,9 +112,7 @@ public class PackManager implements Persistent<PackManager> {
 	public PackManager saveSettings( Settings settings ) {
 		settings.removeNode( SITE_LIST );
 
-		for( PackSite site : sites ) {
-			site.saveSettings( settings.addListNode( SITE_LIST ) );
-		}
+		settings.putList( SITE_LIST, sites );
 
 		return this;
 	}

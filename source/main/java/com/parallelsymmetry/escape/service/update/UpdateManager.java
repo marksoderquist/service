@@ -173,11 +173,7 @@ public class UpdateManager implements Persistent<UpdateManager> {
 	public UpdateManager loadSettings( Settings settings ) {
 		this.settings = settings;
 
-		this.updates.clear();
-		List<Settings> updates = settings.getList( UPDATE_LIST );
-		for( Settings updateSettings : updates ) {
-			this.updates.add( new UpdateInfo().loadSettings( updateSettings ) );
-		}
+		this.updates = settings.getList( UpdateInfo.class, UPDATE_LIST );
 
 		return this;
 	}
@@ -186,9 +182,7 @@ public class UpdateManager implements Persistent<UpdateManager> {
 	public UpdateManager saveSettings( Settings settings ) {
 		settings.removeNode( UPDATE_LIST );
 
-		for( UpdateInfo update : updates ) {
-			update.saveSettings( settings.addListNode( UPDATE_LIST ) );
-		}
+		settings.putList( UPDATE_LIST, updates );
 
 		return this;
 	}

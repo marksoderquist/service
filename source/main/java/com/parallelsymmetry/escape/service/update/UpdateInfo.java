@@ -11,7 +11,7 @@ public class UpdateInfo implements Persistent<UpdateInfo>{
 
 	private File target;
 
-	UpdateInfo() {}
+	public UpdateInfo() {}
 
 	public UpdateInfo( File source, File target ) {
 		this.source = source;
