@@ -424,13 +424,14 @@ public abstract class Service extends Agent {
 			Log.write( exception );
 		}
 
+		// FIXME Move the creation of the internal service to a separate method.
 		// Create the update manager. Requires the settings to be initialized.
 		updateManager = new UpdateManager( this );
 		updateManager.loadSettings( getSettings().getNode( "/services/update" ) );
 
 		// Create the pack manager. Requires the settings to be initialized.
-//		packManager = new PackManager( this );
-//		packManager.loadSettings( getSettings().getNode( "/services/pack" ) );
+		//		packManager = new PackManager( this );
+		//		packManager.loadSettings( getSettings().getNode( "/services/pack" ) );
 
 		// TODO Load the update check schedule from the settings.
 
