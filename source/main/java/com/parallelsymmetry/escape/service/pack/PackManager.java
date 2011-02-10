@@ -14,9 +14,9 @@ import com.parallelsymmetry.escape.utility.setting.Settings;
 
 public class PackManager implements Persistent<PackManager> {
 
-	private static final String DEFAULT_SITE_DESCRIPTOR = "content.xml";
+	public static final String DEFAULT_SITE_DESCRIPTOR = "content.xml";
 
-	private static final String DEFAULT_PACK_DESCRIPTOR = "pack.xml";
+	public static final String DEFAULT_PACK_DESCRIPTOR = "pack.xml";
 
 	private static final String SITE_LIST = "/sites";
 
@@ -39,10 +39,10 @@ public class PackManager implements Persistent<PackManager> {
 		for( PackSite site : sites ) {
 			URI uri = site.getUri();
 			if( uri.getScheme() == null ) uri = new File( uri.getPath() ).toURI();
-			
+
 			// Load the site content descriptor.
 			URI siteUri = uri.resolve( DEFAULT_SITE_DESCRIPTOR );
-			
+
 			// If there is not a site content descriptor try a pack descriptor.
 			URI packUri = uri.resolve( DEFAULT_PACK_DESCRIPTOR );
 		}
