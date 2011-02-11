@@ -24,7 +24,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
-import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import com.parallelsymmetry.escape.service.pack.UpdatePack;
@@ -551,7 +550,7 @@ public abstract class Service extends Agent {
 		boolean exists = false;
 		String peer = null;
 		String host = parameters.get( "host", LOCALHOST );
-		int port = getSettings().getInt( "/port", 0 );
+		int port = getServicePortNumber();
 
 		if( port != 0 ) {
 			// Connect to the peer, if possible, and pass the parameters.
@@ -569,12 +568,7 @@ public abstract class Service extends Agent {
 				return false;
 			} catch( IOException exception ) {
 				Log.write( Log.WARN, exception, "Could not connect to peer." );
-				try {
-					resetServicePortNumber();
-				} catch( BackingStoreException resetException ) {
-					Log.write( resetException );
-				}
-				Log.write( exception );
+				resetServicePortNumber();
 				return false;
 			}
 
@@ -610,11 +604,15 @@ public abstract class Service extends Agent {
 		return exists;
 	}
 
-	private final void storeServicePortNumber() throws IOException, BackingStoreException {
+	private final int getServicePortNumber() {
+		return getSettings().getInt( "/port", 0 );
+	}
+
+	private final void storeServicePortNumber() {
 		getSettings().putInt( "/port", peerServer.getLocalPort() );
 	}
 
-	private final void resetServicePortNumber() throws BackingStoreException {
+	private final void resetServicePortNumber() {
 		getSettings().put( "/port", null );
 	}
 
