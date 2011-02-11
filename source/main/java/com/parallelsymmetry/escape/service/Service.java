@@ -605,15 +605,17 @@ public abstract class Service extends Agent {
 	}
 
 	private final int getServicePortNumber() {
-		return getSettings().getInt( "/port", 0 );
+		return settings.getInt( "/port", 0 );
 	}
 
 	private final void storeServicePortNumber() {
-		getSettings().putInt( "/port", peerServer.getLocalPort() );
+		settings.putInt( "/port", peerServer.getLocalPort() );
+		settings.flush();
 	}
 
 	private final void resetServicePortNumber() {
-		getSettings().put( "/port", null );
+		settings.put( "/port", null );
+		settings.flush();
 	}
 
 	private final boolean update() {
