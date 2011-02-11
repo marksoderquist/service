@@ -265,10 +265,12 @@ public class UpdateManager implements Persistent<UpdateManager> {
 
 	@Override
 	public UpdateManager saveSettings( Settings settings ) {
+		settings.removeNode( SITE_LIST );
 		settings.removeNode( UPDATE_LIST );
 
 		settings.putList( SITE_LIST, sites );
 		settings.putList( UPDATE_LIST, updates );
+		settings.flush();
 
 		return this;
 	}
