@@ -629,20 +629,20 @@ public abstract class Service extends Agent {
 			return false;
 		}
 
-		Log.write( Log.DEBUG, "Checking for updates..." );
+		Log.write( Log.DEBUG, "Checking for staged updates..." );
 
 		// Detect updates.
 		boolean found = updateManager.areUpdatesStaged();
 
 		if( found ) {
-			Log.write( "Updates detected." );
+			Log.write( "Staged updates detected." );
 			try {
 				updateManager.applyUpdates();
 			} catch( Exception exception ) {
 				Log.write( exception );
 			}
 		} else {
-			Log.write( Log.TRACE, "No updates detected." );
+			Log.write( Log.TRACE, "No staged updates detected." );
 		}
 
 		return found;

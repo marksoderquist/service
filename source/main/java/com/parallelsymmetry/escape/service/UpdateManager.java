@@ -158,10 +158,10 @@ public class UpdateManager implements Persistent<UpdateManager> {
 		for( UpdateInfo update : updates ) {
 			if( update.getSource().exists() ) {
 				staged.add( update );
-				Log.write( Log.DEBUG, "Update found: " + update.getSource() );
+				Log.write( Log.DEBUG, "Staged update found: " + update.getSource() );
 			} else {
 				remove.add( update );
-				Log.write( Log.WARN, "Update missing: " + update.getSource() );
+				Log.write( Log.WARN, "Staged update missing: " + update.getSource() );
 			}
 		}
 
@@ -198,7 +198,7 @@ public class UpdateManager implements Persistent<UpdateManager> {
 		builder.command().add( "-jar" );
 		builder.command().add( updaterTarget.toString() );
 
-		// TODO The logging should be configurable.
+		// TODO The logging should be configurable. This is here for integration testing.
 		builder.command().add( "-log.file" );
 		builder.command().add( new File( "updater.log" ).getAbsolutePath() );
 		builder.command().add( "-log.append" );
@@ -237,15 +237,15 @@ public class UpdateManager implements Persistent<UpdateManager> {
 		builder.command().add( "-launch.home" );
 		builder.command().add( System.getProperty( "user.dir" ) );
 
+		// Remove the updates settings.
+		updates.clear();
+		saveSettings( settings );
+
 		// Print the process commands.
 		Log.write( Log.DEBUG, "Launching: " + TextUtil.toString( builder.command(), " " ) );
 
 		builder.start();
 		Log.write( Log.TRACE, "Update process started." );
-
-		// Remove the updates settings.
-		updates.clear();
-		saveSettings( settings );
 	}
 
 	@Override
