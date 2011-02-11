@@ -28,9 +28,9 @@ public class UpdateManager implements Persistent<UpdateManager> {
 
 	public static final String DEFAULT_PACK_DESCRIPTOR = "pack.xml";
 
-	private static final String SITE_LIST = "/sites";
+	private static final String SITE_LIST = "sites";
 
-	private static final String UPDATE_LIST = "/updates";
+	private static final String UPDATE_LIST = "updates";
 
 	private Service service;
 
@@ -246,9 +246,6 @@ public class UpdateManager implements Persistent<UpdateManager> {
 		// Remove the updates settings.
 		updates.clear();
 		saveSettings( settings );
-
-		// The program should be allowed, but not forced, to exit at this point.
-		Log.write( "Program exiting to allow updates to be processed." );
 	}
 
 	@Override
@@ -270,6 +267,7 @@ public class UpdateManager implements Persistent<UpdateManager> {
 
 		settings.putList( SITE_LIST, sites );
 		settings.putList( UPDATE_LIST, updates );
+		
 		settings.flush();
 
 		return this;

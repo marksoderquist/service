@@ -27,14 +27,14 @@ public class UpdateInfo implements Persistent<UpdateInfo>{
 	}
 
 	public UpdateInfo loadSettings( Settings settings ) {
-		source = new File( settings.get( "/source" ) );
-		target = new File( settings.get( "/target" ) );
+		source = new File( settings.get( "source" ) );
+		target = new File( settings.get( "target" ) );
 		return this;
 	}
 
 	public UpdateInfo saveSettings( Settings settings ) {
-		settings.put( "/source", source.getPath() );
-		settings.put( "/target", target.getPath() );
+		settings.put( "source", source.getPath() );
+		settings.put( "target", target.getPath() );
 		return this;
 	}
 

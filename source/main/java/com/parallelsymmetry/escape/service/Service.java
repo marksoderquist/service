@@ -464,10 +464,11 @@ public abstract class Service extends Agent {
 	private void configureServices() {
 		if( isRunning() ) return;
 
-		// FIXME Move the creation of the internal service to a separate method.
-		// Create the update manager. Requires the settings to be initialized.
+		if( settings == null ) throw new RuntimeException( "Settings not initialized." );
+
+		// Create the update manager.
 		updateManager = new UpdateManager( this );
-		updateManager.loadSettings( getSettings().getNode( "/services/update" ) );
+		updateManager.loadSettings( settings.getNode( "services/update" ) );
 	}
 
 	/**
@@ -498,7 +499,11 @@ public abstract class Service extends Agent {
 			if( parameters.isTrue( "watch" ) ) return;
 
 			// Update if necessary.
-			if( ( parameters.isSet( "update" ) & parameters.isTrue( "update" ) ) | ( !parameters.isSet( "update" ) & !peer ) ) if( update() ) return;
+			if( ( parameters.isSet( "update" ) & parameters.isTrue( "update" ) ) | ( !parameters.isSet( "update" ) & !peer ) ) if( update() ) {
+				// The program should be allowed, but not forced, to exit at this point.
+				Log.write( "Program exiting to allow updates to be processed." );
+				return;
+			}
 
 			if( parameters.isTrue( "stop" ) ) {
 				stopAndWait();
@@ -605,16 +610,16 @@ public abstract class Service extends Agent {
 	}
 
 	private final int getServicePortNumber() {
-		return settings.getInt( "/port", 0 );
+		return settings.getInt( "port", 0 );
 	}
 
 	private final void storeServicePortNumber() {
-		settings.putInt( "/port", peerServer.getLocalPort() );
+		settings.putInt( "port", peerServer.getLocalPort() );
 		settings.flush();
 	}
 
 	private final void resetServicePortNumber() {
-		settings.put( "/port", null );
+		settings.put( "port", null );
 		settings.flush();
 	}
 
@@ -631,17 +636,13 @@ public abstract class Service extends Agent {
 
 		if( found ) {
 			Log.write( "Updates detected." );
-		} else {
-			Log.write( Log.TRACE, "No updates detected." );
-		}
-
-		// Apply updates.
-		if( found ) {
 			try {
 				updateManager.applyUpdates();
 			} catch( Exception exception ) {
 				Log.write( exception );
 			}
+		} else {
+			Log.write( Log.TRACE, "No updates detected." );
 		}
 
 		return found;

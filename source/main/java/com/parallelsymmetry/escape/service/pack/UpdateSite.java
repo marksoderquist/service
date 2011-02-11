@@ -36,16 +36,16 @@ public class UpdateSite implements Persistent<UpdateSite> {
 	public UpdateSite loadSettings( Settings settings ) {
 		this.settings = settings;
 
-		name = settings.get( "/name" );
-		uri = URI.create( settings.get( "/uri" ) );
+		name = settings.get( "name" );
+		uri = URI.create( settings.get( "uri" ) );
 
 		return this;
 	}
 
 	@Override
 	public UpdateSite saveSettings( Settings settings ) {
-		settings.put( "/name", name );
-		settings.put( "/uri", uri.toString() );
+		settings.put( "name", name );
+		settings.put( "uri", uri.toString() );
 
 		return this;
 	}
