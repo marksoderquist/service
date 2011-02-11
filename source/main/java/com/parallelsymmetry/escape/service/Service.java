@@ -27,9 +27,7 @@ import java.util.logging.LogRecord;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
-import com.parallelsymmetry.escape.service.pack.Pack;
-import com.parallelsymmetry.escape.service.pack.PackManager;
-import com.parallelsymmetry.escape.service.update.UpdateManager;
+import com.parallelsymmetry.escape.service.pack.UpdatePack;
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.JavaUtil;
@@ -68,8 +66,6 @@ public abstract class Service extends Agent {
 
 	private UpdateManager updateManager;
 
-	private PackManager packManager;
-
 	private Parameters parameters;
 
 	private Settings settings;
@@ -78,7 +74,7 @@ public abstract class Service extends Agent {
 
 	private boolean described;
 
-	private Pack pack;
+	private UpdatePack pack;
 
 	private Descriptor descriptor;
 
@@ -141,7 +137,9 @@ public abstract class Service extends Agent {
 		super( name );
 		this.name = name;
 
-		if( descriptor == null ) {
+		if( descriptor != null ) {
+			this.descriptor = descriptor;
+		} else {
 			try {
 				InputStream input = getClass().getResourceAsStream( DEFAULT_DESCRIPTOR_PATH );
 				if( input != null ) Log.write( Log.DEBUG, "Application descriptor found: " + DEFAULT_DESCRIPTOR_PATH );
@@ -149,11 +147,9 @@ public abstract class Service extends Agent {
 			} catch( Exception exception ) {
 				Log.write( exception );
 			}
-		} else {
-			this.descriptor = descriptor;
 		}
 
-		describe( Parameters.parse( new String[] {} ) );
+		describe();
 	}
 
 	/**
@@ -172,15 +168,10 @@ public abstract class Service extends Agent {
 			return;
 		}
 
-		// Initialize the log.
 		Log.init( parameters );
-
-		// Load description.
-		describe( parameters );
-
-		// Verify Java environment.
-		if( !checkJava( parameters ) ) return;
-
+		configureHome( parameters );
+		configureSettings( parameters );
+		configureServices();
 		processParameters( parameters, false );
 
 		Log.write( Log.TRACE, "Method call() complete." );
@@ -228,7 +219,7 @@ public abstract class Service extends Agent {
 		return settings;
 	}
 
-	public Pack getPack() {
+	UpdatePack getPack() {
 		return pack;
 	}
 
@@ -241,10 +232,6 @@ public abstract class Service extends Agent {
 	 */
 	public File getHomeFolder() {
 		return home;
-	}
-
-	public PackManager getPackManager() {
-		return packManager;
 	}
 
 	public UpdateManager getUpdateManager() {
@@ -334,12 +321,6 @@ public abstract class Service extends Agent {
 		return null;
 	}
 
-	protected abstract void startService( Parameters parameters ) throws Exception;
-
-	protected abstract void process( Parameters parameters ) throws Exception;
-
-	protected abstract void stopService( Parameters parameters ) throws Exception;
-
 	/**
 	 * This method should only be called through the processParameters() method.
 	 */
@@ -372,21 +353,26 @@ public abstract class Service extends Agent {
 		Log.write( getName() + " stopped." );
 	}
 
-	private final synchronized void describe( Parameters parameters ) {
+	protected abstract void startService( Parameters parameters ) throws Exception;
+
+	protected abstract void process( Parameters parameters ) throws Exception;
+
+	protected abstract void stopService( Parameters parameters ) throws Exception;
+
+	private final synchronized void describe() {
 		// This method should only be called once.
 		if( described ) return;
 
-		pack = Pack.load( descriptor );
+		pack = UpdatePack.load( descriptor );
 
 		// Determine the program name.
 		setName( name == null ? pack.getName() : name );
 
 		// Determine the program group.
-		group = parameters.get( "group", pack.getGroup() );
+		group = pack.getGroup();
 
 		// Determine the program artifact.
-		artifact = parameters.get( "artifact", pack.getArtifact() );
-		if( parameters.isTrue( "development" ) ) artifact += "-dev";
+		artifact = pack.getArtifact();
 		if( TextUtil.isEmpty( artifact ) ) artifact = getName().replace( ' ', '-' ).toLowerCase();
 
 		// Determine the program release.
@@ -406,11 +392,62 @@ public abstract class Service extends Agent {
 		// Minimum Java runtime version.
 		javaVersionMinimum = descriptor.getValue( "/pack/resources/java/version", JAVA_VERSION_MINIMUM );
 
-		// Set the program home folder.
-		home = findHome( parameters );
+		described = true;
+	}
 
-		// Add the setting providers.
+	private final boolean checkJava( Parameters parameters ) {
+		String javaRuntimeVersion = System.getProperty( "java.runtime.version" );
+		if( javaVersionMinimum.compareTo( javaRuntimeVersion ) > 0 ) {
+			error( "Java " + javaVersionMinimum + " or higher is required, found: " + javaRuntimeVersion );
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Find the home directory. This method expects the program jar file to be
+	 * installed in a sub-directory of the home directory. Example:
+	 * <code>$HOME/lib/program.jar</code>
+	 * 
+	 * @param parameters
+	 * @return
+	 */
+	private final void configureHome( Parameters parameters ) {
+		if( isRunning() ) return;
+
+		try {
+			// If -home was specified on the command line use it.
+			if( home == null && parameters.get( "home" ) != null ) {
+				home = new File( parameters.get( "home" ) ).getCanonicalFile();
+			}
+
+			// Check the class path.
+			if( home == null ) {
+				try {
+					List<URI> uris = JavaUtil.parseSystemClasspath( System.getProperty( "java.class.path" ) );
+					for( URI uri : uris ) {
+						if( "file".equals( uri.getScheme() ) && uri.getPath().endsWith( ".jar" ) ) {
+							// The following line assumes that the jar is in the home folder.
+							home = new File( uri ).getParentFile();
+							break;
+						}
+					}
+				} catch( URISyntaxException exception ) {
+					Log.write( exception );
+				}
+			}
+
+			if( home != null ) home = home.getCanonicalFile();
+		} catch( IOException exception ) {
+			exception.printStackTrace();
+		}
+	}
+
+	private final void configureSettings( Parameters parameters ) {
+		if( isRunning() ) return;
+
 		settings = new Settings();
+
 		try {
 			Descriptor defaultSettingDescriptor = null;
 			InputStream input = getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH );
@@ -423,28 +460,15 @@ public abstract class Service extends Agent {
 		} catch( Exception exception ) {
 			Log.write( exception );
 		}
+	}
+
+	private void configureServices() {
+		if( isRunning() ) return;
 
 		// FIXME Move the creation of the internal service to a separate method.
 		// Create the update manager. Requires the settings to be initialized.
 		updateManager = new UpdateManager( this );
 		updateManager.loadSettings( getSettings().getNode( "/services/update" ) );
-
-		// Create the pack manager. Requires the settings to be initialized.
-		//		packManager = new PackManager( this );
-		//		packManager.loadSettings( getSettings().getNode( "/services/pack" ) );
-
-		// TODO Load the update check schedule from the settings.
-
-		described = true;
-	}
-
-	private final boolean checkJava( Parameters parameters ) {
-		String javaRuntimeVersion = System.getProperty( "java.runtime.version" );
-		if( javaVersionMinimum.compareTo( javaRuntimeVersion ) > 0 ) {
-			error( "Java " + javaVersionMinimum + " or higher is required, found: " + javaRuntimeVersion );
-			return false;
-		}
-		return true;
 	}
 
 	/**
@@ -460,7 +484,13 @@ public abstract class Service extends Agent {
 		try {
 			if( !isRunning() ) printHeader();
 
+			// Verify Java environment.
+			if( !checkJava( parameters ) ) return;
+
 			Log.write( Log.DEBUG, "Processing parameters: " + parameters.toString() );
+
+			// Update the artifact if the development flag is set.
+			if( parameters.isTrue( "development" ) ) artifact += "-dev";
 
 			// Check for existing peer.
 			if( !peer && peerExists( parameters ) ) return;
@@ -496,48 +526,6 @@ public abstract class Service extends Agent {
 			Log.write( exception );
 			return;
 		}
-	}
-
-	/**
-	 * Find the home directory. This method expects the program jar file to be
-	 * installed in a sub-directory of the home directory. Example:
-	 * <code>$HOME/lib/program.jar</code>
-	 * 
-	 * @param parameters
-	 * @return
-	 */
-	private final File findHome( Parameters parameters ) {
-		File home = null;
-
-		try {
-			// If -home was specified on the command line use it.
-			if( home == null && parameters.get( "home" ) != null ) {
-				home = new File( parameters.get( "home" ) ).getCanonicalFile();
-			}
-
-			// Check the class path.
-			if( home == null ) {
-				try {
-					List<URI> uris = JavaUtil.parseSystemClasspath( System.getProperty( "java.class.path" ) );
-					for( URI uri : uris ) {
-						if( "file".equals( uri.getScheme() ) && uri.getPath().endsWith( ".jar" ) ) {
-							// The following line assumes that the jar is in the home folder.
-							home = new File( uri ).getParentFile();
-							break;
-						}
-					}
-				} catch( URISyntaxException exception ) {
-					Log.write( exception );
-				}
-			}
-
-			if( home != null ) return home.getCanonicalFile();
-		} catch( IOException exception ) {
-			exception.printStackTrace();
-		}
-
-		// If no home is found leave it null.
-		return home;
 	}
 
 	private final void printHeader() {
@@ -639,7 +627,7 @@ public abstract class Service extends Agent {
 		Log.write( Log.DEBUG, "Checking for updates..." );
 
 		// Detect updates.
-		boolean found = updateManager.hasUpdates();
+		boolean found = updateManager.areUpdatesStaged();
 
 		if( found ) {
 			Log.write( "Updates detected." );

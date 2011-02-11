@@ -7,7 +7,7 @@ import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.Release;
 import com.parallelsymmetry.escape.utility.log.Log;
 
-public class Pack {
+public class UpdatePack {
 
 	private String group;
 
@@ -21,7 +21,7 @@ public class Pack {
 
 	private URI uri;
 
-	private Pack() {}
+	private UpdatePack() {}
 
 	public String getGroup() {
 		return group;
@@ -47,7 +47,7 @@ public class Pack {
 		return uri;
 	}
 
-	public static final Pack load( Descriptor descriptor ) {
+	public static final UpdatePack load( Descriptor descriptor ) {
 		if( descriptor == null ) return null;
 
 		String group = descriptor.getValue( "/pack/group" );
@@ -58,7 +58,7 @@ public class Pack {
 		String provider = descriptor.getValue( "/pack/provider" );
 		String uri = descriptor.getValue( "/pack/update/uri" );
 
-		Pack pack = new Pack();
+		UpdatePack pack = new UpdatePack();
 
 		pack.group = group;
 		pack.artifact = artifact;

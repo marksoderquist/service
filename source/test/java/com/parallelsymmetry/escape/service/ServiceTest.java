@@ -25,7 +25,7 @@ public class ServiceTest extends TestCase {
 	private int timeout = 1000;
 
 	public void setUp() {
-		Log.setLevel( Log.NONE );
+		Log.setLevel( Log.INFO );
 	}
 
 	public void testBeforeCall() throws Exception {
@@ -116,6 +116,7 @@ public class ServiceTest extends TestCase {
 		}
 		assertFalse( "Service should not be running and is.", service.isRunning() );
 
+		assertCommandLineHeader( parser );
 		assertEquals( "[E] Java 1.6 or higher is required, found: 1.5", parser.next() );
 	}
 
