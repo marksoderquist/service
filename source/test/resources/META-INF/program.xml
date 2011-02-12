@@ -9,6 +9,10 @@
 	<provider>Parallel Symmetry</provider>
 	<inception>1973</inception>
 
+	<copyright>
+		<notice>All rights reserved.</notice>
+	</copyright>
+
 	<license>
 		<summary>Mock Service comes with ABSOLUTELY NO WARRANTY. This is open software,&#10;and you are welcome to redistribute it under certain conditions.</summary>
 	</license>
