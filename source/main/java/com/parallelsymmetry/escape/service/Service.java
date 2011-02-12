@@ -33,7 +33,6 @@ import com.parallelsymmetry.escape.utility.JavaUtil;
 import com.parallelsymmetry.escape.utility.Parameters;
 import com.parallelsymmetry.escape.utility.Release;
 import com.parallelsymmetry.escape.utility.TextUtil;
-import com.parallelsymmetry.escape.utility.Version;
 import com.parallelsymmetry.escape.utility.agent.Agent;
 import com.parallelsymmetry.escape.utility.agent.ServerAgent;
 import com.parallelsymmetry.escape.utility.agent.Worker;
@@ -44,10 +43,6 @@ import com.parallelsymmetry.escape.utility.setting.PreferencesSettingProvider;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
 public abstract class Service extends Agent {
-
-	private static final String DEFAULT_NAMESPACE = "com.parallelsymmetry";
-
-	private static final String DEFAULT_IDENTIFIER = "service";
 
 	private static final String PEER_LOGGER_NAME = "peer";
 
@@ -76,12 +71,6 @@ public abstract class Service extends Agent {
 	private UpdatePack pack;
 
 	private Descriptor descriptor;
-
-	private String group = DEFAULT_NAMESPACE;
-
-	private String artifact = DEFAULT_IDENTIFIER;
-
-	private Release release = new Release( new Version() );
 
 	private int inceptionYear = DateUtil.getCurrentYear();
 
@@ -177,15 +166,19 @@ public abstract class Service extends Agent {
 	}
 
 	public String getGroup() {
-		return this.group;
+		return pack.getGroup();
 	}
 
 	public String getArtifact() {
-		return this.artifact;
+		return pack.getArtifact();
 	}
 
 	public Release getRelease() {
-		return release;
+		return pack.getRelease();
+	}
+
+	public String getProvider() {
+		return pack.getProvider();
 	}
 
 	public String getCopyright() {
@@ -367,16 +360,6 @@ public abstract class Service extends Agent {
 		// Determine the program name.
 		setName( name == null ? pack.getName() : name );
 
-		// Determine the program group.
-		group = pack.getGroup();
-
-		// Determine the program artifact.
-		artifact = pack.getArtifact();
-		if( TextUtil.isEmpty( artifact ) ) artifact = getName().replace( ' ', '-' ).toLowerCase();
-
-		// Determine the program release.
-		release = pack.getRelease();
-
 		// Determine the program copyright information.
 		try {
 			inceptionYear = Integer.parseInt( descriptor.getValue( "/pack/inception" ) );
@@ -401,6 +384,16 @@ public abstract class Service extends Agent {
 			return false;
 		}
 		return true;
+	}
+
+	private final void configureOnce( Parameters parameters ) {
+		if( isRunning() ) return;
+
+		// Update the artifact if the development flag is set.
+		if( parameters.isTrue( "development" ) ) {
+			pack.setArtifact( pack.getArtifact() + "-dev" );
+			Log.write( Log.TRACE, "Updated artifact to: " + pack.getArtifact() );
+		}
 	}
 
 	/**
@@ -451,7 +444,7 @@ public abstract class Service extends Agent {
 			Descriptor defaultSettingDescriptor = null;
 			InputStream input = getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH );
 			if( input != null ) defaultSettingDescriptor = new Descriptor( input );
-			Preferences preferences = Preferences.userRoot().node( "/" + group.replace( '.', '/' ) + "/" + artifact );
+			Preferences preferences = Preferences.userRoot().node( "/" + pack.getGroup().replace( '.', '/' ) + "/" + pack.getArtifact() );
 
 			settings.addProvider( new ParametersSettingProvider( parameters ) );
 			if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
@@ -489,8 +482,7 @@ public abstract class Service extends Agent {
 
 			Log.write( Log.DEBUG, "Processing parameters: " + parameters.toString() );
 
-			// Update the artifact if the development flag is set.
-			if( parameters.isTrue( "development" ) ) artifact += "-dev";
+			configureOnce( parameters );
 
 			// Check for existing peer.
 			if( !peer && peerExists( parameters ) ) return;
