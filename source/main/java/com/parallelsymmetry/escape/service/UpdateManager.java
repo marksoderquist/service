@@ -18,11 +18,16 @@ import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.Parameters;
 import com.parallelsymmetry.escape.utility.TextUtil;
+import com.parallelsymmetry.escape.utility.agent.Agent;
+import com.parallelsymmetry.escape.utility.agent.AgentEvent;
+import com.parallelsymmetry.escape.utility.agent.AgentListener;
 import com.parallelsymmetry.escape.utility.log.Log;
 import com.parallelsymmetry.escape.utility.setting.Persistent;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
-public class UpdateManager implements Persistent<UpdateManager> {
+public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
+
+	private static final String CHECK_STARTUP = "check-startup";
 
 	public static final String DEFAULT_SITE_DESCRIPTOR = "content.xml";
 
@@ -38,6 +43,8 @@ public class UpdateManager implements Persistent<UpdateManager> {
 
 	private List<UpdateInfo> updates;
 
+	private boolean checkForUpdatesOnStartup;
+
 	private File updater;
 
 	private Settings settings;
@@ -47,6 +54,8 @@ public class UpdateManager implements Persistent<UpdateManager> {
 		sites = new CopyOnWriteArrayList<UpdateSite>();
 		updates = new CopyOnWriteArrayList<UpdateInfo>();
 		updater = new File( service.getHomeFolder(), "updater.jar" );
+
+		service.addListener( this );
 	}
 
 	public List<UpdatePack> getInstalledPacks() {
@@ -89,6 +98,16 @@ public class UpdateManager implements Persistent<UpdateManager> {
 		saveSettings( settings );
 	}
 
+	public void stagePostedUpdates() throws Exception {
+		List<UpdatePack> packs = getPostedUpdates();
+
+		// Stage the posted updates.
+		for( UpdatePack pack : packs ) {
+			Log.write( Log.WARN, "Staging update from: " + getResolvedUpdateUri( pack ) );
+			// TODO Stage the update.
+		}
+	}
+
 	public boolean areUpdatesPosted() throws Exception {
 		return getPostedUpdates().size() > 0;
 	}
@@ -99,18 +118,13 @@ public class UpdateManager implements Persistent<UpdateManager> {
 
 		for( UpdatePack oldPack : oldPacks ) {
 			// This URI should be a direct link to the pack descriptor.
-			URI uri = oldPack.getUpdateUri();
+			URI uri = getResolvedUpdateUri( oldPack );
 			if( uri == null ) {
 				Log.write( Log.WARN, "Installed pack does not have an update URI: " + oldPack.toString() );
 				continue;
 			}
 
-			if( uri.getScheme() == null ) uri = new File( uri.getPath() ).toURI();
-
-			Log.write( Log.WARN, "Pack URI: " + uri );
-
 			UpdatePack newPack = UpdatePack.load( new Descriptor( uri.toString() ) );
-
 			if( newPack.getRelease().compareTo( oldPack.getRelease() ) > 0 ) newPacks.add( newPack );
 		}
 
@@ -143,6 +157,15 @@ public class UpdateManager implements Persistent<UpdateManager> {
 	 */
 	public void setUpdaterPath( File file ) {
 		this.updater = file;
+	}
+
+	public boolean checkForUpdatesOnStartup() {
+		return checkForUpdatesOnStartup;
+	}
+
+	public void checkForUpdatesOnStartup( boolean check ) {
+		checkForUpdatesOnStartup = check;
+		saveSettings( settings );
 	}
 
 	public boolean areUpdatesStaged() {
@@ -252,6 +275,7 @@ public class UpdateManager implements Persistent<UpdateManager> {
 	public UpdateManager loadSettings( Settings settings ) {
 		this.settings = settings;
 
+		this.checkForUpdatesOnStartup = settings.getBoolean( CHECK_STARTUP );
 		this.sites = settings.getList( UpdateSite.class, SITE_LIST );
 		this.updates = settings.getList( UpdateInfo.class, UPDATE_LIST );
 
@@ -262,15 +286,31 @@ public class UpdateManager implements Persistent<UpdateManager> {
 
 	@Override
 	public UpdateManager saveSettings( Settings settings ) {
-		settings.removeNode( SITE_LIST );
-		settings.removeNode( UPDATE_LIST );
-
+		settings.putBoolean( CHECK_STARTUP, checkForUpdatesOnStartup );
 		settings.putList( SITE_LIST, sites );
 		settings.putList( UPDATE_LIST, updates );
-		
+
 		settings.flush();
 
 		return this;
+	}
+
+	@Override
+	public void agentEventOccurred( AgentEvent event ) {
+		if( event.getState() == Agent.State.STARTED && checkForUpdatesOnStartup() ) {
+			try {
+				stagePostedUpdates();
+			} catch( Exception exception ) {
+				Log.write( exception );
+			}
+		}
+	}
+
+	private URI getResolvedUpdateUri( UpdatePack pack ) {
+		URI uri = pack.getUpdateUri();
+		if( uri == null ) return null;
+		if( uri.getScheme() == null ) uri = new File( uri.getPath() ).toURI();
+		return uri;
 	}
 
 }

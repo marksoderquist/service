@@ -24,6 +24,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import com.parallelsymmetry.escape.service.pack.UpdatePack;
@@ -444,7 +445,11 @@ public abstract class Service extends Agent {
 			Descriptor defaultSettingDescriptor = null;
 			InputStream input = getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH );
 			if( input != null ) defaultSettingDescriptor = new Descriptor( input );
-			Preferences preferences = Preferences.userRoot().node( "/" + pack.getGroup().replace( '.', '/' ) + "/" + pack.getArtifact() );
+
+			String preferencesPath = "/" + pack.getGroup().replace( '.', '/' ) + "/" + pack.getArtifact();
+
+			if( parameters.isTrue( "preferences.reset" ) ) resetPreferences( Preferences.userRoot().node( preferencesPath ) );
+			Preferences preferences = Preferences.userRoot().node( preferencesPath );
 
 			settings.addProvider( new ParametersSettingProvider( parameters ) );
 			if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
@@ -452,6 +457,16 @@ public abstract class Service extends Agent {
 		} catch( Exception exception ) {
 			Log.write( exception );
 		}
+	}
+
+	private void resetPreferences( Preferences preferences ) {
+		String path = preferences.absolutePath();
+		try {
+			preferences.removeNode();
+		} catch( BackingStoreException exception ) {
+			Log.write( exception );
+		}
+		preferences = Preferences.userRoot().node( path );
 	}
 
 	private void configureServices() {
@@ -490,13 +505,6 @@ public abstract class Service extends Agent {
 			// If the watch parameter is set then exit before doing anything else.
 			if( parameters.isTrue( "watch" ) ) return;
 
-			// Update if necessary.
-			if( ( parameters.isSet( "update" ) & parameters.isTrue( "update" ) ) | ( !parameters.isSet( "update" ) & !peer ) ) if( update() ) {
-				// The program should be allowed, but not forced, to exit at this point.
-				Log.write( "Program exiting to allow updates to be processed." );
-				return;
-			}
-
 			if( parameters.isTrue( "stop" ) ) {
 				stopAndWait();
 				return;
@@ -510,6 +518,13 @@ public abstract class Service extends Agent {
 				return;
 			} else if( parameters.isTrue( "help" ) ) {
 				printHelp( parameters.get( "help" ) );
+				return;
+			}
+
+			// Update if necessary.
+			if( ( parameters.isSet( "update" ) & parameters.isTrue( "update" ) ) | ( !parameters.isSet( "update" ) & !peer ) ) if( update() ) {
+				// The program should be allowed, but not forced, to exit at this point.
+				Log.write( "Program exiting to apply updates." );
 				return;
 			}
 
