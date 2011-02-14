@@ -104,7 +104,7 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 		// Stage the posted updates.
 		for( UpdatePack pack : packs ) {
 			Log.write( Log.WARN, "Staging update from: " + getResolvedUpdateUri( pack ) );
-			// TODO Stage the update.
+			// NEXT Stage the update.
 		}
 	}
 
