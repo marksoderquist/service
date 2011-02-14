@@ -2,6 +2,7 @@ package com.parallelsymmetry.escape.service.pack;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Date;
 
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.Release;
@@ -83,7 +84,7 @@ public class UpdatePack {
 
 	public static final UpdatePack load( Descriptor descriptor ) {
 		if( descriptor == null ) return null;
-	
+
 		String group = descriptor.getValue( "/pack/group" );
 		String artifact = descriptor.getValue( "/pack/artifact" );
 		String version = descriptor.getValue( "/pack/version" );
@@ -91,21 +92,21 @@ public class UpdatePack {
 		String name = descriptor.getValue( "/pack/name" );
 		String provider = descriptor.getValue( "/pack/provider" );
 		String uri = descriptor.getValue( "/pack/update/uri" );
-	
+
 		UpdatePack pack = new UpdatePack();
-	
+
 		pack.group = group;
 		pack.artifact = artifact;
-		pack.release = new Release( version, timestamp );
+		pack.release = new Release( version, new Date( Long.parseLong( timestamp ) ) );
 		pack.name = name;
 		pack.provider = provider;
-	
+
 		try {
 			if( uri != null ) pack.uri = new URI( uri );
 		} catch( URISyntaxException exception ) {
 			Log.write( exception );
 		}
-	
+
 		return pack;
 	}
 

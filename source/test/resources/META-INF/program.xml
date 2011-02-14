@@ -3,7 +3,7 @@
 	<group>com.parallelsymmetry.escape.service</group>
 	<artifact>mock</artifact>
 	<version>1.0.0-a-00</version>
-	<timestamp>1973-08-14 16:29:00</timestamp>
+	<timestamp>114215340000</timestamp>
 
 	<name>Mock Service</name>
 	<provider>Parallel Symmetry</provider>

@@ -20,7 +20,7 @@ public class ServiceTest extends TestCase {
 
 	private static final String MOCK_SERVICE_NAME = "Mock Service";
 
-	private static final String MOCK_RELEASE = "1.0.0 Alpha 00  1973-08-14 16:29:00";
+	private static final String MOCK_RELEASE = "1.0.0 Alpha 00  1973-08-14 22:29:00";
 
 	private int timeout = 1000;
 
@@ -33,7 +33,7 @@ public class ServiceTest extends TestCase {
 
 		assertEquals( "com.parallelsymmetry.escape.service", service.getGroup() );
 		assertEquals( "mock", service.getArtifact() );
-		assertEquals( "1.0.0-a-00  1973-08-14 16:29:00", service.getRelease().toString() );
+		assertEquals( "1.0.0-a-00  1973-08-14 22:29:00", service.getRelease().toString() );
 		assertEquals( "(C) 1973-" + DateUtil.getCurrentYear() + " Parallel Symmetry", service.getCopyright() );
 		assertEquals( "All rights reserved.", service.getCopyrightNotice() );
 	}
