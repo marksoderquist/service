@@ -15,6 +15,8 @@ public class UpdatePack {
 
 	private static final String DEFAULT_ARTIFACT = "unknown";
 
+	private Descriptor descriptor;
+
 	private String group = DEFAULT_GROUP;
 
 	private String artifact = DEFAULT_ARTIFACT;
@@ -27,7 +29,13 @@ public class UpdatePack {
 
 	private URI uri;
 
-	private UpdatePack() {}
+	private UpdatePack( Descriptor descriptor ) {
+		this.descriptor = descriptor;
+	}
+
+	public Descriptor getDescriptor() {
+		return descriptor;
+	}
 
 	public String getGroup() {
 		return group;
@@ -93,7 +101,7 @@ public class UpdatePack {
 		String provider = descriptor.getValue( "/pack/provider" );
 		String uri = descriptor.getValue( "/pack/update/uri" );
 
-		UpdatePack pack = new UpdatePack();
+		UpdatePack pack = new UpdatePack( descriptor );
 
 		pack.group = group;
 		pack.artifact = artifact;
