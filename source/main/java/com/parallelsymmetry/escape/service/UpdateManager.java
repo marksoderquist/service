@@ -22,6 +22,8 @@ import org.xml.sax.SAXException;
 
 import com.parallelsymmetry.escape.service.pack.UpdatePack;
 import com.parallelsymmetry.escape.service.pack.UpdateSite;
+import com.parallelsymmetry.escape.service.update.PackProvider;
+import com.parallelsymmetry.escape.service.update.Resource;
 import com.parallelsymmetry.escape.service.update.UpdateInfo;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.FileUtil;
@@ -110,94 +112,21 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 	public void stagePostedUpdates() throws Exception {
 		List<UpdatePack> packs = getPostedUpdates();
 
+		File programDataFolder = service.getProgramDataFolder();
+		File stageFolder = new File( programDataFolder, "stage" );
+
+		Log.write( Log.WARN, "Staging packs in: " + stageFolder );
+
 		// Determine all the resources to download.
 		Map<UpdatePack, Set<Resource>> resources = new HashMap<UpdatePack, Set<Resource>>();
 		for( UpdatePack pack : packs ) {
-			Log.write( Log.WARN, "Staging update from: " + getResolvedUpdateUri( pack ) );
+			Log.write( Log.WARN, "Determining resources: " + getResolvedUpdateUri( pack ) );
 
-			// NEXT Create resource providers to resolve resources to download.
-			// FIXME An update pack should use the PackProvider to get resources.
-			// Another provider is the JNLP provider.
-			//resources.put( pack, getResources( pack ) );
+			resources.put( pack, new PackProvider( pack ).getResources() );
 		}
 
 		// Download all resources, save them to the staging location, and add staged updates to list.
 		// TODO Stage the update.
-	}
-
-	private UpdatePack loadUpdatePack( URI uri ) {
-		UpdatePack pack = null;
-
-		try {
-			pack = UpdatePack.load( new Descriptor( uri.toString() ) );
-		} catch( ParserConfigurationException exception ) {
-			Log.write( exception );
-		} catch( SAXException exception ) {
-			Log.write( exception );
-		} catch( IOException exception ) {
-			// TODO This is an exception that should be reported to the users if possible.
-			Log.write( exception );
-		}
-
-		return pack;
-	}
-
-	// FIXME This method, and the one that follows, should be part of a provider subclass.
-	private Set<Resource> getResources( UpdatePack pack ) {
-		URI codebase = pack.getUpdateUri();
-		Descriptor descriptor = pack.getDescriptor();
-
-		Set<Resource> resources = new HashSet<Resource>();
-
-		// Resolve all the files to download.
-		String[] jars = getResources( descriptor, "jar/@uri" );
-		String[] libs = getResources( descriptor, "lib/@uri" );
-		String[] extensions = getResources( descriptor, "extension/@uri" );
-
-		for( String jar : jars ) {
-			URI uri = codebase.resolve( jar );
-			resources.add( new Resource( Resource.Type.JAR, uri ) );
-		}
-		for( String lib : libs ) {
-			URI uri = codebase.resolve( lib );
-			resources.add( new Resource( Resource.Type.PACK, uri ) );
-		}
-
-		// TODO What about JNLP and other extensions.
-		for( String extension : extensions ) {
-			URI uri = codebase.resolve( extension );
-			resources.addAll( getResources( loadUpdatePack( uri ) ) );
-		}
-
-		return resources;
-	}
-
-	private String[] getResources( Descriptor descriptor, String path ) {
-		String os = System.getProperty( "os.name" );
-		String arch = System.getProperty( "os.arch" );
-
-		String[] uris = null;
-		Set<String> resources = new HashSet<String>();
-
-		// Determine the resources.
-		Node[] nodes = descriptor.getNodes( "/jnlp/resources" );
-		for( Node node : nodes ) {
-			Descriptor resourcesDescriptor = new Descriptor( node );
-			Node osNameNode = node.getAttributes().getNamedItem( "os" );
-			Node osArchNode = node.getAttributes().getNamedItem( "arch" );
-
-			String osName = osNameNode == null ? null : osNameNode.getTextContent();
-			String osArch = osArchNode == null ? null : osArchNode.getTextContent();
-
-			// Determine what resources should not be included.
-			if( osName != null && !os.startsWith( osName ) ) continue;
-			if( osArch != null && !arch.equals( osArch ) ) continue;
-
-			uris = resourcesDescriptor.getValues( path );
-			if( uris != null ) resources.addAll( Arrays.asList( uris ) );
-		}
-
-		return resources.toArray( new String[resources.size()] );
 	}
 
 	public boolean areUpdatesPosted() throws Exception {
@@ -399,51 +328,28 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 		}
 	}
 
+	public static final UpdatePack loadUpdatePack( URI uri ) {
+		UpdatePack pack = null;
+
+		try {
+			pack = UpdatePack.load( new Descriptor( uri.toString() ) );
+		} catch( ParserConfigurationException exception ) {
+			Log.write( exception );
+		} catch( SAXException exception ) {
+			Log.write( exception );
+		} catch( IOException exception ) {
+			// TODO This is an exception that should be reported to the users if possible.
+			Log.write( exception );
+		}
+
+		return pack;
+	}
+
 	private URI getResolvedUpdateUri( UpdatePack pack ) {
 		URI uri = pack.getUpdateUri();
 		if( uri == null ) return null;
 		if( uri.getScheme() == null ) uri = new File( uri.getPath() ).toURI();
 		return uri;
-	}
-
-	private static final class Resource {
-
-		public enum Type {
-			JAR, PACK
-		};
-
-		private Type type;
-
-		private URI uri;
-
-		private File file;
-
-		public Resource( Type type, URI uri ) {
-			this.type = type;
-			this.uri = uri;
-		}
-
-		public Type getType() {
-			return type;
-		}
-
-		public URI getUri() {
-			return uri;
-		}
-
-		public File getInstallFile() {
-			return file;
-		}
-
-		public void setInstallFile( File file ) {
-			this.file = file;
-		}
-
-		@Override
-		public String toString() {
-			return type.name() + ": " + uri;
-		}
-
 	}
 
 }

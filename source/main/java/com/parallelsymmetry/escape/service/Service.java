@@ -31,6 +31,7 @@ import com.parallelsymmetry.escape.service.pack.UpdatePack;
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.JavaUtil;
+import com.parallelsymmetry.escape.utility.OperatingSystem;
 import com.parallelsymmetry.escape.utility.Parameters;
 import com.parallelsymmetry.escape.utility.Release;
 import com.parallelsymmetry.escape.utility.TextUtil;
@@ -229,6 +230,10 @@ public abstract class Service extends Agent {
 
 	public UpdateManager getUpdateManager() {
 		return updateManager;
+	}
+	
+	public File getProgramDataFolder() {
+		return OperatingSystem.getProgramDataFolder( getArtifact(), getName() );
 	}
 
 	public void printHelp( String topic ) {
