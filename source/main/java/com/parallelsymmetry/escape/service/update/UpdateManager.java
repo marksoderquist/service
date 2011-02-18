@@ -15,6 +15,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 
 import com.parallelsymmetry.escape.service.Service;
+import com.parallelsymmetry.escape.service.task.Download;
 import com.parallelsymmetry.escape.service.task.DownloadTask;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.FileUtil;
@@ -158,7 +159,8 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 		// TODO Download all resources.
 		for( UpdatePack pack : packs ) {
 			for( Resource resource : packResources.get( pack ) ) {
-
+				Download download = resource.downloadFuture.get();
+				Log.write( Log.WARN, "Target: " + download.getTarget() );
 			}
 		}
 

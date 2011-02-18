@@ -2,10 +2,8 @@ package com.parallelsymmetry.escape.service.task;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 
@@ -44,8 +42,8 @@ public class Download extends OutputStream {
 		return encoding;
 	}
 
-	public InputStream getInputStream() throws IOException {
-		return new FileInputStream( target );
+	public File getTarget() {
+		return target;
 	}
 
 	@Override

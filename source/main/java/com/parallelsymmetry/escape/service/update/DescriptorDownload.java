@@ -1,5 +1,6 @@
 package com.parallelsymmetry.escape.service.update;
 
+import java.io.FileInputStream;
 import java.net.URI;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -24,7 +25,7 @@ final class DescriptorDownload extends Task<Descriptor> {
 		Descriptor descriptor = null;
 
 		try {
-			descriptor = new Descriptor( task.execute().getInputStream() );
+			descriptor = new Descriptor( new FileInputStream( task.execute().getTarget() ) );
 		} catch( ParserConfigurationException exception ) {
 			Log.write( exception );
 		} catch( SAXException exception ) {
