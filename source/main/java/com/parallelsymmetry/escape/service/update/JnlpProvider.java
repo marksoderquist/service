@@ -7,7 +7,6 @@ import java.util.Set;
 
 import org.w3c.dom.Node;
 
-import com.parallelsymmetry.escape.service.UpdateManager;
 import com.parallelsymmetry.escape.utility.Descriptor;
 
 public class JnlpProvider implements UpdateProvider {

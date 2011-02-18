@@ -1,4 +1,4 @@
-package com.parallelsymmetry.escape.service;
+package com.parallelsymmetry.escape.service.update;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,11 +18,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.xml.sax.SAXException;
 
-import com.parallelsymmetry.escape.service.pack.UpdatePack;
-import com.parallelsymmetry.escape.service.pack.UpdateSite;
-import com.parallelsymmetry.escape.service.update.PackProvider;
-import com.parallelsymmetry.escape.service.update.Resource;
-import com.parallelsymmetry.escape.service.update.UpdateInfo;
+import com.parallelsymmetry.escape.service.Service;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.Parameters;

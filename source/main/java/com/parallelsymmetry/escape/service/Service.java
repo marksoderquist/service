@@ -27,8 +27,9 @@ import java.util.logging.LogRecord;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
-import com.parallelsymmetry.escape.service.pack.UpdatePack;
 import com.parallelsymmetry.escape.service.task.TaskManager;
+import com.parallelsymmetry.escape.service.update.UpdateManager;
+import com.parallelsymmetry.escape.service.update.UpdatePack;
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.JavaUtil;
@@ -215,7 +216,7 @@ public abstract class Service extends Agent {
 		return settings;
 	}
 
-	UpdatePack getPack() {
+	public UpdatePack getPack() {
 		return pack;
 	}
 

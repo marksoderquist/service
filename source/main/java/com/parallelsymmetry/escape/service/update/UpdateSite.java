@@ -1,4 +1,4 @@
-package com.parallelsymmetry.escape.service.pack;
+package com.parallelsymmetry.escape.service.update;
 
 import java.net.URI;
 

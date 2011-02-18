@@ -9,7 +9,8 @@ import javax.xml.xpath.XPathFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
-import com.parallelsymmetry.escape.service.pack.UpdateSite;
+import com.parallelsymmetry.escape.service.update.UpdateManager;
+import com.parallelsymmetry.escape.service.update.UpdateSite;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.XmlUtil;
 import com.parallelsymmetry.escape.utility.log.Log;
