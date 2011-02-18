@@ -1,6 +1,7 @@
 package com.parallelsymmetry.escape.service.update;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.net.URI;
@@ -15,7 +16,6 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 
 import com.parallelsymmetry.escape.service.Service;
-import com.parallelsymmetry.escape.service.task.Download;
 import com.parallelsymmetry.escape.service.task.DownloadTask;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.FileUtil;
@@ -64,9 +64,24 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 	public List<UpdatePack> getInstalledPacks() {
 		List<UpdatePack> packs = new ArrayList<UpdatePack>();
 
+		// Add the service pack.
 		packs.add( service.getPack() );
 
+		// TODO Add the module packs.
+
 		return packs;
+	}
+
+	private Map<String, UpdatePack> getInstalledPacksMap() {
+		List<UpdatePack> packs = getInstalledPacks();
+
+		Map<String, UpdatePack> map = new HashMap<String, UpdatePack>();
+
+		for( UpdatePack pack : packs ) {
+			map.put( pack.getKey(), pack );
+		}
+
+		return map;
 	}
 
 	// TODO This method will move to a pack manager in the program library.
@@ -137,36 +152,68 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 		List<UpdatePack> packs = getPostedUpdates();
 		File programDataFolder = service.getProgramDataFolder();
 		File stageFolder = new File( programDataFolder, "stage" );
+		stageFolder.mkdirs();
 
-		Log.write( Log.WARN, "Pack stage folder: " + stageFolder );
+		Log.write( Log.DEBUG, "Pack stage folder: " + stageFolder );
 
 		// Determine all the resources to download.
 		Map<UpdatePack, Set<Resource>> packResources = new HashMap<UpdatePack, Set<Resource>>();
 		for( UpdatePack pack : packs ) {
-			Log.write( Log.WARN, "Determining resources: " + getResolvedUpdateUri( pack.getUpdateUri() ) );
-
 			Set<Resource> resources = new PackProvider( service, pack ).getResources();
 
 			for( Resource resource : resources ) {
 				URI uri = getResolvedUpdateUri( resource.getUri() );
-				Log.write( Log.WARN, "Resource: " + uri );
-				resource.downloadFuture = service.getTaskManager().submit( new DownloadTask( uri ) );
+				Log.write( Log.DEBUG, "Resource source: " + uri );
+				resource.setFuture( service.getTaskManager().submit( new DownloadTask( uri ) ) );
 			}
 
 			packResources.put( pack, resources );
 		}
 
-		// TODO Download all resources.
+		// Download all resources.
 		for( UpdatePack pack : packs ) {
 			for( Resource resource : packResources.get( pack ) ) {
-				Download download = resource.downloadFuture.get();
-				Log.write( Log.WARN, "Target: " + download.getTarget() );
+				resource.waitFor();
+				Log.write( Log.DEBUG, "Resource target: " + resource.getLocalFile() );
+			}
+		}
+		
+		Map<String, UpdatePack> packsMap = getInstalledPacksMap();
+
+		// Create an update for each pack.
+		for( UpdatePack pack : packs ) {
+			File update = new File( stageFolder, pack.getKey() + ".jar" );
+			createUpdatePack( packResources.get( pack ), update );
+			updates.add( new UpdateInfo( update, packsMap.get( pack.getKey() ).getInstallFolder() ) );
+			Log.write( Log.WARN, "Update staged: " + update );
+		}
+		saveSettings( settings );
+	}
+
+	private void createUpdatePack( Set<Resource> resources, File update ) throws IOException {
+		File updateFolder = FileUtil.createTempFolder( "update", "folder" );
+
+		for( Resource resource : resources ) {
+			switch( resource.getType() ) {
+				case FILE: {
+					// Just copy the file.
+					String path = resource.getUri().getPath();
+					String name = path.substring( path.lastIndexOf( "/" ) + 1 );
+					File target = new File( updateFolder, name );
+					FileUtil.copy( resource.getLocalFile(), target );
+					break;
+				}
+				case PACK: {
+					// Unpack the file.
+					FileUtil.unzip( resource.getLocalFile(), updateFolder );
+					break;
+				}
 			}
 		}
 
-		// TODO Create an update for each pack.
-		// TODO Save update pack to the staging location.
-		// TODO Add staged updates to list.
+		FileUtil.deleteOnExit( updateFolder );
+
+		FileUtil.zip( updateFolder, update );
 	}
 
 	public void addUpdateItem( UpdateInfo item ) {
@@ -343,24 +390,6 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 			}
 		}
 	}
-
-	//	public static final Descriptor loadDescriptor( URI uri ) throws IOException {
-	//		Descriptor pack = null;
-	//
-	//		try {
-	//			pack = new Descriptor( uri.toString() );
-	//		} catch( ParserConfigurationException exception ) {
-	//			Log.write( exception );
-	//		} catch( SAXException exception ) {
-	//			Log.write( exception );
-	//		}
-	//
-	//		return pack;
-	//	}
-
-	//	public static final UpdatePack loadUpdatePack( URI uri ) throws IOException {
-	//		return UpdatePack.load( loadDescriptor( uri ) );
-	//	}
 
 	private URI getResolvedUpdateUri( URI uri ) {
 		if( uri == null ) return null;

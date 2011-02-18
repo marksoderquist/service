@@ -1,5 +1,6 @@
 package com.parallelsymmetry.escape.service.update;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
@@ -28,6 +29,8 @@ public class UpdatePack {
 	private String provider = "Unknown";
 
 	private URI uri;
+	
+	private File folder;
 
 	private UpdatePack( Descriptor descriptor ) {
 		this.descriptor = descriptor;
@@ -35,6 +38,10 @@ public class UpdatePack {
 
 	public Descriptor getDescriptor() {
 		return descriptor;
+	}
+	
+	public String getKey() {
+		return group + "." + artifact;
 	}
 
 	public String getGroup() {
@@ -83,6 +90,14 @@ public class UpdatePack {
 
 	public void setUpdateUri( URI uri ) {
 		this.uri = uri;
+	}
+	
+	public File getInstallFolder() {
+		return folder;
+	}
+	
+	public void setInstallFolder( File folder ) {
+		this.folder = folder;
 	}
 
 	@Override

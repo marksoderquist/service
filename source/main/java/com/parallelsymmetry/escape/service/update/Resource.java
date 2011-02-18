@@ -8,16 +8,16 @@ import com.parallelsymmetry.escape.service.task.Download;
 
 public final class Resource {
 
-	public Future<Download> downloadFuture;
-
 	public enum Type {
-		JAR, PACK
+		FILE, PACK
 	};
 
 	private Resource.Type type;
 
 	private URI uri;
 
+	private Future<Download> future;
+	
 	private File file;
 
 	public Resource( Resource.Type type, URI uri ) {
@@ -32,13 +32,17 @@ public final class Resource {
 	public URI getUri() {
 		return uri;
 	}
+	
+	public void waitFor() throws Exception {
+		file = future.get().getTarget();
+	}
 
-	public File getInstallFile() {
+	public File getLocalFile() {
 		return file;
 	}
 
-	public void setInstallFile( File file ) {
-		this.file = file;
+	public void setFuture( Future<Download> future ) {
+		this.future = future;
 	}
 
 	@Override

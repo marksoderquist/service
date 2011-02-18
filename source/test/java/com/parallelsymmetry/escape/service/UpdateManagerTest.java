@@ -6,8 +6,6 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
-import junit.framework.TestCase;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -17,7 +15,7 @@ import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.XmlUtil;
 import com.parallelsymmetry.escape.utility.log.Log;
 
-public class UpdateManagerTest extends TestCase {
+public class UpdateManagerTest extends BaseTestCase {
 
 	protected static final File SOURCE = new File( "source" );
 
@@ -35,19 +33,21 @@ public class UpdateManagerTest extends TestCase {
 	public void setUp() {
 		Log.setLevel( Log.DEBUG );
 	}
-
+	
 	public void testStagePostedUpdates() throws Exception {
 		stageUpdate();
 
 		Service service = new MockService();
-		// Stop any running test.
-		service.call( "-stop" );
-
+		
 		// Reset the preferences but don't start the program.
 		service.call( "-preferences.reset", "-stop" );
+		service.waitForShutdown( TIMEOUT, TIMEUNIT );
+		assertFalse( service.isRunning() );
 
 		// Start the task manager.
-		service.getTaskManager().start();
+		service.call();
+		service.waitForStartup( TIMEOUT, TIMEUNIT );
+		assertTrue( service.isRunning() );
 
 		// Add test update site.
 		UpdateManager manager = service.getUpdateManager();
@@ -59,9 +59,14 @@ public class UpdateManagerTest extends TestCase {
 		manager.stagePostedUpdates();
 
 		File stageFolder = new File( service.getProgramDataFolder(), "stage" );
-		File updateFile = new File( stageFolder, "update.jar" );
+		File updateFile = new File( stageFolder, "mock.jar" );
 
-		//assertTrue( updateFile.exists() );
+		assertTrue( updateFile.exists() );
+
+		// Shutdown the service.
+		service.call( "-stop" );
+		service.waitForShutdown( TIMEOUT, TIMEUNIT );
+		assertFalse( service.isRunning() );
 	}
 
 	private void stageUpdate() throws Exception {

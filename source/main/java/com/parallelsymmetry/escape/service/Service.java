@@ -89,6 +89,8 @@ public abstract class Service extends Agent {
 	private PeerServer peerServer;
 
 	private TaskManager taskManager;
+	
+	private boolean disableUpdates;
 
 	/**
 	 * Construct the service with the default descriptor path of
@@ -239,6 +241,14 @@ public abstract class Service extends Agent {
 
 	public File getProgramDataFolder() {
 		return OperatingSystem.getProgramDataFolder( getArtifact(), getName() );
+	}
+	
+	public boolean isUpdatesDisabled() {
+		return disableUpdates;
+	}
+	
+	public void setUpdatesDisabled( boolean disable ) {
+		this.disableUpdates = disable;
 	}
 
 	public void printHelp( String topic ) {
@@ -447,6 +457,8 @@ public abstract class Service extends Agent {
 		} catch( IOException exception ) {
 			exception.printStackTrace();
 		}
+		
+		pack.setInstallFolder( home );
 	}
 
 	private final void configureSettings( Parameters parameters ) {
@@ -535,7 +547,7 @@ public abstract class Service extends Agent {
 			}
 
 			// Update if necessary.
-			if( ( parameters.isSet( "update" ) & parameters.isTrue( "update" ) ) | ( !parameters.isSet( "update" ) & !peer ) ) if( update() ) {
+			if( !disableUpdates && ( ( parameters.isSet( "update" ) & parameters.isTrue( "update" ) ) | ( !parameters.isSet( "update" ) & !peer ) ) ) if( update() ) {
 				// The program should be allowed, but not forced, to exit at this point.
 				Log.write( "Program exiting to apply updates." );
 				return;

@@ -40,7 +40,7 @@ public class PackProvider implements UpdateProvider {
 
 		for( String file : files ) {
 			URI uri = codebase.resolve( file );
-			resources.add( new Resource( Resource.Type.JAR, uri ) );
+			resources.add( new Resource( Resource.Type.FILE, uri ) );
 		}
 		for( String pack : packs ) {
 			URI uri = codebase.resolve( pack );

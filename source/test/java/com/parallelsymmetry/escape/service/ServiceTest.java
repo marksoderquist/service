@@ -6,10 +6,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-
-import junit.framework.TestCase;
 
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.LineParser;
@@ -17,23 +14,22 @@ import com.parallelsymmetry.escape.utility.agent.Agent;
 import com.parallelsymmetry.escape.utility.log.DefaultHandler;
 import com.parallelsymmetry.escape.utility.log.Log;
 
-public class ServiceTest extends TestCase {
+public class ServiceTest extends BaseTestCase {
 
 	private static final String MOCK_SERVICE_NAME = "Mock Service";
 
 	private static final String MOCK_RELEASE = "1.0.0 Alpha 00  1973-08-14 22:29:00";
 
-	private int timeout = 1;
-
-	private TimeUnit timeunit = TimeUnit.SECONDS;
+	private MockService service;
 
 	public void setUp() {
 		Log.setLevel( Log.INFO );
+
+		service = new MockService();
+		service.setUpdatesDisabled( true );
 	}
 
 	public void testBeforeCall() throws Exception {
-		MockService service = new MockService();
-
 		assertEquals( "com.parallelsymmetry.escape.service", service.getGroup() );
 		assertEquals( "mock", service.getArtifact() );
 		assertEquals( "1.0.0-a-00  1973-08-14 22:29:00", service.getRelease().toString() );
@@ -42,20 +38,18 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testCall() throws Exception {
-		MockService service = new MockService();
 		service.call();
-		service.waitForStartup( timeout, timeunit );
+		service.waitForStartup( TIMEOUT, TIMEUNIT );
 		assertTrue( service.isRunning() );
 
 		assertEquals( MOCK_RELEASE, service.getRelease().toHumanString() );
 
 		service.call( "-stop" );
-		service.waitForShutdown( timeout, timeunit );
+		service.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertFalse( service.isRunning() );
 	}
 
 	public void testCommandLineOutput() throws Exception {
-		MockService service = new MockService();
 		LineParser parser = new LineParser( getCommandLineOutput( service, Log.INFO, true ) );
 
 		assertCommandLineHeader( parser );
@@ -69,7 +63,6 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testHelpCommandLineOutput() throws Exception {
-		MockService service = new MockService();
 		LineParser parser = new LineParser( getCommandLineOutput( service, Log.INFO, true, "-help" ) );
 
 		assertCommandLineHeader( parser );
@@ -96,7 +89,6 @@ public class ServiceTest extends TestCase {
 	}
 
 	public void testStatusCommandLineOutput() throws Exception {
-		MockService service = new MockService();
 		LineParser parser = new LineParser( getCommandLineOutput( service, Log.INFO, true, "-status" ) );
 
 		assertCommandLineHeader( parser );
@@ -111,7 +103,7 @@ public class ServiceTest extends TestCase {
 		System.setProperty( "java.runtime.version", "1.5" );
 
 		LineParser parser = null;
-		MockService service = new MockService();
+
 		try {
 			parser = new LineParser( getCommandLineOutput( service, Log.INFO, true ) );
 		} finally {
@@ -125,19 +117,19 @@ public class ServiceTest extends TestCase {
 
 	public void testLaunchWithStart() throws Exception {
 		//Log.write( "...testLaunchWithStart()..." );
-		MockService service = new MockService();
+
 		assertFalse( "Service should not be running and is.", service.isRunning() );
 		assertEquals( "Start method was not called the right amount times.", 0, service.getStartCalledCount() );
 		assertEquals( "Stop method was not called the right amount times.", 0, service.getStopCalledCount() );
 
 		service.call( "-start" );
-		service.waitForStartup( timeout, timeunit );
+		service.waitForStartup( TIMEOUT, TIMEUNIT );
 		assertTrue( "Service should be running and is not.", service.isRunning() );
 		assertEquals( "Start method was not called the right amount times.", 1, service.getStartCalledCount() );
 		assertEquals( "Stop method was not called the right amount times.", 0, service.getStopCalledCount() );
 
 		service.call( "-stop" );
-		service.waitForShutdown( timeout, timeunit );
+		service.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertFalse( "Service should not be running and is.", service.isRunning() );
 		assertEquals( "Start method was not called the right amount times.", 1, service.getStartCalledCount() );
 		assertEquals( "Stop method was not called the right amount times.", 1, service.getStopCalledCount() );
@@ -145,19 +137,19 @@ public class ServiceTest extends TestCase {
 
 	public void testLaunchWithStop() throws Exception {
 		//Log.write( "...testLaunchWithStop()..." );
-		MockService service = new MockService();
+
 		assertFalse( "Service should not be running and is.", service.isRunning() );
 		assertEquals( "Start method was not called the right amount times.", 0, service.getStartCalledCount() );
 		assertEquals( "Stop method was not called the right amount times.", 0, service.getStopCalledCount() );
 
 		service.call( "-start" );
-		service.waitForStartup( timeout, timeunit );
+		service.waitForStartup( TIMEOUT, TIMEUNIT );
 		assertTrue( "Service should be running and is not.", service.isRunning() );
 		assertEquals( "Start method was not called the right amount times.", 1, service.getStartCalledCount() );
 		assertEquals( "Stop method was not called the right amount times.", 0, service.getStopCalledCount() );
 
 		service.call( "-stop" );
-		service.waitForShutdown( timeout, timeunit );
+		service.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertFalse( "Service should not be running and is.", service.isRunning() );
 		assertEquals( "Start method was not called the right amount times.", 1, service.getStartCalledCount() );
 		assertEquals( "Stop method was not called the right amount times.", 1, service.getStopCalledCount() );
@@ -165,19 +157,19 @@ public class ServiceTest extends TestCase {
 
 	public void testLaunchWithRestart() throws Exception {
 		//Log.write( "...testLaunchWithRestart()..." );
-		MockService service = new MockService();
+
 		assertFalse( "Service should not be running and is.", service.isRunning() );
 		assertEquals( "Start method was not called the right amount times.", 0, service.getStartCalledCount() );
 		assertEquals( "Stop method was not called the right amount times.", 0, service.getStopCalledCount() );
 
 		service.call( "-start" );
-		service.waitForStartup( timeout, timeunit );
+		service.waitForStartup( TIMEOUT, TIMEUNIT );
 		assertTrue( "Service should be running and is not.", service.isRunning() );
 		assertEquals( "Start method was not called the right amount times.", 1, service.getStartCalledCount() );
 		assertEquals( "Stop method was not called the right amount times.", 0, service.getStopCalledCount() );
 
 		service.call( "-restart" );
-		service.waitForStartup( timeout, timeunit );
+		service.waitForStartup( TIMEOUT, TIMEUNIT );
 
 		Agent.State state = service.getState();
 		assertTrue( "Service should be running and is not: " + state, service.isRunning() );
@@ -185,7 +177,7 @@ public class ServiceTest extends TestCase {
 		assertEquals( "Stop method was not called the right amount times.", 1, service.getStopCalledCount() );
 
 		service.call( "-stop" );
-		service.waitForShutdown( timeout, timeunit );
+		service.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertFalse( "Service should not be running and is.", service.isRunning() );
 		assertEquals( "Start method was not called the right amount times.", 2, service.getStartCalledCount() );
 		assertEquals( "Stop method was not called the right amount times.", 2, service.getStopCalledCount() );
@@ -193,41 +185,41 @@ public class ServiceTest extends TestCase {
 
 	public void testFastStartStop() throws Exception {
 		//Log.write( "...testFastStartStop()..." );
-		MockService service = new MockService();
+
 		service.call( "-start" );
-		service.waitForStartup( timeout, timeunit );
+		service.waitForStartup( TIMEOUT, TIMEUNIT );
 		assertTrue( "Service should be running and is not.", service.isRunning() );
 		service.call( "-stop" );
-		service.waitForShutdown( timeout, timeunit );
+		service.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertFalse( "Service should not be running and is.", service.isRunning() );
 
 		service.call( "-start" );
-		service.waitForStartup( timeout, timeunit );
+		service.waitForStartup( TIMEOUT, TIMEUNIT );
 		assertTrue( "Service should be running and is not.", service.isRunning() );
 		service.call( "-stop" );
-		service.waitForShutdown( timeout, timeunit );
+		service.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertFalse( "Service should not be running and is.", service.isRunning() );
 
 		service.call( "-start" );
-		service.waitForStartup( timeout, timeunit );
+		service.waitForStartup( TIMEOUT, TIMEUNIT );
 		assertTrue( "Service should be running and is not.", service.isRunning() );
 		service.call( "-stop" );
-		service.waitForShutdown( timeout, timeunit );
+		service.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertFalse( "Service should not be running and is.", service.isRunning() );
 
 		service.call( "-start" );
-		service.waitForStartup( timeout, timeunit );
+		service.waitForStartup( TIMEOUT, TIMEUNIT );
 		assertTrue( "Service should be running and is not.", service.isRunning() );
 		service.call( "-stop" );
-		service.waitForShutdown( timeout, timeunit );
+		service.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertFalse( "Service should not be running and is.", service.isRunning() );
 	}
 
 	public void testFastRestarts() throws Exception {
 		//Log.write( "...testFastRestarts()..." );
-		MockService service = new MockService();
+
 		service.call( "-start" );
-		service.waitForStartup( timeout, timeunit );
+		service.waitForStartup( TIMEOUT, TIMEUNIT );
 		assertTrue( "Service should be running and is not.", service.isRunning() );
 		service.restart();
 		assertTrue( "Service should be running and is not.", service.isRunning() );
@@ -240,7 +232,7 @@ public class ServiceTest extends TestCase {
 		service.restart();
 		assertTrue( "Service should be running and is not.", service.isRunning() );
 		service.call( "-stop" );
-		service.waitForShutdown( timeout, timeunit );
+		service.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertFalse( "Service should not be running and is.", service.isRunning() );
 	}
 
@@ -248,14 +240,16 @@ public class ServiceTest extends TestCase {
 		//System.out.println( "...testPassParameters()..." );
 		String name1 = "Mock Service 1";
 		MockService service1 = new MockService( name1 );
+		service1.setUpdatesDisabled( true );
 		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false, "-start" ) );
 		assertCommandLineHeader( name1, parser1 );
 		assertTrue( "Service should be running and is not.", service1.isRunning() );
 
 		String name2 = "Mock Service 2";
 		MockService service2 = new MockService( name2 );
+		service2.setUpdatesDisabled( true );
 		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.INFO, false ) );
-		service2.waitForShutdown( timeout, timeunit );
+		service2.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertCommandLineHeader( name2, parser2 );
 
 		assertEquals( "[I] " + name2 + " already running.", parser2.next() );
@@ -263,11 +257,11 @@ public class ServiceTest extends TestCase {
 		assertNull( parser2.next() );
 
 		service2.call( "-stop" );
-		service1.waitForShutdown( timeout, timeunit );
+		service1.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertEquals( Service.State.STOPPED, service1.getState() );
 		assertFalse( "Service should not be running and is.", service1.isRunning() );
 
-		service2.waitForShutdown( timeout, timeunit );
+		service2.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertEquals( Service.State.STOPPED, service2.getState() );
 		assertFalse( "Service should not be running and is.", service2.isRunning() );
 	}
@@ -276,6 +270,7 @@ public class ServiceTest extends TestCase {
 		//Log.write( "...testPassStatus()..." );
 		String name1 = "Mock Service 1";
 		MockService service1 = new MockService( name1 );
+		service1.setUpdatesDisabled( true );
 		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false, "-status", "-log.level", "none" ) );
 		assertCommandLineHeader( name1, parser1 );
 
@@ -286,13 +281,14 @@ public class ServiceTest extends TestCase {
 		// Start the service.
 		assertFalse( "Service should not be running and is.", service1.isRunning() );
 		service1.call( "-start" );
-		service1.waitForStartup( timeout, timeunit );
+		service1.waitForStartup( TIMEOUT, TIMEUNIT );
 		assertTrue( "Service should be running and is not.", service1.isRunning() );
 
 		String name2 = "Mock Service 2";
 		MockService service2 = new MockService( name2 );
+		service2.setUpdatesDisabled( true );
 		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.INFO, false, "-status", "-log.level", "none" ) );
-		service2.waitForShutdown( timeout, timeunit );
+		service2.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertCommandLineHeader( name2, parser2 );
 
 		assertEquals( "[I] " + name1 + " status: STARTED", parser2.next() );
@@ -300,11 +296,11 @@ public class ServiceTest extends TestCase {
 		assertNull( parser2.next() );
 
 		service2.call( "-stop" );
-		service1.waitForShutdown( timeout, timeunit );
+		service1.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertEquals( Service.State.STOPPED, service1.getState() );
 		assertFalse( "Service should not be running and is.", service1.isRunning() );
 
-		service2.waitForShutdown( timeout, timeunit );
+		service2.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertEquals( Service.State.STOPPED, service2.getState() );
 		assertFalse( "Service should not be running and is.", service2.isRunning() );
 	}
@@ -329,11 +325,11 @@ public class ServiceTest extends TestCase {
 
 		try {
 			service.call( commands );
-			service.waitForStartup( timeout, timeunit );
+			service.waitForStartup( TIMEOUT, TIMEUNIT );
 
 			if( stop && service.isRunning() ) {
 				service.call( new String[] { "-stop" } );
-				service.waitForShutdown( timeout, timeunit );
+				service.waitForShutdown( TIMEOUT, TIMEUNIT );
 				assertFalse( service.isRunning() );
 			}
 		} finally {

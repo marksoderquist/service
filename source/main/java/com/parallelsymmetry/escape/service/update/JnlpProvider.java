@@ -40,7 +40,7 @@ public class JnlpProvider implements UpdateProvider {
 
 		for( String jar : jars ) {
 			URI uri = codebase.resolve( jar );
-			resources.add( new Resource( Resource.Type.JAR, uri ) );
+			resources.add( new Resource( Resource.Type.FILE, uri ) );
 		}
 		for( String lib : libs ) {
 			URI uri = codebase.resolve( lib );

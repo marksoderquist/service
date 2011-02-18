@@ -48,6 +48,7 @@ public class DownloadTask extends Task<Download> {
 		}
 
 		Log.write( Log.TRACE, "Resource downloaded: " + uri );
+		Log.write( Log.DEBUG, "        to location: " + download.getTarget() );
 
 		return download;
 	}
