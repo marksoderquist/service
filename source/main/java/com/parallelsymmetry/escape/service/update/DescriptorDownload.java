@@ -1,0 +1,37 @@
+package com.parallelsymmetry.escape.service.update;
+
+import java.net.URI;
+
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
+
+import com.parallelsymmetry.escape.service.task.DownloadTask;
+import com.parallelsymmetry.escape.service.task.Task;
+import com.parallelsymmetry.escape.utility.Descriptor;
+import com.parallelsymmetry.escape.utility.log.Log;
+
+final class DescriptorDownload extends Task<Descriptor> {
+
+	private DownloadTask task;
+
+	public DescriptorDownload( URI uri ) {
+		this.task = new DownloadTask( uri );
+	}
+
+	@Override
+	public Descriptor execute() throws Exception {
+		Descriptor descriptor = null;
+
+		try {
+			descriptor = new Descriptor( task.execute().getInputStream() );
+		} catch( ParserConfigurationException exception ) {
+			Log.write( exception );
+		} catch( SAXException exception ) {
+			Log.write( exception );
+		}
+
+		return descriptor;
+	}
+
+}

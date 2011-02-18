@@ -4,16 +4,21 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 import org.w3c.dom.Node;
 
+import com.parallelsymmetry.escape.service.Service;
 import com.parallelsymmetry.escape.utility.Descriptor;
 
 public class JnlpProvider implements UpdateProvider {
 
+	private Service service;
+
 	private Descriptor descriptor;
 
-	public JnlpProvider( Descriptor descriptor ) {
+	public JnlpProvider( Service service, Descriptor descriptor ) {
+		this.service = service;
 		this.descriptor = descriptor;
 	}
 
@@ -28,9 +33,10 @@ public class JnlpProvider implements UpdateProvider {
 		Set<Resource> resources = new HashSet<Resource>();
 
 		// Resolve all the files to download.
-		String[] jars = getResources( descriptor, "jar/@uri" );
-		String[] libs = getResources( descriptor, "lib/@uri" );
-		String[] extensions = getResources( descriptor, "extension/@uri" );
+		String[] jars = getResources( descriptor, "jar/@href" );
+		String[] libs = getResources( descriptor, "lib/@href" );
+		String[] natives = getResources( descriptor, "nativelib/@href" );
+		String[] extensions = getResources( descriptor, "extension/@href" );
 
 		for( String jar : jars ) {
 			URI uri = codebase.resolve( jar );
@@ -40,11 +46,14 @@ public class JnlpProvider implements UpdateProvider {
 			URI uri = codebase.resolve( lib );
 			resources.add( new Resource( Resource.Type.PACK, uri ) );
 		}
-
-		// TODO What about JNLP and other extensions.
+		for( String lib : natives ) {
+			URI uri = codebase.resolve( lib );
+			resources.add( new Resource( Resource.Type.PACK, uri ) );
+		}
 		for( String extension : extensions ) {
 			URI uri = codebase.resolve( extension );
-			resources.addAll( getResources( UpdateManager.loadDescriptor( uri ) ) );
+			Future<Descriptor> future = service.getTaskManager().submit( new DescriptorDownload( uri ) );
+			resources.addAll( new JnlpProvider( service, future.get() ).getResources() );
 		}
 
 		return resources;

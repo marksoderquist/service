@@ -24,7 +24,7 @@ public class TaskManager implements Persistent<TaskManager>, Controllable {
 	private int threadCount = DEFAULT_THREAD_COUNT;
 
 	private Settings settings;
-	
+
 	private BlockingQueue<Runnable> queue;
 
 	public TaskManager() {
@@ -103,7 +103,7 @@ public class TaskManager implements Persistent<TaskManager>, Controllable {
 	 * @param tasks
 	 * @return
 	 */
-	public <T> List<Future<T>> submitAll( Collection<Task<T>> tasks ) {
+	public <T> List<Future<T>> submitAll( Collection<? extends Task<T>> tasks ) {
 		List<Future<T>> futures = new ArrayList<Future<T>>();
 
 		for( Task<T> task : tasks ) {
@@ -150,7 +150,7 @@ public class TaskManager implements Persistent<TaskManager>, Controllable {
 	 * @return
 	 * @throws InterruptedException
 	 */
-	public <T> List<Future<T>> invokeAll( Collection<Task<T>> tasks ) throws InterruptedException {
+	public <T> List<Future<T>> invokeAll( Collection<? extends Task<T>> tasks ) throws InterruptedException {
 		return invokeAll( tasks, 0, TimeUnit.SECONDS );
 	}
 
@@ -164,7 +164,7 @@ public class TaskManager implements Persistent<TaskManager>, Controllable {
 	 * @return
 	 * @throws InterruptedException
 	 */
-	public <T> List<Future<T>> invokeAll( Collection<Task<T>> tasks, long timeout, TimeUnit unit ) throws InterruptedException {
+	public <T> List<Future<T>> invokeAll( Collection<? extends Task<T>> tasks, long timeout, TimeUnit unit ) throws InterruptedException {
 		if( service == null ) return null;
 		return service.invokeAll( tasks, timeout, unit );
 	}

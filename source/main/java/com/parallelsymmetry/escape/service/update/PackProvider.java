@@ -4,16 +4,21 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 import org.w3c.dom.Node;
 
+import com.parallelsymmetry.escape.service.Service;
 import com.parallelsymmetry.escape.utility.Descriptor;
 
 public class PackProvider implements UpdateProvider {
 
+	private Service service;
+
 	private UpdatePack pack;
 
-	public PackProvider( UpdatePack pack ) {
+	public PackProvider( Service service, UpdatePack pack ) {
+		this.service = service;
 		this.pack = pack;
 	}
 
@@ -43,7 +48,8 @@ public class PackProvider implements UpdateProvider {
 		}
 		for( String jnlp : jnlps ) {
 			URI uri = codebase.resolve( jnlp );
-			resources.addAll( new JnlpProvider( UpdateManager.loadDescriptor( uri ) ).getResources() );
+			Future<Descriptor> future = service.getTaskManager().submit( new DescriptorDownload( uri ) );
+			resources.addAll( new JnlpProvider( service, future.get() ).getResources() );
 		}
 
 		return resources;

@@ -9,7 +9,7 @@ public abstract class Task<V> implements Callable<V> {
 	private boolean complete;
 
 	private boolean success;
-	
+
 	private boolean cancel;
 
 	public final boolean isRunning() {
@@ -23,7 +23,7 @@ public abstract class Task<V> implements Callable<V> {
 	public final boolean isSuccess() {
 		return success;
 	}
-	
+
 	public final boolean isCancelled() {
 		return cancel;
 	}
@@ -44,7 +44,7 @@ public abstract class Task<V> implements Callable<V> {
 			running = false;
 		}
 	}
-	
-	protected abstract V execute() throws Exception;
+
+	public abstract V execute() throws Exception;
 
 }

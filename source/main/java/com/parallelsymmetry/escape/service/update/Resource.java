@@ -2,8 +2,13 @@ package com.parallelsymmetry.escape.service.update;
 
 import java.io.File;
 import java.net.URI;
+import java.util.concurrent.Future;
+
+import com.parallelsymmetry.escape.service.task.Download;
 
 public final class Resource {
+
+	public Future<Download> downloadFuture;
 
 	public enum Type {
 		JAR, PACK

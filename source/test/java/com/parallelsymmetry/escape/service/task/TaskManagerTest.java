@@ -130,7 +130,7 @@ public class TaskManagerTest extends TestCase {
 		}
 
 		@Override
-		protected Object execute() throws Exception {
+		public Object execute() throws Exception {
 			if( fail ) throw new Exception( "Intentionally fail task." );
 			return object;
 		}

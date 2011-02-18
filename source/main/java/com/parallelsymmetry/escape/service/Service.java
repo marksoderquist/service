@@ -166,8 +166,6 @@ public abstract class Service extends Agent {
 		configureSettings( parameters );
 		configureServices();
 		processParameters( parameters, false );
-
-		Log.write( Log.TRACE, "Method call() complete." );
 	}
 
 	public String getGroup() {

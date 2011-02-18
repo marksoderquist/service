@@ -1,7 +1,6 @@
 package com.parallelsymmetry.escape.service.update;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.net.URI;
@@ -12,13 +11,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.xml.sax.SAXException;
-
 import com.parallelsymmetry.escape.service.Service;
+import com.parallelsymmetry.escape.service.task.DownloadTask;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.Parameters;
@@ -109,21 +106,12 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 	}
 
 	public List<UpdatePack> getPostedUpdates() throws Exception {
-		UpdateContext context = new UpdateContext();
-		return getPostedUpdates( context );
-	}
-
-	public List<UpdatePack> getPostedUpdates( UpdateContext context ) throws Exception {
 		List<UpdatePack> newPacks = new ArrayList<UpdatePack>();
 		List<UpdatePack> oldPacks = getInstalledPacks();
 
-		// In order to handle exceptions correctly a context object may need to be used.
-		List<IOException> exceptions = new ArrayList<IOException>();
-
-		// TODO This loop would be more efficient if done concurrently.
+		Map<UpdatePack, Future<Descriptor>> futures = new HashMap<UpdatePack, Future<Descriptor>>();
 		for( UpdatePack oldPack : oldPacks ) {
-			// This URI should be a direct link to the pack descriptor.
-			URI uri = getResolvedUpdateUri( oldPack );
+			URI uri = getResolvedUpdateUri( oldPack.getUpdateUri() );
 			if( uri == null ) {
 				Log.write( Log.WARN, "Installed pack does not have an update URI: " + oldPack.toString() );
 				continue;
@@ -131,36 +119,21 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 				Log.write( Log.DEBUG, "Installed pack URI: " + uri );
 			}
 
-			try {
-				UpdatePack newPack = loadUpdatePack( uri );
-				if( newPack.getRelease().compareTo( oldPack.getRelease() ) > 0 ) newPacks.add( newPack );
-			} catch( IOException exception ) {
-				exceptions.add( exception );
-				Log.write( exception );
-			}
+			futures.put( oldPack, service.getTaskManager().submit( new DescriptorDownload( uri ) ) );
+		}
+
+		for( UpdatePack oldPack : oldPacks ) {
+			Future<Descriptor> future = futures.get( oldPack );
+			if( future == null ) continue;
+			UpdatePack newPack = UpdatePack.load( future.get() );
+			if( newPack.getRelease().compareTo( oldPack.getRelease() ) > 0 ) newPacks.add( newPack );
 		}
 
 		return newPacks;
 	}
 
-	private static final class UpdateContext {
-
-		public Set<UpdatePack> postedUpdates = new HashSet<UpdatePack>();
-
-		public List<Exception> exceptions = new ArrayList<Exception>();
-
-	}
-
 	public void stagePostedUpdates() throws Exception {
-		UpdateContext context = new UpdateContext();
-		stagePostedUpdates( context );
-		if( context.exceptions.size() > 0 ) throw context.exceptions.get( 0 );
-	}
-
-	public void stagePostedUpdates( UpdateContext context ) throws Exception {
 		List<UpdatePack> packs = getPostedUpdates();
-		getPostedUpdates( context );
-
 		File programDataFolder = service.getProgramDataFolder();
 		File stageFolder = new File( programDataFolder, "stage" );
 
@@ -169,19 +142,29 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 		// Determine all the resources to download.
 		Map<UpdatePack, Set<Resource>> packResources = new HashMap<UpdatePack, Set<Resource>>();
 		for( UpdatePack pack : packs ) {
-			Log.write( Log.WARN, "Determining resources: " + getResolvedUpdateUri( pack ) );
+			Log.write( Log.WARN, "Determining resources: " + getResolvedUpdateUri( pack.getUpdateUri() ) );
 
-			Set<Resource> resources = new PackProvider( pack ).getResources();
+			Set<Resource> resources = new PackProvider( service, pack ).getResources();
 
 			for( Resource resource : resources ) {
-				Log.write( Log.WARN, "Resource: " + resource.getUri() );
+				URI uri = getResolvedUpdateUri( resource.getUri() );
+				Log.write( Log.WARN, "Resource: " + uri );
+				resource.downloadFuture = service.getTaskManager().submit( new DownloadTask( uri ) );
 			}
 
 			packResources.put( pack, resources );
 		}
 
-		// Download all resources, create an update for each pack, save them to the staging location, and add staged updates to list.
-		// TODO Stage the update.
+		// TODO Download all resources.
+		for( UpdatePack pack : packs ) {
+			for( Resource resource : packResources.get( pack ) ) {
+
+			}
+		}
+
+		// TODO Create an update for each pack.
+		// TODO Save update pack to the staging location.
+		// TODO Add staged updates to list.
 	}
 
 	public void addUpdateItem( UpdateInfo item ) {
@@ -359,26 +342,25 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 		}
 	}
 
-	public static final Descriptor loadDescriptor( URI uri ) throws IOException {
-		Descriptor pack = null;
+	//	public static final Descriptor loadDescriptor( URI uri ) throws IOException {
+	//		Descriptor pack = null;
+	//
+	//		try {
+	//			pack = new Descriptor( uri.toString() );
+	//		} catch( ParserConfigurationException exception ) {
+	//			Log.write( exception );
+	//		} catch( SAXException exception ) {
+	//			Log.write( exception );
+	//		}
+	//
+	//		return pack;
+	//	}
 
-		try {
-			pack = new Descriptor( uri.toString() );
-		} catch( ParserConfigurationException exception ) {
-			Log.write( exception );
-		} catch( SAXException exception ) {
-			Log.write( exception );
-		}
+	//	public static final UpdatePack loadUpdatePack( URI uri ) throws IOException {
+	//		return UpdatePack.load( loadDescriptor( uri ) );
+	//	}
 
-		return pack;
-	}
-
-	public static final UpdatePack loadUpdatePack( URI uri ) throws IOException {
-		return UpdatePack.load( loadDescriptor( uri ) );
-	}
-
-	private URI getResolvedUpdateUri( UpdatePack pack ) {
-		URI uri = pack.getUpdateUri();
+	private URI getResolvedUpdateUri( URI uri ) {
 		if( uri == null ) return null;
 		if( uri.getScheme() == null ) uri = new File( uri.getPath() ).toURI();
 		return uri;
