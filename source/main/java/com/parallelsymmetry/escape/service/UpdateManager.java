@@ -6,7 +6,6 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,7 +16,6 @@ import java.util.logging.Level;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
 import com.parallelsymmetry.escape.service.pack.UpdatePack;
@@ -77,6 +75,7 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 		return packs;
 	}
 
+	// TODO This method will move to a pack manager in the program library.
 	public List<UpdatePack> getAvailablePacks() throws Exception {
 		for( UpdateSite site : sites ) {
 			URI uri = site.getUri();
@@ -109,33 +108,21 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 		saveSettings( settings );
 	}
 
-	public void stagePostedUpdates() throws Exception {
-		List<UpdatePack> packs = getPostedUpdates();
-
-		File programDataFolder = service.getProgramDataFolder();
-		File stageFolder = new File( programDataFolder, "stage" );
-
-		Log.write( Log.WARN, "Staging packs in: " + stageFolder );
-
-		// Determine all the resources to download.
-		Map<UpdatePack, Set<Resource>> resources = new HashMap<UpdatePack, Set<Resource>>();
-		for( UpdatePack pack : packs ) {
-			Log.write( Log.WARN, "Determining resources: " + getResolvedUpdateUri( pack ) );
-
-			resources.put( pack, new PackProvider( pack ).getResources() );
-		}
-
-		// Download all resources, save them to the staging location, and add staged updates to list.
-		// TODO Stage the update.
-	}
-
 	public boolean areUpdatesPosted() throws Exception {
 		return getPostedUpdates().size() > 0;
 	}
 
-	public List<UpdatePack> getPostedUpdates() {
+	public List<UpdatePack> getPostedUpdates() throws Exception {
+		UpdateContext context = new UpdateContext();
+		return getPostedUpdates( context );
+	}
+
+	public List<UpdatePack> getPostedUpdates( UpdateContext context ) throws Exception {
 		List<UpdatePack> newPacks = new ArrayList<UpdatePack>();
 		List<UpdatePack> oldPacks = getInstalledPacks();
+
+		// In order to handle exceptions correctly a context object may need to be used.
+		List<IOException> exceptions = new ArrayList<IOException>();
 
 		// TODO This loop would be more efficient if done concurrently.
 		for( UpdatePack oldPack : oldPacks ) {
@@ -144,13 +131,61 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 			if( uri == null ) {
 				Log.write( Log.WARN, "Installed pack does not have an update URI: " + oldPack.toString() );
 				continue;
+			} else {
+				Log.write( Log.DEBUG, "Installed pack URI: " + uri );
 			}
 
-			UpdatePack newPack = loadUpdatePack( uri );
-			if( newPack.getRelease().compareTo( oldPack.getRelease() ) > 0 ) newPacks.add( newPack );
+			try {
+				UpdatePack newPack = loadUpdatePack( uri );
+				if( newPack.getRelease().compareTo( oldPack.getRelease() ) > 0 ) newPacks.add( newPack );
+			} catch( IOException exception ) {
+				exceptions.add( exception );
+				Log.write( exception );
+			}
 		}
 
 		return newPacks;
+	}
+
+	private static final class UpdateContext {
+
+		public Set<UpdatePack> postedUpdates = new HashSet<UpdatePack>();
+
+		public List<Exception> exceptions = new ArrayList<Exception>();
+
+	}
+
+	public void stagePostedUpdates() throws Exception {
+		UpdateContext context = new UpdateContext();
+		stagePostedUpdates( context );
+		if( context.exceptions.size() > 0 ) throw context.exceptions.get( 0 );
+	}
+
+	public void stagePostedUpdates( UpdateContext context ) throws Exception {
+		List<UpdatePack> packs = getPostedUpdates();
+		getPostedUpdates( context );
+
+		File programDataFolder = service.getProgramDataFolder();
+		File stageFolder = new File( programDataFolder, "stage" );
+
+		Log.write( Log.WARN, "Pack stage folder: " + stageFolder );
+
+		// Determine all the resources to download.
+		Map<UpdatePack, Set<Resource>> packResources = new HashMap<UpdatePack, Set<Resource>>();
+		for( UpdatePack pack : packs ) {
+			Log.write( Log.WARN, "Determining resources: " + getResolvedUpdateUri( pack ) );
+
+			Set<Resource> resources = new PackProvider( pack ).getResources();
+
+			for( Resource resource : resources ) {
+				Log.write( Log.WARN, "Resource: " + resource.getUri() );
+			}
+
+			packResources.put( pack, resources );
+		}
+
+		// Download all resources, create an update for each pack, save them to the staging location, and add staged updates to list.
+		// TODO Stage the update.
 	}
 
 	public void addUpdateItem( UpdateInfo item ) {
@@ -297,7 +332,7 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 	public UpdateManager loadSettings( Settings settings ) {
 		this.settings = settings;
 
-		this.checkForUpdatesOnStartup = settings.getBoolean( CHECK_STARTUP );
+		this.checkForUpdatesOnStartup = settings.getBoolean( CHECK_STARTUP, false );
 		this.sites = settings.getList( UpdateSite.class, SITE_LIST );
 		this.updates = settings.getList( UpdateInfo.class, UPDATE_LIST );
 
@@ -328,21 +363,22 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 		}
 	}
 
-	public static final UpdatePack loadUpdatePack( URI uri ) {
-		UpdatePack pack = null;
+	public static final Descriptor loadDescriptor( URI uri ) throws IOException {
+		Descriptor pack = null;
 
 		try {
-			pack = UpdatePack.load( new Descriptor( uri.toString() ) );
+			pack = new Descriptor( uri.toString() );
 		} catch( ParserConfigurationException exception ) {
 			Log.write( exception );
 		} catch( SAXException exception ) {
 			Log.write( exception );
-		} catch( IOException exception ) {
-			// TODO This is an exception that should be reported to the users if possible.
-			Log.write( exception );
 		}
 
 		return pack;
+	}
+
+	public static final UpdatePack loadUpdatePack( URI uri ) throws IOException {
+		return UpdatePack.load( loadDescriptor( uri ) );
 	}
 
 	private URI getResolvedUpdateUri( UpdatePack pack ) {

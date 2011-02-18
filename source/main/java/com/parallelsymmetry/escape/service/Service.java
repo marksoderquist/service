@@ -28,6 +28,7 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import com.parallelsymmetry.escape.service.pack.UpdatePack;
+import com.parallelsymmetry.escape.service.task.TaskManager;
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.JavaUtil;
@@ -60,15 +61,9 @@ public abstract class Service extends Agent {
 
 	private Thread shutdownHook = new ShutdownHook( this );
 
-	private UpdateManager updateManager;
-
 	private Parameters parameters;
 
 	private Settings settings;
-
-	private PeerServer peerServer;
-
-	private boolean described;
 
 	private UpdatePack pack;
 
@@ -87,6 +82,12 @@ public abstract class Service extends Agent {
 	private String name;
 
 	private File home;
+
+	private UpdateManager updateManager;
+
+	private PeerServer peerServer;
+
+	private TaskManager taskManager;
 
 	/**
 	 * Construct the service with the default descriptor path of
@@ -127,19 +128,20 @@ public abstract class Service extends Agent {
 		super( name );
 		this.name = name;
 
-		if( descriptor != null ) {
-			this.descriptor = descriptor;
-		} else {
+		if( descriptor == null ) {
 			try {
 				InputStream input = getClass().getResourceAsStream( DEFAULT_DESCRIPTOR_PATH );
 				if( input != null ) Log.write( Log.DEBUG, "Application descriptor found: " + DEFAULT_DESCRIPTOR_PATH );
-				this.descriptor = new Descriptor( input );
+				descriptor = new Descriptor( input );
 			} catch( Exception exception ) {
 				Log.write( exception );
 			}
 		}
 
-		describe();
+		describe( descriptor );
+
+		peerServer = new PeerServer( this );
+		taskManager = new TaskManager();
 	}
 
 	/**
@@ -231,7 +233,11 @@ public abstract class Service extends Agent {
 	public UpdateManager getUpdateManager() {
 		return updateManager;
 	}
-	
+
+	public TaskManager getTaskManager() {
+		return taskManager;
+	}
+
 	public File getProgramDataFolder() {
 		return OperatingSystem.getProgramDataFolder( getArtifact(), getName() );
 	}
@@ -326,9 +332,14 @@ public abstract class Service extends Agent {
 	protected final void startAgent() throws Exception {
 		Log.write( Log.DEBUG, getName() + " starting..." );
 		Runtime.getRuntime().addShutdownHook( shutdownHook );
-		peerServer = new PeerServer( this );
+
+		// Start the peer server.
 		peerServer.startAndWait();
-		storeServicePortNumber();
+
+		// Create and start the task manager.
+		taskManager.loadSettings( settings.getNode( "services/tasks" ) );
+		taskManager.startAndWait();
+
 		startService( parameters );
 		Log.write( getName() + " started." );
 	}
@@ -341,7 +352,6 @@ public abstract class Service extends Agent {
 		Log.write( Log.DEBUG, getName() + " stopping..." );
 		if( socket != null ) socket.close();
 		stopService( parameters );
-		resetServicePortNumber();
 		peerServer.stopAndWait();
 		try {
 			Runtime.getRuntime().removeShutdownHook( shutdownHook );
@@ -357,9 +367,10 @@ public abstract class Service extends Agent {
 
 	protected abstract void stopService( Parameters parameters ) throws Exception;
 
-	private final synchronized void describe() {
-		// This method should only be called once.
-		if( described ) return;
+	private final synchronized void describe( Descriptor descriptor ) {
+		if( this.descriptor != null ) return;
+
+		this.descriptor = descriptor;
 
 		pack = UpdatePack.load( descriptor );
 
@@ -379,8 +390,6 @@ public abstract class Service extends Agent {
 
 		// Minimum Java runtime version.
 		javaVersionMinimum = descriptor.getValue( "/pack/resources/java/version", JAVA_VERSION_MINIMUM );
-
-		described = true;
 	}
 
 	private final boolean checkJava( Parameters parameters ) {
@@ -464,7 +473,7 @@ public abstract class Service extends Agent {
 		}
 	}
 
-	private void resetPreferences( Preferences preferences ) {
+	private final void resetPreferences( Preferences preferences ) {
 		String path = preferences.absolutePath();
 		try {
 			preferences.removeNode();
@@ -474,7 +483,7 @@ public abstract class Service extends Agent {
 		preferences = Preferences.userRoot().node( path );
 	}
 
-	private void configureServices() {
+	private final void configureServices() {
 		if( isRunning() ) return;
 
 		if( settings == null ) throw new RuntimeException( "Settings not initialized." );
@@ -567,7 +576,7 @@ public abstract class Service extends Agent {
 		boolean exists = false;
 		String peer = null;
 		String host = parameters.get( "host", LOCALHOST );
-		int port = getServicePortNumber();
+		int port = peerServer.getServicePortNumber();
 
 		if( port != 0 ) {
 			// Connect to the peer, if possible, and pass the parameters.
@@ -585,7 +594,7 @@ public abstract class Service extends Agent {
 				return false;
 			} catch( IOException exception ) {
 				Log.write( Log.WARN, exception, "Could not connect to peer." );
-				resetServicePortNumber();
+				peerServer.resetServicePortNumber();
 				return false;
 			}
 
@@ -619,20 +628,6 @@ public abstract class Service extends Agent {
 		}
 
 		return exists;
-	}
-
-	private final int getServicePortNumber() {
-		return settings.getInt( "port", 0 );
-	}
-
-	private final void storeServicePortNumber() {
-		settings.putInt( "port", peerServer.getLocalPort() );
-		settings.flush();
-	}
-
-	private final void resetServicePortNumber() {
-		settings.put( "port", null );
-		settings.flush();
 	}
 
 	private final boolean update() {
@@ -672,6 +667,11 @@ public abstract class Service extends Agent {
 		}
 
 		@Override
+		protected void startServer() {
+			storeServicePortNumber();
+		}
+
+		@Override
 		protected void handleSocket( Socket socket ) throws IOException {
 			String peer = socket.getInetAddress().getHostAddress() + ":" + socket.getPort();
 			Log.write( Log.TRACE, "Peer connected: ", peer );
@@ -682,6 +682,7 @@ public abstract class Service extends Agent {
 
 		@Override
 		protected void stopServer() {
+			resetServicePortNumber();
 			for( PeerHandler handler : handlers ) {
 				try {
 					// Cannot wait for handlers to stop because 
@@ -691,6 +692,20 @@ public abstract class Service extends Agent {
 					Log.write( exception );
 				}
 			}
+		}
+
+		private final int getServicePortNumber() {
+			return service.getSettings().getInt( "port", 0 );
+		}
+
+		private final void storeServicePortNumber() {
+			service.getSettings().putInt( "port", getLocalPort() );
+			service.getSettings().flush();
+		}
+
+		private final void resetServicePortNumber() {
+			service.getSettings().put( "port", null );
+			service.getSettings().flush();
 		}
 
 	}

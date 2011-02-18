@@ -4,6 +4,6 @@ import java.util.Set;
 
 public interface UpdateProvider {
 
-	Set<Resource> getResources();
+	Set<Resource> getResources() throws Exception;
 	
 }

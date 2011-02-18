@@ -8,44 +8,44 @@ import java.util.Set;
 import org.w3c.dom.Node;
 
 import com.parallelsymmetry.escape.service.UpdateManager;
-import com.parallelsymmetry.escape.service.pack.UpdatePack;
 import com.parallelsymmetry.escape.utility.Descriptor;
 
-public class PackProvider implements UpdateProvider {
+public class JnlpProvider implements UpdateProvider {
 
-	private UpdatePack pack;
+	private Descriptor descriptor;
 
-	public PackProvider( UpdatePack pack ) {
-		this.pack = pack;
+	public JnlpProvider( Descriptor descriptor ) {
+		this.descriptor = descriptor;
 	}
 
 	@Override
 	public Set<Resource> getResources() throws Exception {
-		return getResources( pack );
+		return getResources( descriptor );
 	}
 
-	private Set<Resource> getResources( UpdatePack source ) throws Exception {
-		URI codebase = source.getUpdateUri();
-		Descriptor descriptor = source.getDescriptor();
+	private Set<Resource> getResources( Descriptor descriptor ) throws Exception {
+		URI codebase = new URI( descriptor.getValue( "/jnlp/@codebase" ) );
 
 		Set<Resource> resources = new HashSet<Resource>();
 
 		// Resolve all the files to download.
-		String[] files = getResources( descriptor, "file/@uri" );
-		String[] packs = getResources( descriptor, "pack/@uri" );
-		String[] jnlps = getResources( descriptor, "jnlp/@uri" );
+		String[] jars = getResources( descriptor, "jar/@uri" );
+		String[] libs = getResources( descriptor, "lib/@uri" );
+		String[] extensions = getResources( descriptor, "extension/@uri" );
 
-		for( String file : files ) {
-			URI uri = codebase.resolve( file );
+		for( String jar : jars ) {
+			URI uri = codebase.resolve( jar );
 			resources.add( new Resource( Resource.Type.JAR, uri ) );
 		}
-		for( String pack : packs ) {
-			URI uri = codebase.resolve( pack );
+		for( String lib : libs ) {
+			URI uri = codebase.resolve( lib );
 			resources.add( new Resource( Resource.Type.PACK, uri ) );
 		}
-		for( String jnlp : jnlps ) {
-			URI uri = codebase.resolve( jnlp );
-			resources.addAll( new JnlpProvider( UpdateManager.loadDescriptor( uri ) ).getResources() );
+
+		// TODO What about JNLP and other extensions.
+		for( String extension : extensions ) {
+			URI uri = codebase.resolve( extension );
+			resources.addAll( getResources( UpdateManager.loadDescriptor( uri ) ) );
 		}
 
 		return resources;
@@ -59,7 +59,7 @@ public class PackProvider implements UpdateProvider {
 		Set<String> resources = new HashSet<String>();
 
 		// Determine the resources.
-		Node[] nodes = descriptor.getNodes( "/pack/resources" );
+		Node[] nodes = descriptor.getNodes( "/jnlp/resources" );
 		for( Node node : nodes ) {
 			Descriptor resourcesDescriptor = new Descriptor( node );
 			Node osNameNode = node.getAttributes().getNamedItem( "os" );
