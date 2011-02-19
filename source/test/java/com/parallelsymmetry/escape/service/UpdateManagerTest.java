@@ -33,12 +33,12 @@ public class UpdateManagerTest extends BaseTestCase {
 	public void setUp() {
 		Log.setLevel( Log.DEBUG );
 	}
-	
+
 	public void testStagePostedUpdates() throws Exception {
 		stageUpdate();
 
 		Service service = new MockService();
-		
+
 		// Reset the preferences but don't start the program.
 		service.call( "-preferences.reset", "-stop" );
 		service.waitForShutdown( TIMEOUT, TIMEUNIT );
@@ -59,8 +59,9 @@ public class UpdateManagerTest extends BaseTestCase {
 		manager.stagePostedUpdates();
 
 		File stageFolder = new File( service.getProgramDataFolder(), "stage" );
-		File updateFile = new File( stageFolder, "mock.jar" );
+		File updateFile = new File( stageFolder, service.getPack().getKey() + ".jar" );
 
+		System.err.println( updateFile.toString() );
 		assertTrue( updateFile.exists() );
 
 		// Shutdown the service.
