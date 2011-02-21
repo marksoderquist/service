@@ -68,7 +68,7 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 		// Add the service pack.
 		packs.add( service.getPack() );
 
-		// TODO Add the module packs.
+		// TODO Add the module packs. Where are these defined?
 
 		return packs;
 	}
@@ -304,10 +304,13 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 		builder.command().add( "-jar" );
 		builder.command().add( updaterTarget.toString() );
 
-		// TODO The logging should be configurable. This is here for integration testing.
-		builder.command().add( "-log.file" );
-		builder.command().add( new File( "updater.log" ).getAbsolutePath() );
-		builder.command().add( "-log.file.append" );
+		// If file logging is enabled append the update process to the log.
+		Parameters parameters = service.getParameters();
+		if( parameters.isSet( Log.PARAMETER_LOG_FILE ) ) {
+			builder.command().add( "-" + Log.PARAMETER_LOG_FILE );
+			builder.command().add( new File( parameters.get( Log.PARAMETER_LOG_FILE ) ).getAbsolutePath() );
+			if( parameters.isTrue( Log.PARAMETER_LOG_FILE_APPEND ) ) builder.command().add( "-" + Log.PARAMETER_LOG_FILE_APPEND );
+		}
 
 		// Add the updates.
 		builder.command().add( "--update" );
