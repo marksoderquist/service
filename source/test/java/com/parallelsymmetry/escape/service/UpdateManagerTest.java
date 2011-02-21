@@ -10,7 +10,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import com.parallelsymmetry.escape.service.update.UpdateManager;
-import com.parallelsymmetry.escape.service.update.UpdateSite;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.XmlUtil;
 import com.parallelsymmetry.escape.utility.log.Log;
@@ -49,13 +48,8 @@ public class UpdateManagerTest extends BaseTestCase {
 		service.waitForStartup( TIMEOUT, TIMEUNIT );
 		assertTrue( service.isRunning() );
 
-		// Add test update site.
+		// Stage the posted updates.
 		UpdateManager manager = service.getUpdateManager();
-		UpdateSite site = new UpdateSite( UPDATE.toURI() );
-		manager.addSite( site );
-
-		//assertEquals( 1, manager.getPostedUpdates().size() );
-
 		manager.stagePostedUpdates();
 
 		File stageFolder = new File( service.getProgramDataFolder(), "stage" );

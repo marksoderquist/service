@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 
@@ -33,17 +34,9 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 
 	private static final String CHECK_STARTUP = "check-startup";
 
-	public static final String DEFAULT_SITE_DESCRIPTOR = "content.xml";
-
-	public static final String DEFAULT_PACK_DESCRIPTOR = "pack.xml";
-
-	private static final String SITE_LIST = "sites";
-
 	private static final String UPDATE_LIST = "updates";
 
 	private Service service;
-
-	private List<UpdateSite> sites;
 
 	private List<UpdateInfo> updates;
 
@@ -53,10 +46,12 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 
 	private Settings settings;
 
+	private Set<UpdatePack> installedPacks;
+
 	public UpdateManager( Service service ) {
 		this.service = service;
-		sites = new CopyOnWriteArrayList<UpdateSite>();
 		updates = new CopyOnWriteArrayList<UpdateInfo>();
+		installedPacks = new CopyOnWriteArraySet<UpdatePack>();
 		updater = new File( service.getHomeFolder(), "updater.jar" );
 
 		service.addListener( this );
@@ -68,54 +63,20 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 		// Add the service pack.
 		packs.add( service.getPack() );
 
-		// TODO Add the module packs. Where are these defined?
+		// Add the installed packs.
+		for( UpdatePack pack : installedPacks ) {
+			packs.add( pack );
+		}
 
 		return packs;
 	}
 
-	private Map<String, UpdatePack> getInstalledPacksMap() {
-		List<UpdatePack> packs = getInstalledPacks();
-
-		Map<String, UpdatePack> map = new HashMap<String, UpdatePack>();
-
-		for( UpdatePack pack : packs ) {
-			map.put( pack.getKey(), pack );
-		}
-
-		return map;
+	public void addInstalledPack( UpdatePack pack ) {
+		installedPacks.add( pack );
 	}
 
-	// TODO This method will move to a pack manager in the program library.
-	public List<UpdatePack> getAvailablePacks() throws Exception {
-		for( UpdateSite site : sites ) {
-			URI uri = site.getUri();
-			if( uri.getScheme() == null ) uri = new File( uri.getPath() ).toURI();
-
-			// Load the site content descriptor.
-			URI siteUri = uri.resolve( DEFAULT_SITE_DESCRIPTOR );
-
-			// If there is not a site content descriptor try a pack descriptor.
-			URI packUri = uri.resolve( DEFAULT_PACK_DESCRIPTOR );
-		}
-		return null;
-	}
-
-	public int getSiteCount() {
-		return sites.size();
-	}
-
-	public UpdateSite getSite( int index ) {
-		return sites.get( index );
-	}
-
-	public void addSite( UpdateSite site ) {
-		sites.add( site );
-		saveSettings( settings );
-	}
-
-	public void removeSite( UpdateSite site ) {
-		sites.remove( site );
-		saveSettings( settings );
+	public void removeInstalledPack( UpdatePack pack ) {
+		installedPacks.remove( pack );
 	}
 
 	public boolean areUpdatesPosted() throws Exception {
@@ -189,32 +150,6 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 			Log.write( Log.WARN, "Update staged: " + update );
 		}
 		saveSettings( settings );
-	}
-
-	private void createUpdatePack( Set<Resource> resources, File update ) throws IOException {
-		File updateFolder = FileUtil.createTempFolder( "update", "folder" );
-
-		for( Resource resource : resources ) {
-			switch( resource.getType() ) {
-				case FILE: {
-					// Just copy the file.
-					String path = resource.getUri().getPath();
-					String name = path.substring( path.lastIndexOf( "/" ) + 1 );
-					File target = new File( updateFolder, name );
-					FileUtil.copy( resource.getLocalFile(), target );
-					break;
-				}
-				case PACK: {
-					// Unpack the file.
-					FileUtil.unzip( resource.getLocalFile(), updateFolder );
-					break;
-				}
-			}
-		}
-
-		FileUtil.deleteOnExit( updateFolder );
-
-		FileUtil.zip( updateFolder, update );
 	}
 
 	public void addUpdateItem( UpdateInfo item ) {
@@ -374,7 +309,6 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 		this.settings = settings;
 
 		this.checkForUpdatesOnStartup = settings.getBoolean( CHECK_STARTUP, false );
-		this.sites = settings.getList( UpdateSite.class, SITE_LIST );
 		this.updates = settings.getList( UpdateInfo.class, UPDATE_LIST );
 
 		// TODO Load the update check schedule from the settings.
@@ -385,7 +319,6 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 	@Override
 	public UpdateManager saveSettings( Settings settings ) {
 		settings.putBoolean( CHECK_STARTUP, checkForUpdatesOnStartup );
-		settings.putList( SITE_LIST, sites );
 		settings.putList( UPDATE_LIST, updates );
 
 		settings.flush();
@@ -404,10 +337,48 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 		}
 	}
 
+	private Map<String, UpdatePack> getInstalledPacksMap() {
+		List<UpdatePack> packs = getInstalledPacks();
+
+		Map<String, UpdatePack> map = new HashMap<String, UpdatePack>();
+
+		for( UpdatePack pack : packs ) {
+			map.put( pack.getKey(), pack );
+		}
+
+		return map;
+	}
+
 	private URI getResolvedUpdateUri( URI uri ) {
 		if( uri == null ) return null;
 		if( uri.getScheme() == null ) uri = new File( uri.getPath() ).toURI();
 		return uri;
+	}
+
+	private void createUpdatePack( Set<Resource> resources, File update ) throws IOException {
+		File updateFolder = FileUtil.createTempFolder( "update", "folder" );
+
+		for( Resource resource : resources ) {
+			switch( resource.getType() ) {
+				case FILE: {
+					// Just copy the file.
+					String path = resource.getUri().getPath();
+					String name = path.substring( path.lastIndexOf( "/" ) + 1 );
+					File target = new File( updateFolder, name );
+					FileUtil.copy( resource.getLocalFile(), target );
+					break;
+				}
+				case PACK: {
+					// Unpack the file.
+					FileUtil.unzip( resource.getLocalFile(), updateFolder );
+					break;
+				}
+			}
+		}
+
+		FileUtil.deleteOnExit( updateFolder );
+
+		FileUtil.zip( updateFolder, update );
 	}
 
 }
