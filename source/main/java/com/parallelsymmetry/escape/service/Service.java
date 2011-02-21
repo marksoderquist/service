@@ -89,7 +89,7 @@ public abstract class Service extends Agent {
 	private PeerServer peerServer;
 
 	private TaskManager taskManager;
-	
+
 	private boolean disableUpdates;
 
 	/**
@@ -143,8 +143,12 @@ public abstract class Service extends Agent {
 
 		describe( descriptor );
 
-		peerServer = new PeerServer( this );
+		// Create the task queue.
 		taskManager = new TaskManager();
+
+		// Create services.
+		updateManager = new UpdateManager( this );
+		peerServer = new PeerServer( this );
 	}
 
 	/**
@@ -163,10 +167,6 @@ public abstract class Service extends Agent {
 			return;
 		}
 
-		Log.init( parameters );
-		configureHome( parameters );
-		configureSettings( parameters );
-		configureServices();
 		processParameters( parameters, false );
 	}
 
@@ -242,11 +242,11 @@ public abstract class Service extends Agent {
 	public File getProgramDataFolder() {
 		return OperatingSystem.getProgramDataFolder( getArtifact(), getName() );
 	}
-	
+
 	public boolean isUpdatesDisabled() {
 		return disableUpdates;
 	}
-	
+
 	public void setUpdatesDisabled( boolean disable ) {
 		this.disableUpdates = disable;
 	}
@@ -401,109 +401,6 @@ public abstract class Service extends Agent {
 		javaVersionMinimum = descriptor.getValue( "/pack/resources/java/version", JAVA_VERSION_MINIMUM );
 	}
 
-	private final boolean checkJava( Parameters parameters ) {
-		String javaRuntimeVersion = System.getProperty( "java.runtime.version" );
-		if( javaVersionMinimum.compareTo( javaRuntimeVersion ) > 0 ) {
-			error( "Java " + javaVersionMinimum + " or higher is required, found: " + javaRuntimeVersion );
-			return false;
-		}
-		return true;
-	}
-
-	private final void configureOnce( Parameters parameters ) {
-		if( isRunning() ) return;
-
-		// Update the artifact if the development flag is set.
-		if( parameters.isTrue( "development" ) ) {
-			pack.setArtifact( pack.getArtifact() + "-dev" );
-			Log.write( Log.TRACE, "Updated artifact to: " + pack.getArtifact() );
-		}
-	}
-
-	/**
-	 * Find the home directory. This method expects the program jar file to be
-	 * installed in a sub-directory of the home directory. Example:
-	 * <code>$HOME/lib/program.jar</code>
-	 * 
-	 * @param parameters
-	 * @return
-	 */
-	private final void configureHome( Parameters parameters ) {
-		if( isRunning() ) return;
-
-		try {
-			// If -home was specified on the command line use it.
-			if( home == null && parameters.get( "home" ) != null ) {
-				home = new File( parameters.get( "home" ) ).getCanonicalFile();
-			}
-
-			// Check the class path.
-			if( home == null ) {
-				try {
-					List<URI> uris = JavaUtil.parseSystemClasspath( System.getProperty( "java.class.path" ) );
-					for( URI uri : uris ) {
-						if( "file".equals( uri.getScheme() ) && uri.getPath().endsWith( ".jar" ) ) {
-							// The following line assumes that the jar is in the home folder.
-							home = new File( uri ).getParentFile();
-							break;
-						}
-					}
-				} catch( URISyntaxException exception ) {
-					Log.write( exception );
-				}
-			}
-
-			if( home != null ) home = home.getCanonicalFile();
-		} catch( IOException exception ) {
-			exception.printStackTrace();
-		}
-		
-		pack.setInstallFolder( home );
-	}
-
-	private final void configureSettings( Parameters parameters ) {
-		if( isRunning() ) return;
-
-		settings = new Settings();
-
-		try {
-			Descriptor defaultSettingDescriptor = null;
-			InputStream input = getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH );
-			if( input != null ) defaultSettingDescriptor = new Descriptor( input );
-
-			String preferencesPath = "/" + pack.getGroup().replace( '.', '/' ) + "/" + pack.getArtifact();
-
-			if( parameters.isTrue( "preferences.reset" ) ) resetPreferences( Preferences.userRoot().node( preferencesPath ) );
-			Preferences preferences = Preferences.userRoot().node( preferencesPath );
-
-			settings.addProvider( new ParametersSettingProvider( parameters ) );
-			if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
-			if( defaultSettingDescriptor != null ) settings.setDefaultProvider( new DescriptorSettingProvider( defaultSettingDescriptor ) );
-		} catch( Exception exception ) {
-			Log.write( exception );
-		}
-	}
-
-	private final void resetPreferences( Preferences preferences ) {
-		String path = preferences.absolutePath();
-		try {
-			preferences.removeNode();
-		} catch( BackingStoreException exception ) {
-			Log.write( exception );
-		}
-		preferences = Preferences.userRoot().node( path );
-	}
-
-	private final void configureServices() {
-		if( isRunning() ) return;
-
-		if( settings == null ) throw new RuntimeException( "Settings not initialized." );
-
-		// Create the update manager.
-		updateManager = new UpdateManager( this );
-		updateManager.loadSettings( settings.getNode( "services/update" ) );
-	}
-
 	/**
 	 * Process the program parameters. This method is called from both the
 	 * process() method if another instance of the program is not running or the
@@ -515,6 +412,9 @@ public abstract class Service extends Agent {
 		if( this.parameters == null ) this.parameters = parameters;
 
 		try {
+			Log.init( parameters );
+
+			// Print the program header.
 			if( !isRunning() ) printHeader();
 
 			// Verify Java environment.
@@ -561,6 +461,111 @@ public abstract class Service extends Agent {
 		} catch( Exception exception ) {
 			Log.write( exception );
 			return;
+		}
+	}
+
+	private final boolean checkJava( Parameters parameters ) {
+		String javaRuntimeVersion = System.getProperty( "java.runtime.version" );
+		if( javaVersionMinimum.compareTo( javaRuntimeVersion ) > 0 ) {
+			error( "Java " + javaVersionMinimum + " or higher is required, found: " + javaRuntimeVersion );
+			return false;
+		}
+		return true;
+	}
+
+	private final void configureOnce( Parameters parameters ) {
+		if( isRunning() ) return;
+
+		configureHome( parameters );
+
+		configureSettings( parameters );
+
+		configureServices( parameters );
+
+		configureDevelopment( parameters );
+	}
+
+	/**
+	 * Find the home directory. This method expects the program jar file to be
+	 * installed in a sub-directory of the home directory. Example:
+	 * <code>$HOME/lib/program.jar</code>
+	 * 
+	 * @param parameters
+	 * @return
+	 */
+	private final void configureHome( Parameters parameters ) {
+		try {
+			// If -home was specified on the command line use it.
+			if( home == null && parameters.get( "home" ) != null ) {
+				home = new File( parameters.get( "home" ) ).getCanonicalFile();
+			}
+
+			// Check the class path.
+			if( home == null ) {
+				try {
+					List<URI> uris = JavaUtil.parseSystemClasspath( System.getProperty( "java.class.path" ) );
+					for( URI uri : uris ) {
+						if( "file".equals( uri.getScheme() ) && uri.getPath().endsWith( ".jar" ) ) {
+							// The following line assumes that the jar is in the home folder.
+							home = new File( uri ).getParentFile();
+							break;
+						}
+					}
+				} catch( URISyntaxException exception ) {
+					Log.write( exception );
+				}
+			}
+
+			if( home != null ) home = home.getCanonicalFile();
+		} catch( IOException exception ) {
+			exception.printStackTrace();
+		}
+
+		pack.setInstallFolder( home );
+	}
+
+	private final void configureSettings( Parameters parameters ) {
+		settings = new Settings();
+
+		try {
+			Descriptor defaultSettingDescriptor = null;
+			InputStream input = getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH );
+			if( input != null ) defaultSettingDescriptor = new Descriptor( input );
+
+			String preferencesPath = "/" + pack.getGroup().replace( '.', '/' ) + "/" + pack.getArtifact();
+
+			if( parameters.isTrue( "preferences.reset" ) ) resetPreferences( Preferences.userRoot().node( preferencesPath ) );
+			Preferences preferences = Preferences.userRoot().node( preferencesPath );
+
+			settings.addProvider( new ParametersSettingProvider( parameters ) );
+			if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
+			if( defaultSettingDescriptor != null ) settings.setDefaultProvider( new DescriptorSettingProvider( defaultSettingDescriptor ) );
+		} catch( Exception exception ) {
+			Log.write( exception );
+		}
+	}
+
+	private final void configureServices( Parameters parameters ) {
+		if( settings == null ) throw new RuntimeException( "Settings not initialized." );
+
+		updateManager.loadSettings( settings.getNode( "services/update" ) );
+	}
+
+	private final void resetPreferences( Preferences preferences ) {
+		String path = preferences.absolutePath();
+		try {
+			preferences.removeNode();
+		} catch( BackingStoreException exception ) {
+			Log.write( exception );
+		}
+		preferences = Preferences.userRoot().node( path );
+	}
+
+	private final void configureDevelopment( Parameters parameters ) {
+		// Update the artifact if the development flag is set.
+		if( parameters.isTrue( "development" ) ) {
+			pack.setArtifact( pack.getArtifact() + "-dev" );
+			Log.write( Log.TRACE, "Updated artifact to: " + pack.getArtifact() );
 		}
 	}
 
