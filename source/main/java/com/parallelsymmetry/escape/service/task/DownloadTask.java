@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URLConnection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import com.parallelsymmetry.escape.utility.log.Log;
 
@@ -13,8 +16,11 @@ public class DownloadTask extends Task<Download> {
 
 	private File target;
 
+	private Set<DownloadListener> listeners;
+
 	public DownloadTask( URI uri ) {
 		this( uri, null );
+		listeners = new CopyOnWriteArraySet<DownloadListener>();
 	}
 
 	public DownloadTask( URI uri, File target ) {
@@ -39,8 +45,7 @@ public class DownloadTask extends Task<Download> {
 				if( isCancelled() ) return null;
 				download.write( buffer, 0, read );
 				offset += read;
-
-				// TODO Notify listeners of the new data.
+				fireEvent( new DownloadEvent( offset, length ) );
 			}
 			if( isCancelled() ) return null;
 		} finally {
@@ -51,6 +56,24 @@ public class DownloadTask extends Task<Download> {
 		Log.write( Log.DEBUG, "        to location: " + download.getTarget() );
 
 		return download;
+	}
+
+	public void addListener( DownloadListener listener ) {
+		listeners.add( listener );
+	}
+
+	public void removeListener( DownloadListener listener ) {
+		listeners.remove( listener );
+	}
+
+	private void fireEvent( DownloadEvent event ) {
+		for( DownloadListener listener : new HashSet<DownloadListener>( listeners ) ) {
+			try {
+				listener.update( event );
+			} catch( Throwable throwable ) {
+				Log.write( throwable );
+			}
+		}
 	}
 
 }
