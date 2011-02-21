@@ -152,16 +152,6 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 		saveSettings( settings );
 	}
 
-	public void addUpdateItem( UpdateInfo item ) {
-		updates.add( item );
-		saveSettings( settings );
-	}
-
-	public void removeUpdateItem( UpdateInfo item ) {
-		updates.remove( item );
-		saveSettings( settings );
-	}
-
 	/**
 	 * Get the path to the updater library.
 	 * 
