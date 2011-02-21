@@ -19,6 +19,7 @@ import com.parallelsymmetry.escape.service.Service;
 import com.parallelsymmetry.escape.service.task.DownloadTask;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.FileUtil;
+import com.parallelsymmetry.escape.utility.JavaUtil;
 import com.parallelsymmetry.escape.utility.Parameters;
 import com.parallelsymmetry.escape.utility.TextUtil;
 import com.parallelsymmetry.escape.utility.agent.Agent;
@@ -177,7 +178,7 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 				Log.write( Log.DEBUG, "Resource target: " + resource.getLocalFile() );
 			}
 		}
-		
+
 		Map<String, UpdatePack> packsMap = getInstalledPacksMap();
 
 		// Create an update for each pack.
@@ -294,9 +295,6 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 		if( !updaterSource.exists() ) throw new RuntimeException( "Update library not found: " + updaterSource );
 		if( !FileUtil.copy( updaterSource, updaterTarget ) ) throw new RuntimeException( "Update library not staged: " + updaterTarget );
 
-		RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
-		List<String> commands = runtimeBean.getInputArguments();
-
 		// Start the updater in a new JVM.
 		ProcessBuilder builder = new ProcessBuilder();
 
@@ -309,7 +307,7 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 		// TODO The logging should be configurable. This is here for integration testing.
 		builder.command().add( "-log.file" );
 		builder.command().add( new File( "updater.log" ).getAbsolutePath() );
-		builder.command().add( "-log.append" );
+		builder.command().add( "-log.file.append" );
 
 		// Add the updates.
 		builder.command().add( "--update" );
@@ -318,10 +316,13 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 			builder.command().add( update.getTarget().getAbsolutePath() );
 		}
 
-		// FIXME The launch parameters should come from the original command line.
+		// Add the launch parameters.
 		builder.command().add( "--launch" );
 		builder.command().add( "java" );
-		builder.command().add( "\\-jar" );
+
+		// Add the VM parameters to the commands.
+		RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
+		List<String> commands = runtimeBean.getInputArguments();
 		for( String command : commands ) {
 			if( command.startsWith( Parameters.SINGLE ) ) {
 				builder.command().add( "\\" + command );
@@ -330,7 +331,16 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 			}
 		}
 
-		builder.command().add( "verify.jar" );
+		// Add the classpath information.
+		List<URI> uris = JavaUtil.parseSystemClasspath( runtimeBean.getClassPath() );
+		if( uris.size() == 1 && uris.get( 0 ).getPath().endsWith( ".jar" ) ) {
+			builder.command().add( "\\-jar" );
+		} else {
+			builder.command().add( "\\-cp" );
+		}
+		builder.command().add( runtimeBean.getClassPath() );
+
+		// Add the original command line parameters.
 		for( String command : service.getParameters().getCommands() ) {
 			if( command.startsWith( Parameters.SINGLE ) ) {
 				builder.command().add( "\\" + command );
