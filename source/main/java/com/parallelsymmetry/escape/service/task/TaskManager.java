@@ -5,8 +5,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -49,7 +51,7 @@ public class TaskManager implements Persistent<TaskManager>, Controllable {
 	@Override
 	public synchronized void start() {
 		if( isRunning() ) return;
-		service = new ThreadPoolExecutor( 0, threadCount, 5, TimeUnit.SECONDS, queue );
+		service = new ThreadPoolExecutor( 0, threadCount, 5, TimeUnit.SECONDS, queue, new TaskThreadFactory() );
 	}
 
 	@Override
@@ -183,6 +185,18 @@ public class TaskManager implements Persistent<TaskManager>, Controllable {
 		settings.putInt( "thread-count", threadCount );
 
 		return this;
+	}
+
+	private static final class TaskThreadFactory implements ThreadFactory {
+
+		private final ThreadFactory defaultFactory = Executors.defaultThreadFactory();
+
+		public Thread newThread( final Runnable runnable ) {
+			Thread thread = defaultFactory.newThread( runnable );
+			thread.setName( "TaskQueue-" + thread.getName() );
+			thread.setDaemon( true );
+			return thread;
+		}
 	}
 
 }

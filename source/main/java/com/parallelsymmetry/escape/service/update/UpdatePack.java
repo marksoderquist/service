@@ -28,8 +28,12 @@ public class UpdatePack {
 
 	private String provider = "Unknown";
 
+	private String copyrightHolder = "Unknown";
+
+	private String copyrightNotice = "All rights reserved.";
+
 	private URI uri;
-	
+
 	private File folder;
 
 	private UpdatePack( Descriptor descriptor ) {
@@ -39,7 +43,7 @@ public class UpdatePack {
 	public Descriptor getDescriptor() {
 		return descriptor;
 	}
-	
+
 	public String getKey() {
 		return group + "." + artifact;
 	}
@@ -84,6 +88,22 @@ public class UpdatePack {
 		this.provider = provider;
 	}
 
+	public void setCopyrightHolder( String holder ) {
+		this.copyrightHolder = holder;
+	}
+
+	public String getCopyrightHolder() {
+		return copyrightHolder;
+	}
+
+	public void setCopyrightNotice( String notice ) {
+		this.copyrightNotice = notice;
+	}
+
+	public String getCopyrightNotice() {
+		return copyrightNotice;
+	}
+
 	public URI getUpdateUri() {
 		return uri;
 	}
@@ -91,11 +111,11 @@ public class UpdatePack {
 	public void setUpdateUri( URI uri ) {
 		this.uri = uri;
 	}
-	
+
 	public File getInstallFolder() {
 		return folder;
 	}
-	
+
 	public void setInstallFolder( File folder ) {
 		this.folder = folder;
 	}
@@ -114,15 +134,20 @@ public class UpdatePack {
 		String timestamp = descriptor.getValue( "/pack/timestamp" );
 		String name = descriptor.getValue( "/pack/name" );
 		String provider = descriptor.getValue( "/pack/provider" );
+		String holder = descriptor.getValue( "/pack/copyright/holder" );
+		String notice = descriptor.getValue( "/pack/copyright/notice" );
 		String uri = descriptor.getValue( "/pack/update/uri" );
 
 		UpdatePack pack = new UpdatePack( descriptor );
 
-		pack.group = group;
-		pack.artifact = artifact;
-		pack.release = new Release( version, new Date( Long.parseLong( timestamp ) ) );
-		pack.name = name;
-		pack.provider = provider;
+		if( group != null) pack.group = group;
+		if( artifact != null) pack.artifact = artifact;
+		if( version != null ) pack.release = new Release( version, new Date( Long.parseLong( timestamp ) ) );
+		if( name != null ) pack.name = name;
+		if( provider != null ) pack.provider = provider;
+
+		pack.copyrightHolder = holder == null ? provider : holder;
+		if( notice != null) pack.copyrightNotice = notice;
 
 		try {
 			if( uri != null ) pack.uri = new URI( uri );

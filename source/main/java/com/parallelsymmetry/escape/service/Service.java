@@ -17,8 +17,6 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Handler;
@@ -187,21 +185,16 @@ public abstract class Service extends Agent {
 	}
 
 	public String getCopyright() {
-		return getCopyright( Locale.getDefault() );
+		int currentYear = DateUtil.getCurrentYear();
+		return COPYRIGHT + " " + ( currentYear == inceptionYear ? currentYear : inceptionYear + "-" + currentYear ) + " " + pack.getCopyrightHolder();
 	}
 
-	public String getCopyright( Locale locale ) {
-		int currentYear = DateUtil.getCurrentYear();
-		return COPYRIGHT + " " + ( currentYear == inceptionYear ? currentYear : inceptionYear + "-" + currentYear ) + " " + copyrightHolder;
+	public String getCopyrightHolder() {
+		return pack.getCopyrightHolder();
 	}
 
 	public String getCopyrightNotice() {
-		return getCopyrightNotice( Locale.getDefault() );
-	}
-
-	public String getCopyrightNotice( Locale locale ) {
-		ResourceBundle bundle = ResourceBundle.getBundle( "copyright", locale );
-		return bundle.getString( "notice" );
+		return pack.getCopyrightNotice();
 	}
 
 	public String getLicenseSummary() {
@@ -573,7 +566,7 @@ public abstract class Service extends Agent {
 		String notice = getLicenseSummary();
 
 		Log.write( Log.NONE, getName() + " " + getRelease().toHumanString() );
-		Log.write( Log.NONE, getCopyright( Locale.ENGLISH ) + " " + getCopyrightNotice( Locale.ENGLISH ) );
+		Log.write( Log.NONE, getCopyright() + " " + getCopyrightNotice() );
 		Log.write( Log.NONE );
 		if( notice != null ) {
 			Log.write( Log.NONE, notice );
