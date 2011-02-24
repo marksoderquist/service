@@ -547,7 +547,7 @@ public abstract class Service extends Agent {
 		Authenticator.setDefault( new ServiceProxyAuthenticator( this ) );
 		ProxySelector.setDefault( new ServiceProxySelector( this ) );
 
-		updateManager.loadSettings( settings.getNode( "services/update" ) );
+		updateManager.loadSettings( settings.getNode( "update" ) );
 	}
 
 	private final void resetPreferences( Preferences preferences ) {
