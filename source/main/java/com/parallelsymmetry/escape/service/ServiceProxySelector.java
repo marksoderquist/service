@@ -6,12 +6,14 @@ import java.net.Proxy;
 import java.net.ProxySelector;
 import java.net.SocketAddress;
 import java.net.URI;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import com.parallelsymmetry.escape.utility.Bundles;
 import com.parallelsymmetry.escape.utility.TextUtil;
 import com.parallelsymmetry.escape.utility.log.Log;
 import com.parallelsymmetry.escape.utility.setting.Settings;
@@ -49,9 +51,7 @@ public class ServiceProxySelector extends ProxySelector {
 	@Override
 	public void connectFailed( URI uri, SocketAddress address, IOException exception ) {
 		if( "socket".equals( uri.getScheme() ) ) return;
-
-		// FIXME Determine a cleaner way to handle i18n.
-		//service.error( MessageFormat.format( Bundles.getString( Bundles.MESSAGES, "proxy.connect.failed" ), address.toString() ) );
+		service.error( MessageFormat.format( Bundles.getString( Bundles.MESSAGES, "proxy.connect.failed" ), address.toString() ) );
 	}
 
 	private Proxy getProxy( String scheme ) {
