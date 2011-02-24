@@ -8,7 +8,9 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.net.Authenticator;
 import java.net.ConnectException;
+import java.net.ProxySelector;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.URI;
@@ -540,6 +542,10 @@ public abstract class Service extends Agent {
 
 	private final void configureServices( Parameters parameters ) {
 		if( settings == null ) throw new RuntimeException( "Settings not initialized." );
+
+		// Set proxy handlers.
+		Authenticator.setDefault( new ServiceProxyAuthenticator( this ) );
+		ProxySelector.setDefault( new ServiceProxySelector( this ) );
 
 		updateManager.loadSettings( settings.getNode( "services/update" ) );
 	}
