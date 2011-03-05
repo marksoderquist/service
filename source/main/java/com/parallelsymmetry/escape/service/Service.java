@@ -529,7 +529,7 @@ public abstract class Service extends Agent {
 
 			String preferencesPath = "/" + pack.getGroup().replace( '.', '/' ) + "/" + pack.getArtifact();
 
-			if( parameters.isTrue( "preferences.reset" ) ) resetPreferences( Preferences.userRoot().node( preferencesPath ) );
+			if( parameters.isTrue( "settings.reset" ) ) resetPreferences( Preferences.userRoot().node( preferencesPath ) );
 			Preferences preferences = Preferences.userRoot().node( preferencesPath );
 
 			settings.addProvider( new ParametersSettingProvider( parameters ) );
