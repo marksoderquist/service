@@ -39,7 +39,7 @@ public class UpdateManagerTest extends BaseTestCase {
 		Service service = new MockService();
 
 		// Reset the preferences but don't start the program.
-		service.call( "-preferences.reset", "-stop" );
+		service.call( "-settings.reset", "-stop" );
 		service.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertFalse( service.isRunning() );
 
