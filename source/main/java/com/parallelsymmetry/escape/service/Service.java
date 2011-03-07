@@ -423,26 +423,26 @@ public abstract class Service extends Agent {
 			if( !peer && peerExists( parameters ) ) return;
 
 			// If the watch parameter is set then exit before doing anything else.
-			if( parameters.isTrue( "watch" ) ) return;
+			if( parameters.isTrue( ServiceParameter.WATCH ) ) return;
 
-			if( parameters.isTrue( "stop" ) ) {
+			if( parameters.isTrue( ServiceParameter.STOP ) ) {
 				stopAndWait();
 				return;
-			} else if( parameters.isTrue( "restart" ) ) {
+			} else if( parameters.isTrue( ServiceParameter.RESTART ) ) {
 				restart();
 				return;
-			} else if( parameters.isTrue( "status" ) ) {
+			} else if( parameters.isTrue( ServiceParameter.STATUS ) ) {
 				printStatus();
 				return;
-			} else if( parameters.isTrue( "version" ) ) {
+			} else if( parameters.isTrue( ServiceParameter.VERSION ) ) {
 				return;
-			} else if( parameters.isTrue( "help" ) ) {
-				printHelp( parameters.get( "help" ) );
+			} else if( parameters.isTrue( ServiceParameter.HELP ) ) {
+				printHelp( parameters.get( ServiceParameter.HELP ) );
 				return;
 			}
 
 			// Update if necessary.
-			if( !disableUpdates && ( ( parameters.isSet( "update" ) & parameters.isTrue( "update" ) ) | ( !parameters.isSet( "update" ) & !peer ) ) ) if( update() ) {
+			if( !disableUpdates && ( ( parameters.isSet( ServiceParameter.UPDATE ) & parameters.isTrue( ServiceParameter.UPDATE ) ) | ( !parameters.isSet( ServiceParameter.UPDATE ) & !peer ) ) ) if( update() ) {
 				// The program should be allowed, but not forced, to exit at this point.
 				Log.write( "Program exiting to apply updates." );
 				return;
@@ -529,7 +529,7 @@ public abstract class Service extends Agent {
 
 			String preferencesPath = "/" + pack.getGroup().replace( '.', '/' ) + "/" + pack.getArtifact();
 
-			if( parameters.isTrue( "settings.reset" ) ) resetPreferences( Preferences.userRoot().node( preferencesPath ) );
+			if( parameters.isTrue( ServiceParameter.SETTINGS_RESET ) ) resetPreferences( Preferences.userRoot().node( preferencesPath ) );
 			Preferences preferences = Preferences.userRoot().node( preferencesPath );
 
 			settings.addProvider( new ParametersSettingProvider( parameters ) );
