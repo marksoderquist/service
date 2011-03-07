@@ -27,6 +27,7 @@ import com.parallelsymmetry.escape.utility.agent.Agent;
 import com.parallelsymmetry.escape.utility.agent.AgentEvent;
 import com.parallelsymmetry.escape.utility.agent.AgentListener;
 import com.parallelsymmetry.escape.utility.log.Log;
+import com.parallelsymmetry.escape.utility.log.LogParameter;
 import com.parallelsymmetry.escape.utility.setting.Persistent;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
@@ -231,10 +232,10 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 
 		// If file logging is enabled append the update process to the log.
 		Parameters parameters = service.getParameters();
-		if( parameters.isSet( Log.PARAMETER_LOG_FILE ) ) {
-			builder.command().add( "-" + Log.PARAMETER_LOG_FILE );
-			builder.command().add( new File( parameters.get( Log.PARAMETER_LOG_FILE ) ).getAbsolutePath() );
-			if( parameters.isTrue( Log.PARAMETER_LOG_FILE_APPEND ) ) builder.command().add( "-" + Log.PARAMETER_LOG_FILE_APPEND );
+		if( parameters.isSet( LogParameter.LOG_FILE ) ) {
+			builder.command().add( "-" + LogParameter.LOG_FILE );
+			builder.command().add( new File( parameters.get( LogParameter.LOG_FILE ) ).getAbsolutePath() );
+			if( parameters.isTrue( LogParameter.LOG_FILE_APPEND ) ) builder.command().add( "-" + LogParameter.LOG_FILE_APPEND );
 		}
 
 		// Add the updates.
