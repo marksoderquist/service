@@ -27,8 +27,8 @@ public class UpdateInfo implements Persistent<UpdateInfo>{
 	}
 
 	public UpdateInfo loadSettings( Settings settings ) {
-		source = new File( settings.get( "source" ) );
-		target = new File( settings.get( "target" ) );
+		source = new File( settings.get( "source", null ) );
+		target = new File( settings.get( "target", null ) );
 		return this;
 	}
 

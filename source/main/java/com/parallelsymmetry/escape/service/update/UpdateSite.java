@@ -36,8 +36,8 @@ public class UpdateSite implements Persistent<UpdateSite> {
 	public UpdateSite loadSettings( Settings settings ) {
 		this.settings = settings;
 
-		name = settings.get( "name" );
-		uri = URI.create( settings.get( "uri" ) );
+		name = settings.get( "name", null );
+		uri = URI.create( settings.get( "uri", null ) );
 
 		return this;
 	}
