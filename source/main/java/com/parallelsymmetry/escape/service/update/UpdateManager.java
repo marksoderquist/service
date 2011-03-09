@@ -261,7 +261,7 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 		}
 
 		// Add the classpath information.
-		List<URI> uris = JavaUtil.parseSystemClasspath( runtimeBean.getClassPath() );
+		List<URI> uris = JavaUtil.parseClasspath( runtimeBean.getClassPath() );
 		if( uris.size() == 1 && uris.get( 0 ).getPath().endsWith( ".jar" ) ) {
 			builder.command().add( "\\-jar" );
 		} else {

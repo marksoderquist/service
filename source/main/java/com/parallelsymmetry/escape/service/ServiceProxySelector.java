@@ -19,6 +19,8 @@ import com.parallelsymmetry.escape.utility.log.Log;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
 public class ServiceProxySelector extends ProxySelector {
+	
+	private static final String MESSAGES_BUNDLE = "messages";
 
 	private Service service;
 
@@ -51,7 +53,7 @@ public class ServiceProxySelector extends ProxySelector {
 	@Override
 	public void connectFailed( URI uri, SocketAddress address, IOException exception ) {
 		if( "socket".equals( uri.getScheme() ) ) return;
-		service.error( MessageFormat.format( Bundles.getString( Bundles.MESSAGES, "proxy.connect.failed" ), address.toString() ) );
+		service.error( MessageFormat.format( Bundles.getString( MESSAGES_BUNDLE, "proxy.connect.failed" ), address.toString() ) );
 	}
 
 	private Proxy getProxy( String scheme ) {

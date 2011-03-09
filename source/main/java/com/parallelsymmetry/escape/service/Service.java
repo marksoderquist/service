@@ -498,7 +498,7 @@ public abstract class Service extends Agent {
 			// Check the class path.
 			if( home == null ) {
 				try {
-					List<URI> uris = JavaUtil.parseSystemClasspath( System.getProperty( "java.class.path" ) );
+					List<URI> uris = JavaUtil.parseClasspath( System.getProperty( "java.class.path" ) );
 					for( URI uri : uris ) {
 						if( "file".equals( uri.getScheme() ) && uri.getPath().endsWith( ".jar" ) ) {
 							// The following line assumes that the jar is in the home folder.
