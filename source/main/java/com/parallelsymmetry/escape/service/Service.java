@@ -561,6 +561,9 @@ public abstract class Service extends Agent {
 	}
 
 	private final void configureDevelopment( Parameters parameters ) {
+		if( parameters.isSet( "artifact" ) ) {
+			pack.setArtifact( parameters.get( "artifact" ) );
+		}
 		// Update the artifact if the development flag is set.
 		if( parameters.isTrue( "development" ) ) {
 			pack.setArtifact( pack.getArtifact() + "-dev" );
@@ -647,7 +650,7 @@ public abstract class Service extends Agent {
 
 	private final boolean update() {
 		if( home == null && parameters.isSet( "update" ) && !parameters.isTrue( "update" ) ) {
-			Log.write( Log.WARN, "Program not executed from libraries; updates disabled." );
+			Log.write( Log.WARN, "Program not executed from updatable location." );
 			return false;
 		}
 
