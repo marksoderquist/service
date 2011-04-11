@@ -44,16 +44,13 @@ public abstract class Task<V> implements Callable<V> {
 		} finally {
 			complete = true;
 			running = false;
-			synchronized( this ) {
-				notifyAll();
-			}
 		}
 	}
 
-	public synchronized void waitFor() throws InterruptedException {
-		while( !isComplete() ) {
-			wait();
-		}
-	}
+	/*
+	 * The correct way to wait for the result is to obtain the Future object from
+	 * the call to submit( Task ) and then call future.get().
+	 */
+	// public synchronized void waitFor() throws InterruptedException {}
 
 }
