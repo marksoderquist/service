@@ -94,7 +94,7 @@ public class TaskManager implements Persistent<TaskManager>, Controllable {
 	 * @return
 	 */
 	public <T> Future<T> submit( Task<T> task ) {
-		if( service == null ) return null;
+		if( service == null ) throw new RuntimeException( "TaskManager has not been started.");
 		return service.submit( task );
 	}
 
