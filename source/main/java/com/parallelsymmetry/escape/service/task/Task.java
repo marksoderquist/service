@@ -12,6 +12,8 @@ public abstract class Task<V> implements Callable<V> {
 
 	private boolean cancel;
 
+	public abstract V execute() throws Exception;
+
 	public final boolean isRunning() {
 		return running;
 	}
@@ -33,7 +35,7 @@ public abstract class Task<V> implements Callable<V> {
 	}
 
 	@Override
-	public final V call() throws Exception {
+	public V call() throws Exception {
 		running = true;
 		try {
 			V result = execute();
@@ -42,9 +44,16 @@ public abstract class Task<V> implements Callable<V> {
 		} finally {
 			complete = true;
 			running = false;
+			synchronized( this ) {
+				notifyAll();
+			}
 		}
 	}
 
-	public abstract V execute() throws Exception;
+	public synchronized void waitFor() throws InterruptedException {
+		while( !isComplete() ) {
+			wait();
+		}
+	}
 
 }
