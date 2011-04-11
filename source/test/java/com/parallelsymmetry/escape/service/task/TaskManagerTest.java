@@ -102,7 +102,13 @@ public class TaskManagerTest extends TestCase {
 
 		MockTask task = new MockTask();
 
-		manager.submit( task );
+		try {
+			manager.submit( task );
+			fail( "TaskManager.submit() should throw and exception if the manager is not running." );
+		} catch( Exception exception ) {
+			// Intentionally ignore exception.
+		}
+		
 		assertFalse( manager.isRunning() );
 		assertFalse( task.isRunning() );
 		assertFalse( task.isComplete() );

@@ -47,6 +47,10 @@ import com.parallelsymmetry.escape.utility.setting.PreferencesSettingProvider;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
 public abstract class Service extends Agent {
+	
+	public static final String MANAGER_SETTINGS_ROOT = "/manager";
+
+	private static final String TASK_MANAGER_SETTINGS_PATH = MANAGER_SETTINGS_ROOT  + "/task";
 
 	private static final String PEER_LOGGER_NAME = "peer";
 
@@ -340,8 +344,8 @@ public abstract class Service extends Agent {
 		// Start the peer server.
 		peerServer.startAndWait();
 
-		// Create and start the task manager.
-		taskManager.loadSettings( settings.getNode( "services/tasks" ) );
+		// Start the task manager.
+		taskManager.loadSettings( settings.getNode( TASK_MANAGER_SETTINGS_PATH ) );
 		taskManager.startAndWait();
 
 		startService( parameters );
@@ -356,7 +360,12 @@ public abstract class Service extends Agent {
 		Log.write( Log.DEBUG, getName() + " stopping..." );
 		if( socket != null ) socket.close();
 		stopService( parameters );
+		
+		taskManager.stopAndWait();
+		taskManager.saveSettings( settings.getNode( TASK_MANAGER_SETTINGS_PATH ) );
+		
 		peerServer.stopAndWait();
+		
 		try {
 			Runtime.getRuntime().removeShutdownHook( shutdownHook );
 		} catch( IllegalStateException exception ) {

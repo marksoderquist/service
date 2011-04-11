@@ -94,7 +94,7 @@ public class TaskManager implements Persistent<TaskManager>, Controllable {
 	 * @return
 	 */
 	public <T> Future<T> submit( Task<T> task ) {
-		if( service == null ) throw new RuntimeException( "TaskManager has not been started.");
+		checkNullService();
 		return service.submit( task );
 	}
 
@@ -106,6 +106,7 @@ public class TaskManager implements Persistent<TaskManager>, Controllable {
 	 * @return
 	 */
 	public <T> List<Future<T>> submitAll( Collection<? extends Task<T>> tasks ) {
+		checkNullService();
 		List<Future<T>> futures = new ArrayList<Future<T>>();
 
 		for( Task<T> task : tasks ) {
@@ -138,7 +139,7 @@ public class TaskManager implements Persistent<TaskManager>, Controllable {
 	 * @throws InterruptedException
 	 */
 	public <T> List<Future<T>> invoke( Task<T> task, long timeout, TimeUnit unit ) throws InterruptedException {
-		if( service == null ) return null;
+		checkNullService();
 		List<Task<T>> tasks = new ArrayList<Task<T>>();
 		tasks.add( task );
 		return service.invokeAll( tasks, timeout, unit );
@@ -167,7 +168,7 @@ public class TaskManager implements Persistent<TaskManager>, Controllable {
 	 * @throws InterruptedException
 	 */
 	public <T> List<Future<T>> invokeAll( Collection<? extends Task<T>> tasks, long timeout, TimeUnit unit ) throws InterruptedException {
-		if( service == null ) return null;
+		checkNullService();
 		return service.invokeAll( tasks, timeout, unit );
 	}
 
@@ -185,6 +186,10 @@ public class TaskManager implements Persistent<TaskManager>, Controllable {
 		settings.putInt( "thread-count", threadCount );
 
 		return this;
+	}
+	
+	private void checkNullService() {
+		if( service == null ) throw new RuntimeException( "TaskManager has not been started.");
 	}
 
 	private static final class TaskThreadFactory implements ThreadFactory {
