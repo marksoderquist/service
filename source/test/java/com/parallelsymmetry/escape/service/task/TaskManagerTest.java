@@ -2,6 +2,8 @@ package com.parallelsymmetry.escape.service.task;
 
 import java.util.concurrent.Future;
 
+import com.parallelsymmetry.escape.utility.log.Log;
+
 import junit.framework.TestCase;
 
 public class TaskManagerTest extends TestCase {
@@ -47,6 +49,7 @@ public class TaskManagerTest extends TestCase {
 	}
 
 	public void testSubmitNullResult() throws Exception {
+		Log.setLevel( Log.DEBUG );
 		assertFalse( manager.isRunning() );
 
 		manager.startAndWait();
@@ -55,8 +58,8 @@ public class TaskManagerTest extends TestCase {
 		MockTask task = new MockTask();
 		Future<Object> future = manager.submit( task );
 		assertNull( future.get() );
+		assertTrue( task.isDone() );
 		assertFalse( task.isRunning() );
-		assertTrue( task.isComplete() );
 		assertTrue( task.isSuccess() );
 		assertFalse( task.isCancelled() );
 	}
@@ -71,8 +74,8 @@ public class TaskManagerTest extends TestCase {
 		MockTask task = new MockTask( result );
 		Future<Object> future = manager.submit( task );
 		assertEquals( result, future.get() );
+		assertTrue( task.isDone() );
 		assertFalse( task.isRunning() );
-		assertTrue( task.isComplete() );
 		assertTrue( task.isSuccess() );
 		assertFalse( task.isCancelled() );
 	}
@@ -91,8 +94,8 @@ public class TaskManagerTest extends TestCase {
 		} catch( Exception exception ) {
 			assertNotNull( exception );
 		}
+		assertTrue( task.isDone() );
 		assertFalse( task.isRunning() );
-		assertTrue( task.isComplete() );
 		assertFalse( task.isSuccess() );
 		assertFalse( task.isCancelled() );
 	}
@@ -108,12 +111,36 @@ public class TaskManagerTest extends TestCase {
 		} catch( Exception exception ) {
 			// Intentionally ignore exception.
 		}
-		
+
 		assertFalse( manager.isRunning() );
+		assertFalse( task.isDone() );
 		assertFalse( task.isRunning() );
-		assertFalse( task.isComplete() );
 		assertFalse( task.isSuccess() );
 		assertFalse( task.isCancelled() );
+	}
+
+	public void testUsingTaskAsFuture() throws Exception {
+		assertFalse( manager.isRunning() );
+	
+		manager.startAndWait();
+		assertTrue( manager.isRunning() );
+	
+		Object result = new Object();
+		MockTask task = new MockTask( result );
+		manager.submit( task );
+		assertEquals( result, task.get() );
+		assertTrue( task.isDone() );
+		assertFalse( task.isRunning() );
+		
+		// Intermittently fails.
+		assertTrue( task.isSuccess() );
+		assertFalse( task.isCancelled() );
+	}
+	
+	public void testNestedTasks() throws Exception {
+		manager.startAndWait();
+		assertTrue( manager.isRunning() );
+	
 	}
 
 	private static final class MockTask extends Task<Object> {
