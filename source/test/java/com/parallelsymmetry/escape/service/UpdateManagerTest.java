@@ -12,7 +12,6 @@ import org.w3c.dom.Node;
 import com.parallelsymmetry.escape.service.update.UpdateManager;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.XmlUtil;
-import com.parallelsymmetry.escape.utility.log.Log;
 
 public class UpdateManagerTest extends BaseTestCase {
 
@@ -30,7 +29,7 @@ public class UpdateManagerTest extends BaseTestCase {
 
 	@Override
 	public void setUp() {
-		Log.setLevel( Log.DEBUG );
+		super.setUp();
 	}
 
 	public void testStagePostedUpdates() throws Exception {

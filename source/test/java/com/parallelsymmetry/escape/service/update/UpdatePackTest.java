@@ -2,11 +2,10 @@ package com.parallelsymmetry.escape.service.update;
 
 import java.io.InputStream;
 
-import junit.framework.TestCase;
-
+import com.parallelsymmetry.escape.service.BaseTestCase;
 import com.parallelsymmetry.escape.utility.Descriptor;
 
-public class UpdatePackTest extends TestCase {
+public class UpdatePackTest extends BaseTestCase {
 	
 	public void testGetKey() throws Exception {
 		InputStream input = getClass().getResourceAsStream( "/META-INF/program.xml" );

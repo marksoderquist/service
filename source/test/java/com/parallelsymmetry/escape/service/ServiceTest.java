@@ -23,8 +23,7 @@ public class ServiceTest extends BaseTestCase {
 	private MockService service;
 
 	public void setUp() {
-		Log.setLevel( Log.INFO );
-
+		super.setUp();
 		service = new MockService();
 		service.setUpdatesDisabled( true );
 	}

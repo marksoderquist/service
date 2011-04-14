@@ -2,16 +2,16 @@ package com.parallelsymmetry.escape.service.task;
 
 import java.util.concurrent.Future;
 
+import com.parallelsymmetry.escape.service.BaseTestCase;
 import com.parallelsymmetry.escape.utility.log.Log;
 
-import junit.framework.TestCase;
-
-public class TaskManagerTest extends TestCase {
+public class TaskManagerTest extends BaseTestCase {
 
 	private TaskManager manager;
 
 	@Override
 	public void setUp() {
+		super.setUp();
 		manager = new TaskManager();
 	}
 
