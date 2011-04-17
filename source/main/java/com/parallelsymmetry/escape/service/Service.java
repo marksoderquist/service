@@ -27,7 +27,6 @@ import java.util.logging.LogRecord;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
-import com.parallelsymmetry.escape.service.task.TaskManager;
 import com.parallelsymmetry.escape.service.update.UpdateManager;
 import com.parallelsymmetry.escape.service.update.UpdatePack;
 import com.parallelsymmetry.escape.utility.DateUtil;
@@ -45,12 +44,13 @@ import com.parallelsymmetry.escape.utility.setting.DescriptorSettingProvider;
 import com.parallelsymmetry.escape.utility.setting.ParametersSettingProvider;
 import com.parallelsymmetry.escape.utility.setting.PreferencesSettingProvider;
 import com.parallelsymmetry.escape.utility.setting.Settings;
+import com.parallelsymmetry.escape.utility.task.TaskManager;
 
 public abstract class Service extends Agent {
-	
+
 	public static final String MANAGER_SETTINGS_ROOT = "/manager";
 
-	private static final String TASK_MANAGER_SETTINGS_PATH = MANAGER_SETTINGS_ROOT  + "/task";
+	private static final String TASK_MANAGER_SETTINGS_PATH = MANAGER_SETTINGS_ROOT + "/task";
 
 	private static final String PEER_LOGGER_NAME = "peer";
 
@@ -360,12 +360,12 @@ public abstract class Service extends Agent {
 		Log.write( Log.DEBUG, getName() + " stopping..." );
 		if( socket != null ) socket.close();
 		stopService( parameters );
-		
+
 		taskManager.stopAndWait();
 		taskManager.saveSettings( settings.getNode( TASK_MANAGER_SETTINGS_PATH ) );
-		
+
 		peerServer.stopAndWait();
-		
+
 		try {
 			Runtime.getRuntime().removeShutdownHook( shutdownHook );
 		} catch( IllegalStateException exception ) {

@@ -8,9 +8,9 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 
 import com.parallelsymmetry.escape.service.task.DownloadTask;
-import com.parallelsymmetry.escape.service.task.Task;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.log.Log;
+import com.parallelsymmetry.escape.utility.task.Task;
 
 final class DescriptorDownload extends Task<Descriptor> {
 
