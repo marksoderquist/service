@@ -145,7 +145,7 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 
 		// Create an update for each pack.
 		for( UpdatePack pack : packs ) {
-			File update = new File( stageFolder, pack.getKey() + ".jar" );
+			File update = new File( stageFolder, pack.getKey() + ".pak" );
 			createUpdatePack( packResources.get( pack ), update );
 			updates.add( new UpdateInfo( update, packsMap.get( pack.getKey() ).getInstallFolder() ) );
 			Log.write( Log.WARN, "Update staged: " + update );
@@ -237,6 +237,9 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 			builder.command().add( new File( parameters.get( LogParameter.LOG_FILE ) ).getAbsolutePath() );
 			if( parameters.isTrue( LogParameter.LOG_FILE_APPEND ) ) builder.command().add( "-" + LogParameter.LOG_FILE_APPEND );
 		}
+
+		builder.command().add( "-update.delay" );
+		builder.command().add( "20000" );
 
 		// Add the updates.
 		builder.command().add( "--update" );
