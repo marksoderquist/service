@@ -238,8 +238,8 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 			if( parameters.isTrue( LogParameter.LOG_FILE_APPEND ) ) builder.command().add( "-" + LogParameter.LOG_FILE_APPEND );
 		}
 
-		builder.command().add( "-update.delay" );
-		builder.command().add( "20000" );
+//		builder.command().add( "-update.delay" );
+//		builder.command().add( "20000" );
 
 		// Add the updates.
 		builder.command().add( "--update" );
