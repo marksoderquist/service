@@ -2,6 +2,10 @@ package com.parallelsymmetry.escape.service;
 
 public interface ServiceParameter {
 
+	public static final String ARTIFACT = "artifact";
+	
+	public static final String DEVELOPMENT = "development";
+	
 	public static final String HELP = "help";
 
 	public static final String RESTART = "restart";

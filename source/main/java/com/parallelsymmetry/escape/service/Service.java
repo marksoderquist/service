@@ -572,11 +572,11 @@ public abstract class Service extends Agent {
 	}
 
 	private final void configureDevelopment( Parameters parameters ) {
-		if( parameters.isSet( "artifact" ) ) {
-			pack.setArtifact( parameters.get( "artifact" ) );
+		if( parameters.isSet( ServiceParameter.ARTIFACT ) ) {
+			pack.setArtifact( parameters.get( ServiceParameter.ARTIFACT ) );
 		}
 		// Update the artifact if the development flag is set.
-		if( parameters.isTrue( "development" ) ) {
+		if( parameters.isTrue( ServiceParameter.DEVELOPMENT ) ) {
 			pack.setArtifact( pack.getArtifact() + "-dev" );
 			Log.write( Log.TRACE, "Updated artifact to: " + pack.getArtifact() );
 		}
