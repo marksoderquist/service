@@ -41,7 +41,8 @@ public class UpdateManagerTest extends BaseTestCase {
 		File updateFile = new File( stageFolder, service.getPack().getKey() + ".pak" );
 
 		// Cleanup from previous run.
-		assertTrue( FileUtil.delete( stageFolder ) );
+		FileUtil.delete( stageFolder );
+		assertFalse( stageFolder.exists() );
 
 		// Reset the preferences but don't start the program.
 		service.call( "-" + ServiceParameter.SETTINGS_RESET, "-" + ServiceParameter.STOP );
