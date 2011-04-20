@@ -37,6 +37,12 @@ public class UpdateManagerTest extends BaseTestCase {
 
 		Service service = new MockService();
 
+		File stageFolder = new File( service.getProgramDataFolder(), "stage" );
+		File updateFile = new File( stageFolder, service.getPack().getKey() + ".pak" );
+
+		// Cleanup from previous run.
+		assertTrue( FileUtil.delete( stageFolder ) );
+
 		// Reset the preferences but don't start the program.
 		service.call( "-" + ServiceParameter.SETTINGS_RESET, "-" + ServiceParameter.STOP );
 		service.waitForShutdown( TIMEOUT, TIMEUNIT );
@@ -50,9 +56,6 @@ public class UpdateManagerTest extends BaseTestCase {
 		// Stage the posted updates.
 		UpdateManager manager = service.getUpdateManager();
 		manager.stagePostedUpdates();
-
-		File stageFolder = new File( service.getProgramDataFolder(), "stage" );
-		File updateFile = new File( stageFolder, service.getPack().getKey() + ".jar" );
 
 		System.err.println( updateFile.toString() );
 		assertTrue( updateFile.exists() );
