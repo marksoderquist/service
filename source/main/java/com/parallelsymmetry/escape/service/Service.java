@@ -172,7 +172,7 @@ public abstract class Service extends Agent {
 		}
 
 		processParameters( parameters, false );
-		
+
 		Log.write( Log.DEBUG, "Program terminating..." );
 	}
 
@@ -577,7 +577,7 @@ public abstract class Service extends Agent {
 		}
 		// Update the artifact if the development flag is set.
 		if( parameters.isTrue( ServiceParameter.DEVELOPMENT ) ) {
-			pack.setArtifact( pack.getArtifact() + "-dev" );
+			pack.setArtifact( "#" + pack.getArtifact() );
 			Log.write( Log.TRACE, "Updated artifact to: " + pack.getArtifact() );
 		}
 	}
