@@ -17,7 +17,9 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 
 import com.parallelsymmetry.escape.service.Service;
+import com.parallelsymmetry.escape.service.ServiceFlag;
 import com.parallelsymmetry.escape.service.task.DownloadTask;
+import com.parallelsymmetry.escape.updater.UpdaterFlag;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.JavaUtil;
@@ -27,7 +29,7 @@ import com.parallelsymmetry.escape.utility.agent.Agent;
 import com.parallelsymmetry.escape.utility.agent.AgentEvent;
 import com.parallelsymmetry.escape.utility.agent.AgentListener;
 import com.parallelsymmetry.escape.utility.log.Log;
-import com.parallelsymmetry.escape.utility.log.LogParameter;
+import com.parallelsymmetry.escape.utility.log.LogFlag;
 import com.parallelsymmetry.escape.utility.setting.Persistent;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
@@ -232,24 +234,21 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 
 		// If file logging is enabled append the update process to the log.
 		Parameters parameters = service.getParameters();
-		if( parameters.isSet( LogParameter.LOG_FILE ) ) {
-			builder.command().add( "-" + LogParameter.LOG_FILE );
-			builder.command().add( new File( parameters.get( LogParameter.LOG_FILE ) ).getAbsolutePath() );
-			if( parameters.isTrue( LogParameter.LOG_FILE_APPEND ) ) builder.command().add( "-" + LogParameter.LOG_FILE_APPEND );
+		if( parameters.isSet( LogFlag.LOG_FILE ) ) {
+			builder.command().add( LogFlag.LOG_FILE );
+			builder.command().add( new File( parameters.get( LogFlag.LOG_FILE ) ).getAbsolutePath() );
+			if( parameters.isTrue( LogFlag.LOG_FILE_APPEND ) ) builder.command().add( LogFlag.LOG_FILE_APPEND );
 		}
 
-//		builder.command().add( "-update.delay" );
-//		builder.command().add( "20000" );
-
 		// Add the updates.
-		builder.command().add( "--update" );
+		builder.command().add( UpdaterFlag.UPDATE );
 		for( UpdateInfo update : updates ) {
 			builder.command().add( update.getSource().getAbsolutePath() );
 			builder.command().add( update.getTarget().getAbsolutePath() );
 		}
 
 		// Add the launch parameters.
-		builder.command().add( "--launch" );
+		builder.command().add( UpdaterFlag.LAUNCH );
 		builder.command().add( "java" );
 
 		// Add the VM parameters to the commands.
@@ -281,10 +280,10 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 			}
 		}
 
-		builder.command().add( "\\-update" );
+		builder.command().add( "\\" + ServiceFlag.UPDATE );
 		builder.command().add( "false" );
 
-		builder.command().add( "-launch.home" );
+		builder.command().add( UpdaterFlag.LAUNCH_HOME );
 		builder.command().add( System.getProperty( "user.dir" ) );
 
 		// Remove the updates settings.

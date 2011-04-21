@@ -45,7 +45,7 @@ public class UpdateManagerTest extends BaseTestCase {
 		assertFalse( stageFolder.exists() );
 
 		// Reset the preferences but don't start the program.
-		service.call( "-" + ServiceParameter.SETTINGS_RESET, "-" + ServiceParameter.STOP );
+		service.call( ServiceFlag.SETTINGS_RESET, ServiceFlag.STOP );
 		service.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertFalse( service.isRunning() );
 
@@ -57,12 +57,10 @@ public class UpdateManagerTest extends BaseTestCase {
 		// Stage the posted updates.
 		UpdateManager manager = service.getUpdateManager();
 		manager.stagePostedUpdates();
-
-		System.err.println( updateFile.toString() );
 		assertTrue( updateFile.exists() );
 
 		// Shutdown the service.
-		service.call( "-" + ServiceParameter.STOP );
+		service.call( ServiceFlag.STOP );
 		service.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertFalse( service.isRunning() );
 	}

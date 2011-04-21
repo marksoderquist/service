@@ -434,26 +434,26 @@ public abstract class Service extends Agent {
 			if( !peer && peerExists( parameters ) ) return;
 
 			// If the watch parameter is set then exit before doing anything else.
-			if( parameters.isTrue( ServiceParameter.WATCH ) ) return;
+			if( parameters.isTrue( ServiceFlag.WATCH ) ) return;
 
-			if( parameters.isTrue( ServiceParameter.STOP ) ) {
+			if( parameters.isTrue( ServiceFlag.STOP ) ) {
 				stopAndWait();
 				return;
-			} else if( parameters.isTrue( ServiceParameter.RESTART ) ) {
+			} else if( parameters.isTrue( ServiceFlag.RESTART ) ) {
 				restart();
 				return;
-			} else if( parameters.isTrue( ServiceParameter.STATUS ) ) {
+			} else if( parameters.isTrue( ServiceFlag.STATUS ) ) {
 				printStatus();
 				return;
-			} else if( parameters.isTrue( ServiceParameter.VERSION ) ) {
+			} else if( parameters.isTrue( ServiceFlag.VERSION ) ) {
 				return;
-			} else if( parameters.isTrue( ServiceParameter.HELP ) ) {
-				printHelp( parameters.get( ServiceParameter.HELP ) );
+			} else if( parameters.isTrue( ServiceFlag.HELP ) ) {
+				printHelp( parameters.get( ServiceFlag.HELP ) );
 				return;
 			}
 
 			// Update if necessary.
-			if( !disableUpdates && ( ( parameters.isSet( ServiceParameter.UPDATE ) & parameters.isTrue( ServiceParameter.UPDATE ) ) | ( !parameters.isSet( ServiceParameter.UPDATE ) & !peer ) ) ) if( update() ) {
+			if( !disableUpdates && ( ( parameters.isSet( ServiceFlag.UPDATE ) & parameters.isTrue( ServiceFlag.UPDATE ) ) | ( !parameters.isSet( ServiceFlag.UPDATE ) & !peer ) ) ) if( update() ) {
 				// The program should be allowed, but not forced, to exit at this point.
 				Log.write( "Program exiting to apply updates." );
 				return;
@@ -540,7 +540,7 @@ public abstract class Service extends Agent {
 
 			String preferencesPath = "/" + pack.getGroup().replace( '.', '/' ) + "/" + pack.getArtifact();
 
-			if( parameters.isTrue( ServiceParameter.SETTINGS_RESET ) ) resetPreferences( Preferences.userRoot().node( preferencesPath ) );
+			if( parameters.isTrue( ServiceFlag.SETTINGS_RESET ) ) resetPreferences( Preferences.userRoot().node( preferencesPath ) );
 			Preferences preferences = Preferences.userRoot().node( preferencesPath );
 
 			settings.addProvider( new ParametersSettingProvider( parameters ) );
@@ -572,11 +572,11 @@ public abstract class Service extends Agent {
 	}
 
 	private final void configureDevelopment( Parameters parameters ) {
-		if( parameters.isSet( ServiceParameter.ARTIFACT ) ) {
-			pack.setArtifact( parameters.get( ServiceParameter.ARTIFACT ) );
+		if( parameters.isSet( ServiceFlag.ARTIFACT ) ) {
+			pack.setArtifact( parameters.get( ServiceFlag.ARTIFACT ) );
 		}
 		// Update the artifact if the development flag is set.
-		if( parameters.isTrue( ServiceParameter.DEVELOPMENT ) ) {
+		if( parameters.isTrue( ServiceFlag.DEVELOPMENT ) ) {
 			pack.setArtifact( "#" + pack.getArtifact() );
 			Log.write( Log.TRACE, "Updated artifact to: " + pack.getArtifact() );
 		}
