@@ -147,11 +147,24 @@ public abstract class Service extends Agent {
 
 		describe( descriptor );
 
+		// Create the settings object.
+		settings = new Settings();
+		try {
+			Descriptor defaultSettingDescriptor = null;
+			InputStream input = getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH );
+			if( input != null ) defaultSettingDescriptor = new Descriptor( input );
+			if( defaultSettingDescriptor != null ) settings.setDefaultProvider( new DescriptorSettingProvider( defaultSettingDescriptor ) );
+		} catch( Exception exception ) {
+			Log.write( exception );
+		}
+
 		// Create the task queue.
 		taskManager = new TaskManager();
 
-		// Create services.
+		// Create update manager.
 		updateManager = new UpdateManager( this );
+
+		// Create the peer server.
 		peerServer = new PeerServer( this );
 	}
 
@@ -531,21 +544,13 @@ public abstract class Service extends Agent {
 	}
 
 	private final void configureSettings( Parameters parameters ) {
-		settings = new Settings();
-
 		try {
-			Descriptor defaultSettingDescriptor = null;
-			InputStream input = getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH );
-			if( input != null ) defaultSettingDescriptor = new Descriptor( input );
-
 			String preferencesPath = "/" + pack.getGroup().replace( '.', '/' ) + "/" + pack.getArtifact();
-
 			if( parameters.isTrue( ServiceFlag.SETTINGS_RESET ) ) resetPreferences( Preferences.userRoot().node( preferencesPath ) );
 			Preferences preferences = Preferences.userRoot().node( preferencesPath );
 
 			settings.addProvider( new ParametersSettingProvider( parameters ) );
 			if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
-			if( defaultSettingDescriptor != null ) settings.setDefaultProvider( new DescriptorSettingProvider( defaultSettingDescriptor ) );
 		} catch( Exception exception ) {
 			Log.write( exception );
 		}
