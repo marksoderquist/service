@@ -24,7 +24,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
-import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import com.parallelsymmetry.escape.service.update.UpdateManager;
@@ -546,11 +545,11 @@ public abstract class Service extends Agent {
 	private final void configureSettings( Parameters parameters ) {
 		try {
 			String preferencesPath = "/" + pack.getGroup().replace( '.', '/' ) + "/" + pack.getArtifact();
-			if( parameters.isTrue( ServiceFlag.SETTINGS_RESET ) ) resetPreferences( Preferences.userRoot().node( preferencesPath ) );
 			Preferences preferences = Preferences.userRoot().node( preferencesPath );
 
 			settings.addProvider( new ParametersSettingProvider( parameters ) );
 			if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
+			if( parameters.isTrue( ServiceFlag.SETTINGS_RESET ) ) settings.reset();
 		} catch( Exception exception ) {
 			Log.write( exception );
 		}
@@ -564,16 +563,6 @@ public abstract class Service extends Agent {
 		ProxySelector.setDefault( new ServiceProxySelector( this ) );
 
 		updateManager.loadSettings( settings.getNode( "update" ) );
-	}
-
-	private final void resetPreferences( Preferences preferences ) {
-		String path = preferences.absolutePath();
-		try {
-			preferences.removeNode();
-		} catch( BackingStoreException exception ) {
-			Log.write( exception );
-		}
-		preferences = Preferences.userRoot().node( path );
 	}
 
 	private final void configureDevelopment( Parameters parameters ) {
