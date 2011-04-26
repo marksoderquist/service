@@ -184,8 +184,6 @@ public abstract class Service extends Agent {
 		}
 
 		processParameters( parameters, false );
-
-		Log.write( Log.DEBUG, "Program terminating..." );
 	}
 
 	public String getGroup() {
