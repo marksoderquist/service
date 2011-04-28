@@ -111,7 +111,7 @@ public class ServiceTest extends BaseTestCase {
 		assertFalse( "Service should not be running and is.", service.isRunning() );
 
 		assertCommandLineHeader( parser );
-		assertEquals( "[E] Java 1.6 or higher is required, found: 1.5", parser.next() );
+		assertEquals( "[E] Java 1.6.0_11 or higher is required, found: 1.5", parser.next() );
 	}
 
 	public void testLaunchWithStart() throws Exception {

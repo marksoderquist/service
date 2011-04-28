@@ -57,7 +57,7 @@ public abstract class Service extends Agent {
 
 	private static final String DEFAULT_SETTINGS_PATH = "/META-INF/settings.xml";
 
-	private static final String JAVA_VERSION_MINIMUM = "1.6";
+	private static final String JAVA_VERSION_MINIMUM = "1.6.0";
 
 	private static final String LOCALHOST = "127.0.0.1";
 
@@ -414,7 +414,7 @@ public abstract class Service extends Agent {
 		if( licenseSummary != null ) licenseSummary = TextUtil.reline( licenseSummary, 72 );
 
 		// Minimum Java runtime version.
-		javaVersionMinimum = descriptor.getValue( "/pack/resources/java/version", JAVA_VERSION_MINIMUM );
+		javaVersionMinimum = descriptor.getValue( "/pack/resources/java/@version", JAVA_VERSION_MINIMUM );
 	}
 
 	/**
@@ -482,6 +482,7 @@ public abstract class Service extends Agent {
 
 	private final boolean checkJava( Parameters parameters ) {
 		String javaRuntimeVersion = System.getProperty( "java.runtime.version" );
+		Log.write( Log.DEBUG, "Comparing Java version: " + javaRuntimeVersion + " >= " + javaVersionMinimum );
 		if( javaVersionMinimum.compareTo( javaRuntimeVersion ) > 0 ) {
 			error( "Java " + javaVersionMinimum + " or higher is required, found: " + javaRuntimeVersion );
 			return false;

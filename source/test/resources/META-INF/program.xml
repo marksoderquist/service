@@ -20,7 +20,7 @@
 	</license>
 
 	<resources>
-		<java version="1.6" />
+		<java version="1.6.0_11" />
 		<pack uri="update.jar" />
 	</resources>
 
