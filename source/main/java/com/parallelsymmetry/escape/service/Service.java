@@ -548,7 +548,10 @@ public abstract class Service extends Agent {
 
 			settings.addProvider( new ParametersSettingProvider( parameters ) );
 			if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
-			if( parameters.isTrue( ServiceFlag.SETTINGS_RESET ) ) settings.reset();
+			if( parameters.isTrue( ServiceFlag.SETTINGS_RESET ) ) {
+				Log.write( Log.WARN, "Resetting the program settings..." );
+				settings.reset();
+			}
 		} catch( Exception exception ) {
 			Log.write( exception );
 		}
