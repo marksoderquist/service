@@ -541,6 +541,19 @@ public abstract class Service extends Agent {
 		pack.setInstallFolder( home );
 	}
 
+	private final void configureArtifact( Parameters parameters ) {
+		// Set the artifact name if specified.
+		if( parameters.isSet( ServiceFlag.ARTIFACT ) ) {
+			pack.setArtifact( parameters.get( ServiceFlag.ARTIFACT ) );
+		}
+		
+		// Update the artifact if the development flag is set.
+		if( parameters.isTrue( ServiceFlag.DEVELOPMENT ) ) {
+			pack.setArtifact( "#" + pack.getArtifact() );
+			Log.write( Log.TRACE, "Updated artifact to: " + pack.getArtifact() );
+		}
+	}
+
 	private final void configureSettings( Parameters parameters ) {
 		try {
 			String preferencesPath = "/" + pack.getGroup().replace( '.', '/' ) + "/" + pack.getArtifact();
@@ -565,19 +578,6 @@ public abstract class Service extends Agent {
 		ProxySelector.setDefault( new ServiceProxySelector( this ) );
 
 		updateManager.loadSettings( settings.getNode( "update" ) );
-	}
-
-	private final void configureArtifact( Parameters parameters ) {
-		// Set the artifact name if specified.
-		if( parameters.isSet( ServiceFlag.ARTIFACT ) ) {
-			pack.setArtifact( parameters.get( ServiceFlag.ARTIFACT ) );
-		}
-		
-		// Update the artifact if the development flag is set.
-		if( parameters.isTrue( ServiceFlag.DEVELOPMENT ) ) {
-			pack.setArtifact( "#" + pack.getArtifact() );
-			Log.write( Log.TRACE, "Updated artifact to: " + pack.getArtifact() );
-		}
 	}
 
 	private final void printHeader() {
