@@ -495,11 +495,11 @@ public abstract class Service extends Agent {
 
 		configureHome( parameters );
 
+		configureArtifact( parameters );
+
 		configureSettings( parameters );
 
 		configureServices( parameters );
-
-		configureDevelopment( parameters );
 	}
 
 	/**
@@ -567,10 +567,12 @@ public abstract class Service extends Agent {
 		updateManager.loadSettings( settings.getNode( "update" ) );
 	}
 
-	private final void configureDevelopment( Parameters parameters ) {
+	private final void configureArtifact( Parameters parameters ) {
+		// Set the artifact name if specified.
 		if( parameters.isSet( ServiceFlag.ARTIFACT ) ) {
 			pack.setArtifact( parameters.get( ServiceFlag.ARTIFACT ) );
 		}
+		
 		// Update the artifact if the development flag is set.
 		if( parameters.isTrue( ServiceFlag.DEVELOPMENT ) ) {
 			pack.setArtifact( "#" + pack.getArtifact() );
