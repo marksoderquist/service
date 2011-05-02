@@ -302,7 +302,7 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 		this.settings = settings;
 
 		this.checkForUpdatesOnStartup = settings.getBoolean( CHECK_STARTUP, false );
-		this.updates = settings.getList( UpdateInfo.class, UPDATE_LIST );
+		this.updates = settings.getList( UPDATE_LIST, new ArrayList<UpdateInfo>() );
 
 		// TODO Load the check update schedule from the settings.
 
