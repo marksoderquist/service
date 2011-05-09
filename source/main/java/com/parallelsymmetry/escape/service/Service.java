@@ -19,6 +19,7 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Handler;
@@ -48,6 +49,8 @@ import com.parallelsymmetry.escape.utility.task.TaskManager;
 public abstract class Service extends Agent {
 
 	public static final String MANAGER_SETTINGS_ROOT = "/manager";
+
+	public static final String LOCALE = "locale";
 
 	private static final String TASK_MANAGER_SETTINGS_PATH = MANAGER_SETTINGS_ROOT + "/task";
 
@@ -428,7 +431,11 @@ public abstract class Service extends Agent {
 		if( this.parameters == null ) this.parameters = parameters;
 
 		try {
+			// Initialize logging.
 			Log.init( parameters );
+
+			// Set the locale.
+			if( parameters.isSet( LOCALE ) ) setLocale( parameters );
 
 			// Print the program header.
 			if( !isRunning() ) printHeader();
@@ -478,6 +485,18 @@ public abstract class Service extends Agent {
 			Log.write( exception );
 			return;
 		}
+	}
+
+	private static void setLocale( Parameters parameters ) {
+		String locale = parameters.get( LOCALE );
+
+		String[] parts = locale.split( "_" );
+
+		String l = parts.length > 0 ? parts[0] : "";
+		String c = parts.length > 1 ? parts[1] : "";
+		String v = parts.length > 2 ? parts[2] : "";
+
+		Locale.setDefault( new Locale( l, c, v ) );
 	}
 
 	private final boolean checkJava( Parameters parameters ) {
