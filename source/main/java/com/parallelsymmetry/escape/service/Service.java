@@ -52,9 +52,11 @@ public abstract class Service extends Agent {
 
 	public static final String LOCALE = "locale";
 
-	private static final String TASK_MANAGER_SETTINGS_PATH = MANAGER_SETTINGS_ROOT + "/task";
+	private static final String DEVELOPMENT_PREFIX = "#";
 
 	private static final String PEER_LOGGER_NAME = "peer";
+
+	private static final String TASK_MANAGER_SETTINGS_PATH = MANAGER_SETTINGS_ROOT + "/task";
 
 	private static final String DEFAULT_DESCRIPTOR_PATH = "/META-INF/program.xml";
 
@@ -567,9 +569,9 @@ public abstract class Service extends Agent {
 		}
 		
 		// Update the artifact if the development flag is set.
-		if( parameters.isTrue( ServiceFlag.DEVELOPMENT ) ) {
-			pack.setArtifact( "#" + pack.getArtifact() );
-			Log.write( Log.TRACE, "Updated artifact to: " + pack.getArtifact() );
+		if( parameters.isTrue( ServiceFlag.DEVELOPMENT ) && !pack.getArtifact().startsWith( DEVELOPMENT_PREFIX ) ) {
+			pack.setArtifact( DEVELOPMENT_PREFIX + pack.getArtifact() );
+			Log.write( Log.TRACE, "Development artifact: " + pack.getArtifact() );
 		}
 	}
 
