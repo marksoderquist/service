@@ -70,7 +70,7 @@ public abstract class Service extends Agent {
 
 	private Thread shutdownHook = new ShutdownHook( this );
 
-	private Parameters parameters;
+	private Parameters parameters = Parameters.create();
 
 	private Settings settings;
 
