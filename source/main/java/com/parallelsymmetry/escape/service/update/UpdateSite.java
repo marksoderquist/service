@@ -5,7 +5,7 @@ import java.net.URI;
 import com.parallelsymmetry.escape.utility.setting.Persistent;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
-public class UpdateSite implements Persistent<UpdateSite> {
+public class UpdateSite implements Persistent {
 
 	private String name;
 
@@ -33,21 +33,17 @@ public class UpdateSite implements Persistent<UpdateSite> {
 	}
 
 	@Override
-	public UpdateSite loadSettings( Settings settings ) {
+	public void loadSettings( Settings settings ) {
 		this.settings = settings;
 
 		name = settings.get( "name", null );
 		uri = URI.create( settings.get( "uri", null ) );
-
-		return this;
 	}
 
 	@Override
-	public UpdateSite saveSettings( Settings settings ) {
+	public void saveSettings( Settings settings ) {
 		settings.put( "name", name );
 		settings.put( "uri", uri.toString() );
-
-		return this;
 	}
 
 	@Override

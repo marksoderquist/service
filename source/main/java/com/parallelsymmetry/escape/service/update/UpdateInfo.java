@@ -5,7 +5,7 @@ import java.io.File;
 import com.parallelsymmetry.escape.utility.setting.Persistent;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
-public class UpdateInfo implements Persistent<UpdateInfo> {
+public class UpdateInfo implements Persistent {
 
 	private File source;
 
@@ -26,18 +26,16 @@ public class UpdateInfo implements Persistent<UpdateInfo> {
 		return target;
 	}
 
-	public UpdateInfo loadSettings( Settings settings ) {
+	public void loadSettings( Settings settings ) {
 		String sourcePath = settings.get( "source", null );
 		String targetPath = settings.get( "target", null );
 		source = sourcePath == null ? null : new File( sourcePath );
 		target = targetPath == null ? null : new File( targetPath );
-		return this;
 	}
 
-	public UpdateInfo saveSettings( Settings settings ) {
+	public void saveSettings( Settings settings ) {
 		settings.put( "source", source.getPath() );
 		settings.put( "target", target.getPath() );
-		return this;
 	}
 
 }

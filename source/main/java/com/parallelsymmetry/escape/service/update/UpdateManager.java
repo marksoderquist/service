@@ -33,7 +33,7 @@ import com.parallelsymmetry.escape.utility.log.LogFlag;
 import com.parallelsymmetry.escape.utility.setting.Persistent;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
-public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
+public class UpdateManager implements AgentListener, Persistent {
 
 	private static final String CHECK_STARTUP = "check-startup";
 
@@ -298,25 +298,21 @@ public class UpdateManager implements AgentListener, Persistent<UpdateManager> {
 	}
 
 	@Override
-	public UpdateManager loadSettings( Settings settings ) {
+	public void loadSettings( Settings settings ) {
 		this.settings = settings;
 
 		this.checkForUpdatesOnStartup = settings.getBoolean( CHECK_STARTUP, false );
 		this.updates = settings.getList( UPDATE_LIST, new ArrayList<UpdateInfo>() );
 
 		// TODO Load the check update schedule from the settings.
-
-		return this;
 	}
 
 	@Override
-	public UpdateManager saveSettings( Settings settings ) {
+	public void saveSettings( Settings settings ) {
 		settings.putBoolean( CHECK_STARTUP, checkForUpdatesOnStartup );
 		settings.putList( UPDATE_LIST, updates );
 
 		settings.flush();
-
-		return this;
 	}
 
 	@Override
