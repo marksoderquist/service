@@ -567,7 +567,7 @@ public abstract class Service extends Agent {
 		if( parameters.isSet( ServiceFlag.ARTIFACT ) ) {
 			pack.setArtifact( parameters.get( ServiceFlag.ARTIFACT ) );
 		}
-		
+
 		// Update the artifact if the development flag is set.
 		if( parameters.isTrue( ServiceFlag.DEVELOPMENT ) && !pack.getArtifact().startsWith( DEVELOPMENT_PREFIX ) ) {
 			pack.setArtifact( DEVELOPMENT_PREFIX + pack.getArtifact() );
@@ -743,16 +743,16 @@ public abstract class Service extends Agent {
 		}
 
 		private final int getServicePortNumber() {
-			return service.getSettings().getInt( "port", 0 );
+			return service.getSettings().getInt( "/service/port", 0 );
 		}
 
 		private final void storeServicePortNumber() {
-			service.getSettings().putInt( "port", getLocalPort() );
+			service.getSettings().putInt( "/service/port", getLocalPort() );
 			service.getSettings().flush();
 		}
 
 		private final void resetServicePortNumber() {
-			service.getSettings().put( "port", null );
+			service.getSettings().put( "/service/port", null );
 			service.getSettings().flush();
 		}
 
