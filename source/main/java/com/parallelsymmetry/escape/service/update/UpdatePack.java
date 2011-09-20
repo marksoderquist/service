@@ -139,10 +139,17 @@ public class UpdatePack {
 		String uri = descriptor.getValue( "/pack/update/uri" );
 
 		UpdatePack pack = new UpdatePack( descriptor );
+		
+		Date releaseDate = null;
+		try {
+			releaseDate = new Date( Long.parseLong( timestamp ) );
+		} catch( Throwable throwable ) {
+			Log.write( throwable );
+		}
 
 		if( group != null) pack.group = group;
 		if( artifact != null) pack.artifact = artifact;
-		if( version != null ) pack.release = new Release( version, new Date( Long.parseLong( timestamp ) ) );
+		if( version != null ) pack.release = new Release( version, releaseDate );
 		if( name != null ) pack.name = name;
 		if( provider != null ) pack.provider = provider;
 
