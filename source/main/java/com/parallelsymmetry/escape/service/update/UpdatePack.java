@@ -144,7 +144,7 @@ public class UpdatePack {
 		try {
 			releaseDate = new Date( Long.parseLong( timestamp ) );
 		} catch( Throwable throwable ) {
-			Log.write( throwable );
+			Log.write( Log.WARN, throwable );
 		}
 
 		if( group != null) pack.group = group;
