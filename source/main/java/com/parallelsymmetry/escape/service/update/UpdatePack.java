@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
 
+import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.Release;
 import com.parallelsymmetry.escape.utility.Version;
@@ -144,7 +145,7 @@ public class UpdatePack {
 		try {
 			releaseDate = new Date( Long.parseLong( timestamp ) );
 		} catch( Throwable throwable ) {
-			Log.write( Log.WARN, throwable );
+			releaseDate = DateUtil.INCEPTION_DATE;
 		}
 
 		if( group != null) pack.group = group;
