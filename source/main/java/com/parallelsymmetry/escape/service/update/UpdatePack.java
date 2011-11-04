@@ -13,9 +13,27 @@ import com.parallelsymmetry.escape.utility.log.Log;
 
 public class UpdatePack {
 
-	private static final String DEFAULT_GROUP = "com.parallelsymmetry";
+	public static final String GROUP_PATH = "/pack/group";
+
+	public static final String ARTIFACT_PATH = "/pack/artifact";
+
+	public static final String VERSION_PATH = "/pack/version";
+
+	public static final String TIMESTAMP_PATH = "/pack/timestamp";
+
+	public static final String NAME_PATH = "/pack/name";
+
+	public static final String PROVIDER_PATH = "/pack/provider";
+
+	public static final String COPYRIGHT_HOLDER_PATH = "/pack/copyright/holder";
+
+	public static final String COPYRIGHT_NOTICE_PATH = "/pack/copyright/notice";
+
+	public static final String UPDATE_URI_PATH = "/pack/update/uri";
 
 	private static final String DEFAULT_ARTIFACT = "unknown";
+
+	private static final String DEFAULT_GROUP = "com.parallelsymmetry";
 
 	private Descriptor descriptor;
 
@@ -129,15 +147,15 @@ public class UpdatePack {
 	public static final UpdatePack load( Descriptor descriptor ) {
 		if( descriptor == null ) return null;
 
-		String group = descriptor.getValue( "/pack/group" );
-		String artifact = descriptor.getValue( "/pack/artifact" );
-		String version = descriptor.getValue( "/pack/version" );
-		String timestamp = descriptor.getValue( "/pack/timestamp" );
-		String name = descriptor.getValue( "/pack/name" );
-		String provider = descriptor.getValue( "/pack/provider" );
-		String holder = descriptor.getValue( "/pack/copyright/holder" );
-		String notice = descriptor.getValue( "/pack/copyright/notice" );
-		String uri = descriptor.getValue( "/pack/update/uri" );
+		String group = descriptor.getValue( GROUP_PATH );
+		String artifact = descriptor.getValue( ARTIFACT_PATH );
+		String version = descriptor.getValue( VERSION_PATH );
+		String timestamp = descriptor.getValue( TIMESTAMP_PATH );
+		String name = descriptor.getValue( NAME_PATH );
+		String provider = descriptor.getValue( PROVIDER_PATH );
+		String holder = descriptor.getValue( COPYRIGHT_HOLDER_PATH );
+		String notice = descriptor.getValue( COPYRIGHT_NOTICE_PATH );
+		String uri = descriptor.getValue( UPDATE_URI_PATH );
 
 		UpdatePack pack = new UpdatePack( descriptor );
 		

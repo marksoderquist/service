@@ -256,7 +256,7 @@ public abstract class Service extends Agent {
 	}
 
 	public File getProgramDataFolder() {
-		return OperatingSystem.getProgramDataFolder( getArtifact(), getName() );
+		return OperatingSystem.getUserProgramDataFolder( getArtifact(), getName() );
 	}
 
 	public boolean isUpdatesDisabled() {
