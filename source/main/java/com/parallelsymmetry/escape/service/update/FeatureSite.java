@@ -5,7 +5,7 @@ import java.net.URI;
 import com.parallelsymmetry.escape.utility.setting.Persistent;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
-public class UpdateSite implements Persistent {
+public class FeatureSite implements Persistent {
 
 	private String name;
 
@@ -13,9 +13,9 @@ public class UpdateSite implements Persistent {
 
 	private Settings settings;
 
-	public UpdateSite() {}
+	public FeatureSite() {}
 
-	public UpdateSite( URI uri ) {
+	public FeatureSite( URI uri ) {
 		this.uri = uri;
 	}
 
@@ -48,8 +48,8 @@ public class UpdateSite implements Persistent {
 
 	@Override
 	public boolean equals( Object object ) {
-		if( !( object instanceof UpdateSite ) ) return false;
-		UpdateSite that = (UpdateSite)object;
+		if( !( object instanceof FeatureSite ) ) return false;
+		FeatureSite that = (FeatureSite)object;
 		return getUri().toString().equals( that.getUri().toString() );
 	}
 

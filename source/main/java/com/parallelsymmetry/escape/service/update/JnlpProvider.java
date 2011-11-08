@@ -11,7 +11,7 @@ import org.w3c.dom.Node;
 import com.parallelsymmetry.escape.service.Service;
 import com.parallelsymmetry.escape.utility.Descriptor;
 
-public class JnlpProvider implements UpdateProvider {
+public class JnlpProvider implements FeatureProvider {
 
 	private Service service;
 
@@ -23,14 +23,14 @@ public class JnlpProvider implements UpdateProvider {
 	}
 
 	@Override
-	public Set<Resource> getResources() throws Exception {
+	public Set<FeatureResource> getResources() throws Exception {
 		return getResources( descriptor );
 	}
 
-	private Set<Resource> getResources( Descriptor descriptor ) throws Exception {
+	private Set<FeatureResource> getResources( Descriptor descriptor ) throws Exception {
 		URI codebase = new URI( descriptor.getValue( "/jnlp/@codebase" ) );
 
-		Set<Resource> resources = new HashSet<Resource>();
+		Set<FeatureResource> resources = new HashSet<FeatureResource>();
 
 		// Resolve all the files to download.
 		String[] jars = getResources( descriptor, "jar/@href" );
@@ -40,15 +40,15 @@ public class JnlpProvider implements UpdateProvider {
 
 		for( String jar : jars ) {
 			URI uri = codebase.resolve( jar );
-			resources.add( new Resource( Resource.Type.FILE, uri ) );
+			resources.add( new FeatureResource( FeatureResource.Type.FILE, uri ) );
 		}
 		for( String lib : libs ) {
 			URI uri = codebase.resolve( lib );
-			resources.add( new Resource( Resource.Type.PACK, uri ) );
+			resources.add( new FeatureResource( FeatureResource.Type.PACK, uri ) );
 		}
 		for( String lib : natives ) {
 			URI uri = codebase.resolve( lib );
-			resources.add( new Resource( Resource.Type.PACK, uri ) );
+			resources.add( new FeatureResource( FeatureResource.Type.PACK, uri ) );
 		}
 		for( String extension : extensions ) {
 			URI uri = codebase.resolve( extension );

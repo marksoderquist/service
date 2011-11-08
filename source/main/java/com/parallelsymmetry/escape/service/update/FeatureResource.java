@@ -6,13 +6,13 @@ import java.util.concurrent.Future;
 
 import com.parallelsymmetry.escape.service.task.Download;
 
-public final class Resource {
+public final class FeatureResource {
 
 	public enum Type {
 		FILE, PACK
 	};
 
-	private Resource.Type type;
+	private FeatureResource.Type type;
 
 	private URI uri;
 
@@ -20,12 +20,12 @@ public final class Resource {
 	
 	private File file;
 
-	public Resource( Resource.Type type, URI uri ) {
+	public FeatureResource( FeatureResource.Type type, URI uri ) {
 		this.type = type;
 		this.uri = uri;
 	}
 
-	public Resource.Type getType() {
+	public FeatureResource.Type getType() {
 		return type;
 	}
 

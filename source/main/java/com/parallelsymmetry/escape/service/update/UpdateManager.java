@@ -33,6 +33,23 @@ import com.parallelsymmetry.escape.utility.log.LogFlag;
 import com.parallelsymmetry.escape.utility.setting.Persistent;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
+/**
+ * The update manager handles discovery, staging and applying program updates.
+ * <p>
+ * Discovery involves checking for updates over the network (usually over the
+ * Internet) and comparing the release information of installed packs with the
+ * release information of the discovered packs. If the discovered pack is
+ * determined to be newer than the installed pack it is considered an update.
+ * <p>
+ * Staging involves downloading new pack data and preparing it to be applied 
+ * by the update application.
+ * <p>
+ * Applying involves configuring and executing a separate update process to 
+ * apply the staged updates. This requires the calling process to terminate
+ * to allow the update process to change required files.
+ * 
+ * @author SoderquistMV
+ */
 public class UpdateManager implements AgentListener, Persistent {
 
 	private static final String CHECK_STARTUP = "check-startup";
@@ -49,49 +66,56 @@ public class UpdateManager implements AgentListener, Persistent {
 
 	private Settings settings;
 
-	private Set<UpdatePack> installedPacks;
+	private Set<FeaturePack> installedPacks;
 
 	public UpdateManager( Service service ) {
 		this.service = service;
 		updates = new CopyOnWriteArrayList<UpdateInfo>();
-		installedPacks = new CopyOnWriteArraySet<UpdatePack>();
+		installedPacks = new CopyOnWriteArraySet<FeaturePack>();
 		updater = new File( service.getHomeFolder(), "updater.jar" );
 
 		service.addListener( this );
 	}
 
-	public List<UpdatePack> getInstalledPacks() {
-		List<UpdatePack> packs = new ArrayList<UpdatePack>();
+	public List<FeaturePack> getInstalledPacks() {
+		List<FeaturePack> packs = new ArrayList<FeaturePack>();
 
 		// Add the service pack.
 		packs.add( service.getPack() );
 
 		// Add the installed packs.
-		for( UpdatePack pack : installedPacks ) {
+		for( FeaturePack pack : installedPacks ) {
 			packs.add( pack );
 		}
 
 		return packs;
 	}
 
-	public void addInstalledPack( UpdatePack pack ) {
+	public void addInstalledPack( FeaturePack pack ) {
 		installedPacks.add( pack );
 	}
 
-	public void removeInstalledPack( UpdatePack pack ) {
+	public void removeInstalledPack( FeaturePack pack ) {
 		installedPacks.remove( pack );
 	}
 
+	/**
+	 * This method returns true if the getPostedUpdates() method returns any
+	 * updates.
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
 	public boolean areUpdatesPosted() throws Exception {
 		return getPostedUpdates().size() > 0;
 	}
 
-	public List<UpdatePack> getPostedUpdates() throws Exception {
-		List<UpdatePack> newPacks = new ArrayList<UpdatePack>();
-		List<UpdatePack> oldPacks = getInstalledPacks();
+	public List<FeaturePack> getPostedUpdates() throws Exception {
+		List<FeaturePack> newPacks = new ArrayList<FeaturePack>();
+		List<FeaturePack> oldPacks = getInstalledPacks();
 
-		Map<UpdatePack, Future<Descriptor>> futures = new HashMap<UpdatePack, Future<Descriptor>>();
-		for( UpdatePack oldPack : oldPacks ) {
+		Map<FeaturePack, Future<Descriptor>> futures = new HashMap<FeaturePack, Future<Descriptor>>();
+		for( FeaturePack oldPack : oldPacks ) {
 			URI uri = getResolvedUpdateUri( oldPack.getUpdateUri() );
 			if( uri == null ) {
 				Log.write( Log.WARN, "Installed pack does not have an update URI: " + oldPack.toString() );
@@ -103,18 +127,25 @@ public class UpdateManager implements AgentListener, Persistent {
 			futures.put( oldPack, service.getTaskManager().submit( new DescriptorDownload( uri ) ) );
 		}
 
-		for( UpdatePack oldPack : oldPacks ) {
+		for( FeaturePack oldPack : oldPacks ) {
 			Future<Descriptor> future = futures.get( oldPack );
 			if( future == null ) continue;
-			UpdatePack newPack = UpdatePack.load( future.get() );
-			if( newPack.getRelease().compareTo( oldPack.getRelease() ) > 0 ) newPacks.add( newPack );
+			FeaturePack newPack = FeaturePack.load( future.get() );
+
+			Log.write( Log.DEBUG, "Old " + oldPack.getArtifact() + " release: " + oldPack.getRelease() );
+			Log.write( Log.DEBUG, "New " + oldPack.getArtifact() + " release: " + newPack.getRelease() );
+
+			if( newPack.getRelease().compareTo( oldPack.getRelease() ) > 0 ) {
+				Log.write( Log.TRACE, "Update found for: " + oldPack.toString() );
+				newPacks.add( newPack );
+			}
 		}
 
 		return newPacks;
 	}
 
 	public void stagePostedUpdates() throws Exception {
-		List<UpdatePack> packs = getPostedUpdates();
+		List<FeaturePack> packs = getPostedUpdates();
 		File programDataFolder = service.getProgramDataFolder();
 		File stageFolder = new File( programDataFolder, "stage" );
 		stageFolder.mkdirs();
@@ -122,11 +153,11 @@ public class UpdateManager implements AgentListener, Persistent {
 		Log.write( Log.DEBUG, "Pack stage folder: " + stageFolder );
 
 		// Determine all the resources to download.
-		Map<UpdatePack, Set<Resource>> packResources = new HashMap<UpdatePack, Set<Resource>>();
-		for( UpdatePack pack : packs ) {
-			Set<Resource> resources = new PackProvider( service, pack ).getResources();
+		Map<FeaturePack, Set<FeatureResource>> packResources = new HashMap<FeaturePack, Set<FeatureResource>>();
+		for( FeaturePack pack : packs ) {
+			Set<FeatureResource> resources = new PackProvider( service, pack ).getResources();
 
-			for( Resource resource : resources ) {
+			for( FeatureResource resource : resources ) {
 				URI uri = getResolvedUpdateUri( resource.getUri() );
 				Log.write( Log.DEBUG, "Resource source: " + uri );
 				resource.setFuture( service.getTaskManager().submit( new DownloadTask( uri ) ) );
@@ -136,17 +167,17 @@ public class UpdateManager implements AgentListener, Persistent {
 		}
 
 		// Download all resources.
-		for( UpdatePack pack : packs ) {
-			for( Resource resource : packResources.get( pack ) ) {
+		for( FeaturePack pack : packs ) {
+			for( FeatureResource resource : packResources.get( pack ) ) {
 				resource.waitFor();
 				Log.write( Log.DEBUG, "Resource target: " + resource.getLocalFile() );
 			}
 		}
 
-		Map<String, UpdatePack> packsMap = getInstalledPacksMap();
+		Map<String, FeaturePack> packsMap = getInstalledPacksMap();
 
 		// Create an update for each pack.
-		for( UpdatePack pack : packs ) {
+		for( FeaturePack pack : packs ) {
 			File update = new File( stageFolder, pack.getKey() + ".pak" );
 			createUpdatePack( packResources.get( pack ), update );
 			updates.add( new UpdateInfo( update, packsMap.get( pack.getKey() ).getInstallFolder() ) );
@@ -326,12 +357,12 @@ public class UpdateManager implements AgentListener, Persistent {
 		}
 	}
 
-	private Map<String, UpdatePack> getInstalledPacksMap() {
-		List<UpdatePack> packs = getInstalledPacks();
+	private Map<String, FeaturePack> getInstalledPacksMap() {
+		List<FeaturePack> packs = getInstalledPacks();
 
-		Map<String, UpdatePack> map = new HashMap<String, UpdatePack>();
+		Map<String, FeaturePack> map = new HashMap<String, FeaturePack>();
 
-		for( UpdatePack pack : packs ) {
+		for( FeaturePack pack : packs ) {
 			map.put( pack.getKey(), pack );
 		}
 
@@ -344,10 +375,10 @@ public class UpdateManager implements AgentListener, Persistent {
 		return uri;
 	}
 
-	private void createUpdatePack( Set<Resource> resources, File update ) throws IOException {
+	private void createUpdatePack( Set<FeatureResource> resources, File update ) throws IOException {
 		File updateFolder = FileUtil.createTempFolder( "update", "folder" );
 
-		for( Resource resource : resources ) {
+		for( FeatureResource resource : resources ) {
 			switch( resource.getType() ) {
 				case FILE: {
 					// Just copy the file.

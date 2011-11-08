@@ -28,7 +28,7 @@ import java.util.logging.LogRecord;
 import java.util.prefs.Preferences;
 
 import com.parallelsymmetry.escape.service.update.UpdateManager;
-import com.parallelsymmetry.escape.service.update.UpdatePack;
+import com.parallelsymmetry.escape.service.update.FeaturePack;
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.JavaUtil;
@@ -74,7 +74,7 @@ public abstract class Service extends Agent {
 
 	private Settings settings;
 
-	private UpdatePack pack;
+	private FeaturePack pack;
 
 	private Descriptor descriptor;
 
@@ -232,7 +232,7 @@ public abstract class Service extends Agent {
 		return settings;
 	}
 
-	public UpdatePack getPack() {
+	public FeaturePack getPack() {
 		return pack;
 	}
 
@@ -402,7 +402,7 @@ public abstract class Service extends Agent {
 
 		this.descriptor = descriptor;
 
-		pack = UpdatePack.load( descriptor );
+		pack = FeaturePack.load( descriptor );
 
 		// Determine the program name.
 		setName( name == null ? pack.getName() : name );

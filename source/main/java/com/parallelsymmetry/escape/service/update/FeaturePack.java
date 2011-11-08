@@ -11,7 +11,7 @@ import com.parallelsymmetry.escape.utility.Release;
 import com.parallelsymmetry.escape.utility.Version;
 import com.parallelsymmetry.escape.utility.log.Log;
 
-public class UpdatePack {
+public class FeaturePack {
 
 	public static final String GROUP_PATH = "/pack/group";
 
@@ -55,7 +55,7 @@ public class UpdatePack {
 
 	private File folder;
 
-	private UpdatePack( Descriptor descriptor ) {
+	private FeaturePack( Descriptor descriptor ) {
 		this.descriptor = descriptor;
 	}
 
@@ -141,10 +141,10 @@ public class UpdatePack {
 
 	@Override
 	public String toString() {
-		return group + ":" + artifact;
+		return group + "." + artifact;
 	}
 
-	public static final UpdatePack load( Descriptor descriptor ) {
+	public static final FeaturePack load( Descriptor descriptor ) {
 		if( descriptor == null ) return null;
 
 		String group = descriptor.getValue( GROUP_PATH );
@@ -157,7 +157,7 @@ public class UpdatePack {
 		String notice = descriptor.getValue( COPYRIGHT_NOTICE_PATH );
 		String uri = descriptor.getValue( UPDATE_URI_PATH );
 
-		UpdatePack pack = new UpdatePack( descriptor );
+		FeaturePack pack = new FeaturePack( descriptor );
 		
 		Date releaseDate = null;
 		try {

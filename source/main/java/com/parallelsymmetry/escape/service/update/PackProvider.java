@@ -11,27 +11,27 @@ import org.w3c.dom.Node;
 import com.parallelsymmetry.escape.service.Service;
 import com.parallelsymmetry.escape.utility.Descriptor;
 
-public class PackProvider implements UpdateProvider {
+public class PackProvider implements FeatureProvider {
 
 	private Service service;
 
-	private UpdatePack pack;
+	private FeaturePack pack;
 
-	public PackProvider( Service service, UpdatePack pack ) {
+	public PackProvider( Service service, FeaturePack pack ) {
 		this.service = service;
 		this.pack = pack;
 	}
 
 	@Override
-	public Set<Resource> getResources() throws Exception {
+	public Set<FeatureResource> getResources() throws Exception {
 		return getResources( pack );
 	}
 
-	private Set<Resource> getResources( UpdatePack source ) throws Exception {
+	private Set<FeatureResource> getResources( FeaturePack source ) throws Exception {
 		URI codebase = source.getUpdateUri();
 		Descriptor descriptor = source.getDescriptor();
 
-		Set<Resource> resources = new HashSet<Resource>();
+		Set<FeatureResource> resources = new HashSet<FeatureResource>();
 
 		// Resolve all the files to download.
 		String[] files = getResources( descriptor, "file/@uri" );
@@ -40,11 +40,11 @@ public class PackProvider implements UpdateProvider {
 
 		for( String file : files ) {
 			URI uri = codebase.resolve( file );
-			resources.add( new Resource( Resource.Type.FILE, uri ) );
+			resources.add( new FeatureResource( FeatureResource.Type.FILE, uri ) );
 		}
 		for( String pack : packs ) {
 			URI uri = codebase.resolve( pack );
-			resources.add( new Resource( Resource.Type.PACK, uri ) );
+			resources.add( new FeatureResource( FeatureResource.Type.PACK, uri ) );
 		}
 		for( String jnlp : jnlps ) {
 			URI uri = codebase.resolve( jnlp );
