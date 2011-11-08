@@ -5,6 +5,7 @@ import java.net.URI;
 import com.parallelsymmetry.escape.utility.setting.Persistent;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
+// TODO This may be better named MarketSite.
 public class FeatureSite implements Persistent {
 
 	private String name;
