@@ -247,12 +247,12 @@ public abstract class Service extends Agent {
 		return home;
 	}
 
-	public UpdateManager getUpdateManager() {
-		return updateManager;
-	}
-
 	public TaskManager getTaskManager() {
 		return taskManager;
+	}
+
+	public UpdateManager getUpdateManager() {
+		return updateManager;
 	}
 
 	public File getProgramDataFolder() {

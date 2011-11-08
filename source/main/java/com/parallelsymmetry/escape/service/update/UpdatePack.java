@@ -141,7 +141,7 @@ public class UpdatePack {
 
 	@Override
 	public String toString() {
-		return group + "|" + artifact;
+		return group + ":" + artifact;
 	}
 
 	public static final UpdatePack load( Descriptor descriptor ) {
