@@ -130,7 +130,7 @@ public class FeaturePack {
 	public void setUpdateUri( URI uri ) {
 		this.uri = uri;
 	}
-
+	
 	public File getInstallFolder() {
 		return folder;
 	}
@@ -139,9 +139,13 @@ public class FeaturePack {
 		this.folder = folder;
 	}
 
+	public boolean isInstallFolderValid() {
+		return folder != null && folder.exists();
+	}
+
 	@Override
 	public String toString() {
-		return group + "." + artifact;
+		return getKey();
 	}
 
 	public static final FeaturePack load( Descriptor descriptor ) {

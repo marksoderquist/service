@@ -41,20 +41,22 @@ import com.parallelsymmetry.escape.utility.setting.Settings;
  * release information of the discovered packs. If the discovered pack is
  * determined to be newer than the installed pack it is considered an update.
  * <p>
- * Staging involves downloading new pack data and preparing it to be applied 
- * by the update application.
+ * Staging involves downloading new pack data and preparing it to be applied by
+ * the update application.
  * <p>
- * Applying involves configuring and executing a separate update process to 
- * apply the staged updates. This requires the calling process to terminate
- * to allow the update process to change required files.
+ * Applying involves configuring and executing a separate update process to
+ * apply the staged updates. This requires the calling process to terminate to
+ * allow the update process to change required files.
  * 
  * @author SoderquistMV
  */
 public class UpdateManager implements AgentListener, Persistent {
 
+	private static final String UPDATE_LIST = "updates";
+
 	private static final String CHECK_STARTUP = "check-startup";
 
-	private static final String UPDATE_LIST = "updates";
+	private static final String UPDATER_JAR_NAME = "updater.jar";
 
 	private Service service;
 
@@ -72,13 +74,12 @@ public class UpdateManager implements AgentListener, Persistent {
 		this.service = service;
 		updates = new CopyOnWriteArrayList<UpdateInfo>();
 		installedPacks = new CopyOnWriteArraySet<FeaturePack>();
-		updater = new File( service.getHomeFolder(), "updater.jar" );
 
 		service.addListener( this );
 	}
 
-	public List<FeaturePack> getInstalledPacks() {
-		List<FeaturePack> packs = new ArrayList<FeaturePack>();
+	public Set<FeaturePack> getInstalledPacks() {
+		Set<FeaturePack> packs = new HashSet<FeaturePack>();
 
 		// Add the service pack.
 		packs.add( service.getPack() );
@@ -92,6 +93,10 @@ public class UpdateManager implements AgentListener, Persistent {
 	}
 
 	public void addInstalledPack( FeaturePack pack ) {
+		//		if( !pack.isInstallFolderValid() ) {
+		//			Log.write( Log.WARN, "Pack install folder not valid: " + pack.getInstallFolder() );
+		//			return;
+		//		}
 		installedPacks.add( pack );
 	}
 
@@ -110,9 +115,9 @@ public class UpdateManager implements AgentListener, Persistent {
 		return getPostedUpdates().size() > 0;
 	}
 
-	public List<FeaturePack> getPostedUpdates() throws Exception {
-		List<FeaturePack> newPacks = new ArrayList<FeaturePack>();
-		List<FeaturePack> oldPacks = getInstalledPacks();
+	public Set<FeaturePack> getPostedUpdates() throws Exception {
+		Set<FeaturePack> newPacks = new HashSet<FeaturePack>();
+		Set<FeaturePack> oldPacks = getInstalledPacks();
 
 		Map<FeaturePack, Future<Descriptor>> futures = new HashMap<FeaturePack, Future<Descriptor>>();
 		for( FeaturePack oldPack : oldPacks ) {
@@ -132,8 +137,20 @@ public class UpdateManager implements AgentListener, Persistent {
 			if( future == null ) continue;
 			FeaturePack newPack = FeaturePack.load( future.get() );
 
-			Log.write( Log.DEBUG, "Old " + oldPack.getArtifact() + " release: " + oldPack.getRelease() );
-			Log.write( Log.DEBUG, "New " + oldPack.getArtifact() + " release: " + newPack.getRelease() );
+			// Handle the development command line flag.
+			boolean development = service.getParameters().isSet( ServiceFlag.DEVELOPMENT );
+			if( development && oldPack.getArtifact().equals( Service.DEVELOPMENT_PREFIX + newPack.getArtifact() ) ) {
+				newPack.setArtifact( Service.DEVELOPMENT_PREFIX + newPack.getArtifact() );
+			}
+
+			// Validate the pack key.
+			if( !oldPack.getKey().equals( newPack.getKey() ) ) {
+				Log.write( Log.WARN, "Pack mismatch: ", oldPack.getKey(), " != ", newPack.getKey() );
+				continue;
+			}
+
+			Log.write( Log.DEBUG, "Old release: ", oldPack.getArtifact(), " ", oldPack.getRelease() );
+			Log.write( Log.DEBUG, "New release: ", newPack.getArtifact(), " ", newPack.getRelease() );
 
 			if( newPack.getRelease().compareTo( oldPack.getRelease() ) > 0 ) {
 				Log.write( Log.TRACE, "Update found for: " + oldPack.toString() );
@@ -145,7 +162,7 @@ public class UpdateManager implements AgentListener, Persistent {
 	}
 
 	public void stagePostedUpdates() throws Exception {
-		List<FeaturePack> packs = getPostedUpdates();
+		Set<FeaturePack> packs = getPostedUpdates();
 		File programDataFolder = service.getProgramDataFolder();
 		File stageFolder = new File( programDataFolder, "stage" );
 		stageFolder.mkdirs();
@@ -174,14 +191,26 @@ public class UpdateManager implements AgentListener, Persistent {
 			}
 		}
 
-		Map<String, FeaturePack> packsMap = getInstalledPacksMap();
+		Map<String, FeaturePack> installedPacks = getInstalledPacksMap();
+
+		for( String key : installedPacks.keySet() ) {
+			Log.write( Log.TRACE, "Installed pack: " + key );
+		}
 
 		// Create an update for each pack.
 		for( FeaturePack pack : packs ) {
+			FeaturePack installedPack = installedPacks.get( pack.getKey() );
+
+			// Check that the pack is valid.
+			if( installedPack == null || !installedPack.isInstallFolderValid() ) {
+				Log.write( Log.WARN, "Pack not installed: " + pack );
+				continue;
+			}
+
 			File update = new File( stageFolder, pack.getKey() + ".pak" );
 			createUpdatePack( packResources.get( pack ), update );
-			updates.add( new UpdateInfo( update, packsMap.get( pack.getKey() ).getInstallFolder() ) );
-			Log.write( Log.WARN, "Update staged: " + update );
+			updates.add( new UpdateInfo( update, installedPack.getInstallFolder() ) );
+			Log.write( Log.TRACE, "Update staged: " + update );
 		}
 		saveSettings( settings );
 	}
@@ -335,6 +364,8 @@ public class UpdateManager implements AgentListener, Persistent {
 		this.checkForUpdatesOnStartup = settings.getBoolean( CHECK_STARTUP, false );
 		this.updates = settings.getList( UPDATE_LIST, new ArrayList<UpdateInfo>() );
 
+		this.updater = new File( service.getHomeFolder(), UPDATER_JAR_NAME );
+
 		// TODO Load the check update schedule from the settings.
 	}
 
@@ -358,8 +389,7 @@ public class UpdateManager implements AgentListener, Persistent {
 	}
 
 	private Map<String, FeaturePack> getInstalledPacksMap() {
-		List<FeaturePack> packs = getInstalledPacks();
-
+		Set<FeaturePack> packs = getInstalledPacks();
 		Map<String, FeaturePack> map = new HashMap<String, FeaturePack>();
 
 		for( FeaturePack pack : packs ) {

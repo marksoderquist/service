@@ -52,7 +52,7 @@ public abstract class Service extends Agent {
 
 	public static final String LOCALE = "locale";
 
-	private static final String DEVELOPMENT_PREFIX = "#";
+	public static final String DEVELOPMENT_PREFIX = "#";
 
 	private static final String PEER_LOGGER_NAME = "peer";
 
@@ -471,11 +471,15 @@ public abstract class Service extends Agent {
 				return;
 			}
 
-			// Update if necessary.
-			if( !disableUpdates && ( ( parameters.isSet( ServiceFlag.UPDATE ) & parameters.isTrue( ServiceFlag.UPDATE ) ) | ( !parameters.isSet( ServiceFlag.UPDATE ) & !peer ) ) ) if( update() ) {
-				// The program should be allowed, but not forced, to exit at this point.
-				Log.write( "Program exiting to apply updates." );
-				return;
+			// This logic is somewhat complex, thus the nested if statements.
+			if( !disableUpdates && !parameters.isSet( ServiceFlag.DEVELOPMENT ) ) {
+				if( ( parameters.isSet( ServiceFlag.UPDATE ) & parameters.isTrue( ServiceFlag.UPDATE ) ) | ( !parameters.isSet( ServiceFlag.UPDATE ) & !peer ) ) {
+					if( update() ) {
+						// The program should be allowed, but not forced, to exit at this point.
+						Log.write( "Program exiting to apply updates." );
+						return;
+					}
+				}
 			}
 
 			// Start the program.
@@ -538,6 +542,11 @@ public abstract class Service extends Agent {
 				home = new File( parameters.get( "home" ) ).getCanonicalFile();
 			}
 
+			if( home == null && parameters.isSet( ServiceFlag.DEVELOPMENT ) ) {
+				home = new File( System.getProperty( "user.dir" ), "target/install" );
+				home.mkdirs();
+			}
+
 			// Check the class path.
 			if( home == null ) {
 				try {
@@ -559,6 +568,8 @@ public abstract class Service extends Agent {
 			exception.printStackTrace();
 		}
 
+		Log.write( Log.TRACE, "Home: ", home );
+
 		pack.setInstallFolder( home );
 	}
 
@@ -571,8 +582,9 @@ public abstract class Service extends Agent {
 		// Update the artifact if the development flag is set.
 		if( parameters.isTrue( ServiceFlag.DEVELOPMENT ) && !pack.getArtifact().startsWith( DEVELOPMENT_PREFIX ) ) {
 			pack.setArtifact( DEVELOPMENT_PREFIX + pack.getArtifact() );
-			Log.write( Log.TRACE, "Development artifact: " + pack.getArtifact() );
 		}
+
+		Log.write( Log.TRACE, "Pack: ", pack.getKey() );
 	}
 
 	private final void configureSettings( Parameters parameters ) {
@@ -613,7 +625,6 @@ public abstract class Service extends Agent {
 		}
 
 		Log.write( Log.TRACE, "Java: " + System.getProperty( "java.runtime.version" ) );
-		Log.write( Log.TRACE, "Home: " + getHomeFolder() );
 	}
 
 	private final void printStatus() {
