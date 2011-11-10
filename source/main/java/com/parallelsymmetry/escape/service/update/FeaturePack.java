@@ -29,7 +29,7 @@ public class FeaturePack {
 
 	public static final String COPYRIGHT_NOTICE_PATH = "/pack/copyright/notice";
 
-	public static final String UPDATE_URI_PATH = "/pack/update/uri";
+	public static final String UPDATE_URI_PATH = "/pack/update/@uri";
 
 	private static final String DEFAULT_ARTIFACT = "unknown";
 

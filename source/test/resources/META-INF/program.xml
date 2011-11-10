@@ -16,7 +16,8 @@
 	<license>
 		<summary>Mock Service comes with ABSOLUTELY NO WARRANTY. This is open
 			software,&#10;and you are welcome to redistribute it under certain
-			conditions.</summary>
+			conditions.
+		</summary>
 	</license>
 
 	<resources>
@@ -24,8 +25,5 @@
 		<pack uri="update.jar" />
 	</resources>
 
-	<update>
-		<uri>target/sandbox/update.xml</uri>
-	</update>
-
+	<update uri="target/sandbox/update.xml" />
 </pack>
