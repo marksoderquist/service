@@ -93,10 +93,6 @@ public class UpdateManager implements AgentListener, Persistent {
 	}
 
 	public void addInstalledPack( FeaturePack pack ) {
-		//		if( !pack.isInstallFolderValid() ) {
-		//			Log.write( Log.WARN, "Pack install folder not valid: " + pack.getInstallFolder() );
-		//			return;
-		//		}
 		installedPacks.add( pack );
 	}
 
