@@ -17,6 +17,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
@@ -330,7 +331,7 @@ public abstract class Service extends Agent {
 		}
 
 		// The shutdown hook should restart the application.
-		Log.write( Log.INFO, "Restarting program..." );
+		Log.write( Log.INFO, "Restarting..." );
 	}
 
 	protected boolean requestStop() {
@@ -503,7 +504,7 @@ public abstract class Service extends Agent {
 				return;
 			}
 
-			// This logic is somewhat complex, thus the nested if statements.
+			// The logic is somewhat complex, the nested if statements help clarify it.
 			if( !disableUpdates && !parameters.isSet( ServiceFlag.DEVELOPMENT ) ) {
 				if( ( parameters.isSet( ServiceFlag.UPDATE ) & parameters.isTrue( ServiceFlag.UPDATE ) ) | ( !parameters.isSet( ServiceFlag.UPDATE ) & !peer ) ) {
 					if( update() ) {
@@ -648,8 +649,9 @@ public abstract class Service extends Agent {
 	private final void printHeader() {
 		String notice = getLicenseSummary();
 
+		Log.write( Log.NONE, TextUtil.pad( 60, '-' ) );
 		Log.write( Log.NONE, getName() + " " + getRelease().toHumanString() );
-		Log.write( Log.NONE, getCopyright() + " " + getCopyrightNotice() );
+		Log.write( Log.NONE, getCopyright(), " ", getCopyrightNotice() );
 		Log.write( Log.NONE );
 		if( notice != null ) {
 			Log.write( Log.NONE, notice );
@@ -978,13 +980,12 @@ public abstract class Service extends Agent {
 
 		@Override
 		public void execute() {
-			new Throwable( "*** ServiceUpdateTask.execute() stack trace." ).printStackTrace( System.err );
 			try {
-				//if( getParameters().isSet( "-killupdate" ) ) return;
-				//getService().getUpdateManager().stagePostedUpdates();
-				
-				// FIXME This line cause an infinite process loop.
-				if( getService().getUpdateManager().stagePostedUpdates() ) serviceRestart();
+				Log.write( Log.TRACE, "Checking for updates..." );
+				if( getService().getUpdateManager().stagePostedUpdates() ) {
+					Log.write( Log.TRACE, "Updates staged, restarting..." );
+					serviceRestart();
+				}
 			} catch( Exception exception ) {
 				Log.write( exception );
 			}

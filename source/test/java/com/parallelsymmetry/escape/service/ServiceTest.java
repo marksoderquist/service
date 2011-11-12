@@ -10,6 +10,7 @@ import java.util.logging.Level;
 
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.LineParser;
+import com.parallelsymmetry.escape.utility.TextUtil;
 import com.parallelsymmetry.escape.utility.agent.Agent;
 import com.parallelsymmetry.escape.utility.log.DefaultHandler;
 import com.parallelsymmetry.escape.utility.log.Log;
@@ -345,6 +346,7 @@ public class ServiceTest extends BaseTestCase {
 	private void assertCommandLineHeader( String name, LineParser parser ) {
 		int currentYear = Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ).get( Calendar.YEAR );
 
+		assertEquals( TextUtil.pad( 60, '-' ), parser.next() );
 		assertEquals( name + " " + MOCK_RELEASE, parser.next() );
 		assertEquals( "(C) 1973-" + currentYear + " Parallel Symmetry All rights reserved.", parser.next() );
 		assertEquals( "", parser.next() );
