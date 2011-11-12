@@ -2,9 +2,9 @@ package com.parallelsymmetry.escape.service;
 
 import java.util.concurrent.TimeUnit;
 
-import com.parallelsymmetry.escape.utility.log.Log;
-
 import junit.framework.TestCase;
+
+import com.parallelsymmetry.escape.utility.log.Log;
 
 public abstract class BaseTestCase extends TestCase {
 
