@@ -5,13 +5,13 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
@@ -26,8 +26,6 @@ import com.parallelsymmetry.escape.utility.JavaUtil;
 import com.parallelsymmetry.escape.utility.Parameters;
 import com.parallelsymmetry.escape.utility.TextUtil;
 import com.parallelsymmetry.escape.utility.agent.Agent;
-import com.parallelsymmetry.escape.utility.agent.AgentEvent;
-import com.parallelsymmetry.escape.utility.agent.AgentListener;
 import com.parallelsymmetry.escape.utility.log.Log;
 import com.parallelsymmetry.escape.utility.log.LogFlag;
 import com.parallelsymmetry.escape.utility.setting.Persistent;
@@ -50,32 +48,36 @@ import com.parallelsymmetry.escape.utility.setting.Settings;
  * 
  * @author SoderquistMV
  */
-public class UpdateManager implements AgentListener, Persistent {
+public class UpdateManager extends Agent implements Persistent {
 
-	private static final String UPDATE_LIST = "updates";
+	private static final String CHECK = "check";
 
-	private static final String CHECK_STARTUP = "check-startup";
+	private static final String UPDATES = "updates";
 
 	private static final String UPDATER_JAR_NAME = "updater.jar";
 
 	private Service service;
 
-	private List<UpdateInfo> updates;
-
-	private boolean checkForUpdatesOnStartup;
+	private CheckMode checkMode;
 
 	private File updater;
 
 	private Settings settings;
 
+	private Set<UpdateInfo> updates;
+
 	private Set<FeaturePack> installedPacks;
+
+	private Timer timer;
+
+	public enum CheckMode {
+		DISABLED, STARTUP, INTERVAL, SCHEDULE
+	}
 
 	public UpdateManager( Service service ) {
 		this.service = service;
-		updates = new CopyOnWriteArrayList<UpdateInfo>();
+		updates = new CopyOnWriteArraySet<UpdateInfo>();
 		installedPacks = new CopyOnWriteArraySet<FeaturePack>();
-
-		service.addListener( this );
 	}
 
 	public Set<FeaturePack> getInstalledPacks() {
@@ -101,6 +103,33 @@ public class UpdateManager implements AgentListener, Persistent {
 	}
 
 	/**
+	 * Get the path to the updater library.
+	 * 
+	 * @return
+	 */
+	public File getUpdaterPath() {
+		return updater;
+	}
+
+	/**
+	 * Get the path to the updater library.
+	 * 
+	 * @param file
+	 */
+	public void setUpdaterPath( File file ) {
+		this.updater = file;
+	}
+
+	public CheckMode getCheckMode() {
+		return checkMode;
+	}
+
+	public void setCheckMode( CheckMode checkMode ) {
+		this.checkMode = checkMode;
+		saveSettings( settings );
+	}
+
+	/**
 	 * This method returns true if the getPostedUpdates() method returns any
 	 * updates.
 	 * 
@@ -113,6 +142,8 @@ public class UpdateManager implements AgentListener, Persistent {
 
 	public Set<FeaturePack> getPostedUpdates() throws Exception {
 		Set<FeaturePack> newPacks = new HashSet<FeaturePack>();
+		if( !isEnabled() ) return newPacks;
+
 		Set<FeaturePack> oldPacks = getInstalledPacks();
 
 		Map<FeaturePack, Future<Descriptor>> futures = new HashMap<FeaturePack, Future<Descriptor>>();
@@ -157,8 +188,12 @@ public class UpdateManager implements AgentListener, Persistent {
 		return newPacks;
 	}
 
-	public void stagePostedUpdates() throws Exception {
+	public boolean stagePostedUpdates() throws Exception {
+		if( !isEnabled() ) return false;
+
 		Set<FeaturePack> packs = getPostedUpdates();
+		if( packs.size() == 0 ) return false;
+
 		File programDataFolder = service.getProgramDataFolder();
 		File stageFolder = new File( programDataFolder, "stage" );
 		stageFolder.mkdirs();
@@ -209,33 +244,8 @@ public class UpdateManager implements AgentListener, Persistent {
 			Log.write( Log.TRACE, "Update staged: " + update );
 		}
 		saveSettings( settings );
-	}
 
-	/**
-	 * Get the path to the updater library.
-	 * 
-	 * @return
-	 */
-	public File getUpdaterPath() {
-		return updater;
-	}
-
-	/**
-	 * Get the path to the updater library.
-	 * 
-	 * @param file
-	 */
-	public void setUpdaterPath( File file ) {
-		this.updater = file;
-	}
-
-	public boolean checkForUpdatesOnStartup() {
-		return checkForUpdatesOnStartup;
-	}
-
-	public void checkForUpdatesOnStartup( boolean check ) {
-		checkForUpdatesOnStartup = check;
-		saveSettings( settings );
+		return true;
 	}
 
 	public boolean areUpdatesStaged() {
@@ -269,14 +279,24 @@ public class UpdateManager implements AgentListener, Persistent {
 		return staged.size() > 0;
 	}
 
-	public void applyUpdates() throws Exception {
+	/**
+	 * Launch the update program to apply the staged updates. This method is
+	 * generally called when the program starts and, if the update program is
+	 * successfully started, the program should be terminated to allow for the
+	 * updates to be applied.
+	 * 
+	 * @throws Exception
+	 */
+	public boolean applyStagedUpdates() throws Exception {
+		if( !isEnabled() || updates.size() == 0 ) return false;
+
 		Log.write( Log.DEBUG, "Starting update process..." );
 
 		// Copy the updater to a temporary location.
 		File updaterSource = updater;
 		File updaterTarget = new File( FileUtil.TEMP_FOLDER, service.getArtifact() + "-updater.jar" );
 
-		if( !updaterSource.exists() ) throw new RuntimeException( "Update library not found: " + updaterSource );
+		if( updaterSource == null || !updaterSource.exists() ) throw new RuntimeException( "Update library not found: " + updaterSource );
 		if( !FileUtil.copy( updaterSource, updaterTarget ) ) throw new RuntimeException( "Update library not staged: " + updaterTarget );
 
 		// Start the updater in a new JVM.
@@ -351,37 +371,52 @@ public class UpdateManager implements AgentListener, Persistent {
 
 		builder.start();
 		Log.write( Log.TRACE, "Update process started." );
+
+		return true;
 	}
 
 	@Override
 	public void loadSettings( Settings settings ) {
-		this.settings = settings;
-
-		this.checkForUpdatesOnStartup = settings.getBoolean( CHECK_STARTUP, false );
-		this.updates = settings.getList( UPDATE_LIST, new ArrayList<UpdateInfo>() );
-
 		this.updater = new File( service.getHomeFolder(), UPDATER_JAR_NAME );
 
-		// TODO Load the check update schedule from the settings.
+		this.settings = settings;
+
+		this.checkMode = CheckMode.valueOf( settings.get( CHECK, CheckMode.DISABLED.name() ) );
+		this.updates = settings.getSet( UPDATES, new HashSet<UpdateInfo>() );
+
 	}
 
 	@Override
 	public void saveSettings( Settings settings ) {
-		settings.putBoolean( CHECK_STARTUP, checkForUpdatesOnStartup );
-		settings.putList( UPDATE_LIST, updates );
+		settings.put( CHECK, checkMode.name() );
+		settings.putSet( UPDATES, updates );
 
 		settings.flush();
 	}
 
 	@Override
-	public void agentEventOccurred( AgentEvent event ) {
-		if( event.getState() == Agent.State.STARTED && checkForUpdatesOnStartup() ) {
-			try {
-				stagePostedUpdates();
-			} catch( Exception exception ) {
-				Log.write( exception );
-			}
+	protected void startAgent() throws Exception {
+		if( service.isUpdatesDisabled() ) return;
+		
+		timer = new Timer();
+
+		if( checkMode == CheckMode.STARTUP ) {
+			//Schedule the update check task for immediate execution.
+			timer.schedule( service.getUpdateCheckTask(), 0 );
+		} else {
+			scheduleCheckUpdateTask( service.getUpdateCheckTask() );
 		}
+	}
+
+	@Override
+	protected void stopAgent() throws Exception {
+		if( service.isUpdatesDisabled() ) return;
+		
+		timer.cancel();
+	}
+
+	private boolean isEnabled() {
+		return checkMode != CheckMode.DISABLED;
 	}
 
 	private Map<String, FeaturePack> getInstalledPacksMap() {
@@ -425,6 +460,43 @@ public class UpdateManager implements AgentListener, Persistent {
 		FileUtil.deleteOnExit( updateFolder );
 
 		FileUtil.zip( updateFolder, update );
+	}
+
+	private void scheduleCheckUpdateTask( UpdateCheckTask task ) {
+		switch( checkMode ) {
+			case INTERVAL: {
+				// TODO Schedule the task by interval.
+				break;
+			}
+			case SCHEDULE: {
+				// TODO Schedule the task by schedule.
+				break;
+			}
+		}
+	}
+
+	public static abstract class UpdateCheckTask extends TimerTask {
+
+		private Service service;
+
+		public UpdateCheckTask( Service service ) {
+			this.service = service;
+		}
+
+		public Service getService() {
+			return service;
+		}
+
+		@Override
+		public void run() {
+			try {
+				execute();
+			} finally {
+				service.getUpdateManager().scheduleCheckUpdateTask( service.getUpdateCheckTask() );
+			}
+		}
+
+		public abstract void execute();
 	}
 
 }

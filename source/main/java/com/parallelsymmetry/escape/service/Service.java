@@ -27,8 +27,8 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.prefs.Preferences;
 
-import com.parallelsymmetry.escape.service.update.UpdateManager;
 import com.parallelsymmetry.escape.service.update.FeaturePack;
+import com.parallelsymmetry.escape.service.update.UpdateManager;
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.JavaUtil;
@@ -44,6 +44,7 @@ import com.parallelsymmetry.escape.utility.setting.DescriptorSettingProvider;
 import com.parallelsymmetry.escape.utility.setting.ParametersSettingProvider;
 import com.parallelsymmetry.escape.utility.setting.PreferencesSettingProvider;
 import com.parallelsymmetry.escape.utility.setting.Settings;
+import com.parallelsymmetry.escape.utility.task.Task;
 import com.parallelsymmetry.escape.utility.task.TaskManager;
 
 public abstract class Service extends Agent {
@@ -67,6 +68,8 @@ public abstract class Service extends Agent {
 	private static final String LOCALHOST = "127.0.0.1";
 
 	private static final String COPYRIGHT = "(C)";
+
+	private static RestartShutdownHook restartShutdownHook;
 
 	private Thread shutdownHook = new ShutdownHook( this );
 
@@ -92,11 +95,11 @@ public abstract class Service extends Agent {
 
 	private File home;
 
-	private UpdateManager updateManager;
-
 	private PeerServer peerServer;
 
 	private TaskManager taskManager;
+
+	private UpdateManager updateManager;
 
 	private boolean disableUpdates;
 
@@ -311,6 +314,30 @@ public abstract class Service extends Agent {
 		error( "Error", message, throwable );
 	}
 
+	public UpdateManager.UpdateCheckTask getUpdateCheckTask() {
+		return new ServiceUpdateTask();
+	}
+
+	protected void serviceRestart() {
+		// Register a shutdown hook to restart the application.
+		restartShutdownHook = new RestartShutdownHook( this );
+		Runtime.getRuntime().addShutdownHook( restartShutdownHook );
+
+		// Request the program stop.
+		if( !requestStop() ) {
+			Runtime.getRuntime().removeShutdownHook( restartShutdownHook );
+			return;
+		}
+
+		// The shutdown hook should restart the application.
+		Log.write( Log.INFO, "Restarting program..." );
+	}
+
+	protected boolean requestStop() {
+		getTaskManager().submit( new ShutdownTask( this ) );
+		return true;
+	}
+
 	protected String[] error( String title, String message, Throwable throwable ) {
 		List<String> elements = new ArrayList<String>();
 		if( throwable != null ) {
@@ -365,6 +392,9 @@ public abstract class Service extends Agent {
 		taskManager.loadSettings( settings.getNode( TASK_MANAGER_SETTINGS_PATH ) );
 		taskManager.startAndWait();
 
+		// Start the update manager.
+		updateManager.startAndWait();
+
 		startService( parameters );
 		Log.write( getName() + " started." );
 	}
@@ -377,6 +407,8 @@ public abstract class Service extends Agent {
 		Log.write( Log.DEBUG, getName() + " stopping..." );
 		if( socket != null ) socket.close();
 		stopService( parameters );
+
+		updateManager.stopAndWait();
 
 		taskManager.stopAndWait();
 		taskManager.saveSettings( settings.getNode( TASK_MANAGER_SETTINGS_PATH ) );
@@ -689,6 +721,13 @@ public abstract class Service extends Agent {
 		return exists;
 	}
 
+	/**
+	 * Apply updates. If updates are found then the method returns true, allowing
+	 * the service to terminate cleanly.
+	 * 
+	 * @return True if updates were found, causing the service to terminate. False
+	 *         otherwise.
+	 */
 	private final boolean update() {
 		if( home == null && parameters.isSet( "update" ) && !parameters.isTrue( "update" ) ) {
 			Log.write( Log.WARN, "Program not executed from updatable location." );
@@ -697,21 +736,20 @@ public abstract class Service extends Agent {
 
 		Log.write( Log.DEBUG, "Checking for staged updates..." );
 
-		// Detect updates.
-		boolean found = updateManager.areUpdatesStaged();
-
-		if( found ) {
+		// If updates are staged, apply them.
+		if( updateManager.areUpdatesStaged() ) {
 			Log.write( "Staged updates detected." );
+			boolean result = false;
 			try {
-				updateManager.applyUpdates();
+				result = updateManager.applyStagedUpdates();
 			} catch( Exception exception ) {
 				Log.write( exception );
 			}
+			return result;
 		} else {
 			Log.write( Log.TRACE, "No staged updates detected." );
+			return false;
 		}
-
-		return found;
 	}
 
 	private static final class PeerServer extends ServerAgent {
@@ -932,12 +970,34 @@ public abstract class Service extends Agent {
 
 	}
 
+	private class ServiceUpdateTask extends UpdateManager.UpdateCheckTask {
+
+		public ServiceUpdateTask() {
+			super( Service.this );
+		}
+
+		@Override
+		public void execute() {
+			new Throwable( "*** ServiceUpdateTask.execute() stack trace." ).printStackTrace( System.err );
+			try {
+				//if( getParameters().isSet( "-killupdate" ) ) return;
+				getService().getUpdateManager().stagePostedUpdates();
+				
+				// FIXME This line cause an infinite process loop.
+				if( getService().getUpdateManager().stagePostedUpdates() ) serviceRestart();
+			} catch( Exception exception ) {
+				Log.write( exception );
+			}
+		}
+
+	}
+
 	private static final class ShutdownHook extends Thread {
 
 		private Service service;
 
-		public ShutdownHook( Service daemon ) {
-			this.service = daemon;
+		public ShutdownHook( Service service ) {
+			this.service = service;
 		}
 
 		public void run() {
@@ -946,6 +1006,27 @@ public abstract class Service extends Agent {
 			} catch( Exception exception ) {
 				Log.write( exception );
 			}
+		}
+
+	}
+
+	private static final class ShutdownTask extends Task<Void> {
+
+		private Service service;
+
+		public ShutdownTask( Service service ) {
+			this.service = service;
+		}
+
+		@Override
+		public Void execute() throws Exception {
+			try {
+				service.stop();
+			} catch( Exception exception ) {
+				Log.write( exception );
+			}
+
+			return null;
 		}
 
 	}

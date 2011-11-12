@@ -56,6 +56,7 @@ public class UpdateManagerTest extends BaseTestCase {
 
 		// Stage the posted updates.
 		UpdateManager manager = service.getUpdateManager();
+		manager.setCheckMode( UpdateManager.CheckMode.STARTUP );
 		manager.stagePostedUpdates();
 		assertTrue( updateFile.exists() );
 
