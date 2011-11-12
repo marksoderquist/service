@@ -258,6 +258,8 @@ public class UpdateManager extends Agent implements Persistent {
 		Set<UpdateInfo> staged = new HashSet<UpdateInfo>();
 		Set<UpdateInfo> remove = new HashSet<UpdateInfo>();
 
+		Log.write( Log.TRACE, "Update count: " + updates.size() );
+
 		for( UpdateInfo update : updates ) {
 			if( update.getSource().exists() ) {
 				staged.add( update );
@@ -356,8 +358,8 @@ public class UpdateManager extends Agent implements Persistent {
 			}
 		}
 
-		builder.command().add( "\\" + ServiceFlag.UPDATE );
-		builder.command().add( "false" );
+				builder.command().add( "\\" + ServiceFlag.UPDATE );
+				builder.command().add( "false" );
 
 		builder.command().add( UpdaterFlag.LAUNCH_HOME );
 		builder.command().add( System.getProperty( "user.dir" ) );
@@ -383,21 +385,19 @@ public class UpdateManager extends Agent implements Persistent {
 
 		this.checkMode = CheckMode.valueOf( settings.get( CHECK, CheckMode.DISABLED.name() ) );
 		this.updates = settings.getSet( UPDATES, new HashSet<UpdateInfo>() );
-
 	}
 
 	@Override
 	public void saveSettings( Settings settings ) {
 		settings.put( CHECK, checkMode.name() );
 		settings.putSet( UPDATES, updates );
-
 		settings.flush();
 	}
 
 	@Override
 	protected void startAgent() throws Exception {
 		if( service.isUpdatesDisabled() ) return;
-		
+
 		timer = new Timer();
 
 		if( checkMode == CheckMode.STARTUP ) {
@@ -411,7 +411,7 @@ public class UpdateManager extends Agent implements Persistent {
 	@Override
 	protected void stopAgent() throws Exception {
 		if( service.isUpdatesDisabled() ) return;
-		
+
 		timer.cancel();
 	}
 

@@ -47,8 +47,6 @@ public class RestartShutdownHook extends Thread {
 			builder.command().add( command );
 		}
 
-		builder.command().add( "-killupdate" );
-
 		Log.write( Log.DEBUG, TextUtil.toString( builder.command(), " " ) );
 	}
 

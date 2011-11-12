@@ -981,7 +981,7 @@ public abstract class Service extends Agent {
 			new Throwable( "*** ServiceUpdateTask.execute() stack trace." ).printStackTrace( System.err );
 			try {
 				//if( getParameters().isSet( "-killupdate" ) ) return;
-				getService().getUpdateManager().stagePostedUpdates();
+				//getService().getUpdateManager().stagePostedUpdates();
 				
 				// FIXME This line cause an infinite process loop.
 				if( getService().getUpdateManager().stagePostedUpdates() ) serviceRestart();
