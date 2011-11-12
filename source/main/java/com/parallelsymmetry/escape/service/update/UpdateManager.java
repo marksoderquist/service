@@ -394,14 +394,10 @@ public class UpdateManager extends Agent implements Persistent {
 
 	@Override
 	protected void startAgent() throws Exception {
-		if( service.isUpdatesDisabled() ) {
-			Log.write( Log.TRACE, "Updates disabled, not starting UpdateManager." );
-			return;
-		}
+		if( service.isUpdatesDisabled() ) return;
 
 		timer = new Timer();
 
-		Log.write( Log.TRACE, "Update check mode: " + checkMode );
 		if( checkMode == CheckMode.STARTUP ) {
 			//Schedule the update check task for immediate execution.
 			timer.schedule( service.getUpdateCheckTask(), 0 );
