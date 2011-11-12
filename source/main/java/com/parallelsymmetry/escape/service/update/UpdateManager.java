@@ -258,8 +258,6 @@ public class UpdateManager extends Agent implements Persistent {
 		Set<UpdateInfo> staged = new HashSet<UpdateInfo>();
 		Set<UpdateInfo> remove = new HashSet<UpdateInfo>();
 
-		Log.write( Log.TRACE, "Update count: " + updates.size() );
-
 		for( UpdateInfo update : updates ) {
 			if( update.getSource().exists() ) {
 				staged.add( update );
@@ -396,10 +394,14 @@ public class UpdateManager extends Agent implements Persistent {
 
 	@Override
 	protected void startAgent() throws Exception {
-		if( service.isUpdatesDisabled() ) return;
+		if( service.isUpdatesDisabled() ) {
+			Log.write( Log.TRACE, "Updates disabled, not starting UpdateManager." );
+			return;
+		}
 
 		timer = new Timer();
 
+		Log.write( Log.TRACE, "Update check mode: " + checkMode );
 		if( checkMode == CheckMode.STARTUP ) {
 			//Schedule the update check task for immediate execution.
 			timer.schedule( service.getUpdateCheckTask(), 0 );
