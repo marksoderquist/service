@@ -101,8 +101,6 @@ public abstract class Service extends Agent {
 
 	private UpdateManager updateManager;
 
-	private boolean disableUpdates;
-
 	/**
 	 * Construct the service with the default descriptor path of
 	 * &quot;/META-INF/program.xml&quot;.
@@ -260,14 +258,6 @@ public abstract class Service extends Agent {
 
 	public File getProgramDataFolder() {
 		return OperatingSystem.getUserProgramDataFolder( getArtifact(), getName() );
-	}
-
-	public boolean isUpdatesDisabled() {
-		return disableUpdates;
-	}
-
-	public void setUpdatesDisabled( boolean disable ) {
-		this.disableUpdates = disable;
 	}
 
 	public void printHelp( String topic ) {
@@ -504,7 +494,7 @@ public abstract class Service extends Agent {
 			}
 
 			// The logic is somewhat complex, the nested if statements help clarify it.
-			if( !disableUpdates && !parameters.isSet( ServiceFlag.DEVELOPMENT ) ) {
+			if( updateManager.getCheckMode() != UpdateManager.CheckMode.DISABLED && !parameters.isSet( ServiceFlag.DEVELOPMENT ) ) {
 				if( ( parameters.isSet( ServiceFlag.UPDATE ) & parameters.isTrue( ServiceFlag.UPDATE ) ) | ( !parameters.isSet( ServiceFlag.UPDATE ) & !peer ) ) {
 					if( update() ) {
 						// The program should be allowed, but not forced, to exit at this point.

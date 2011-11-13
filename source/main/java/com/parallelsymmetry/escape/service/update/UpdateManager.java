@@ -144,6 +144,8 @@ public class UpdateManager extends Agent implements Persistent {
 		Set<FeaturePack> newPacks = new HashSet<FeaturePack>();
 		if( !isEnabled() ) return newPacks;
 
+		Log.write( Log.TRACE, "Checking for updates..." );
+
 		Set<FeaturePack> oldPacks = getInstalledPacks();
 
 		Map<FeaturePack, Future<Descriptor>> futures = new HashMap<FeaturePack, Future<Descriptor>>();
@@ -387,6 +389,8 @@ public class UpdateManager extends Agent implements Persistent {
 
 	@Override
 	public void saveSettings( Settings settings ) {
+		if( settings == null ) return;
+		
 		settings.put( CHECK, checkMode.name() );
 		settings.putSet( UPDATES, updates );
 		settings.flush();
@@ -394,7 +398,7 @@ public class UpdateManager extends Agent implements Persistent {
 
 	@Override
 	protected void startAgent() throws Exception {
-		if( service.isUpdatesDisabled() ) return;
+		if( !isEnabled() ) return;
 
 		timer = new Timer();
 
@@ -408,7 +412,7 @@ public class UpdateManager extends Agent implements Persistent {
 
 	@Override
 	protected void stopAgent() throws Exception {
-		if( service.isUpdatesDisabled() ) return;
+		if( !isEnabled() ) return;
 
 		timer.cancel();
 	}
