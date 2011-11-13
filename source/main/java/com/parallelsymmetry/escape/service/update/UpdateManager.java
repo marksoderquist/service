@@ -29,6 +29,8 @@ import com.parallelsymmetry.escape.utility.agent.Agent;
 import com.parallelsymmetry.escape.utility.log.Log;
 import com.parallelsymmetry.escape.utility.log.LogFlag;
 import com.parallelsymmetry.escape.utility.setting.Persistent;
+import com.parallelsymmetry.escape.utility.setting.SettingEvent;
+import com.parallelsymmetry.escape.utility.setting.SettingListener;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
 /**
@@ -71,13 +73,15 @@ public class UpdateManager extends Agent implements Persistent {
 	private Timer timer;
 
 	public enum CheckMode {
-		DISABLED, STARTUP, INTERVAL, SCHEDULE
+		DISABLED, MANUAL, STARTUP, INTERVAL, SCHEDULE
 	}
 
 	public UpdateManager( Service service ) {
 		this.service = service;
 		updates = new CopyOnWriteArraySet<UpdateInfo>();
 		installedPacks = new CopyOnWriteArraySet<FeaturePack>();
+
+		service.getSettings().addSettingListener( "/update", new SettingChangeHandler() );
 	}
 
 	public Set<FeaturePack> getInstalledPacks() {
@@ -358,8 +362,8 @@ public class UpdateManager extends Agent implements Persistent {
 			}
 		}
 
-				builder.command().add( "\\" + ServiceFlag.UPDATE );
-				builder.command().add( "false" );
+		builder.command().add( "\\" + ServiceFlag.UPDATE );
+		builder.command().add( "false" );
 
 		builder.command().add( UpdaterFlag.LAUNCH_HOME );
 		builder.command().add( System.getProperty( "user.dir" ) );
@@ -390,7 +394,7 @@ public class UpdateManager extends Agent implements Persistent {
 	@Override
 	public void saveSettings( Settings settings ) {
 		if( settings == null ) return;
-		
+
 		settings.put( CHECK, checkMode.name() );
 		settings.putSet( UPDATES, updates );
 		settings.flush();
@@ -499,6 +503,17 @@ public class UpdateManager extends Agent implements Persistent {
 		}
 
 		public abstract void execute();
+	}
+
+	private final class SettingChangeHandler implements SettingListener {
+
+		@Override
+		public void settingChanged( SettingEvent event ) {
+			if( CHECK.equals( event.getKey() ) ) {
+				setCheckMode( CheckMode.valueOf( event.getNewValue() ) );
+			}
+		}
+
 	}
 
 }
