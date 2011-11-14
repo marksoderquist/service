@@ -27,6 +27,10 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.prefs.Preferences;
 
+import javax.swing.Icon;
+import javax.swing.JOptionPane;
+import javax.swing.UIManager;
+
 import com.parallelsymmetry.escape.service.update.FeaturePack;
 import com.parallelsymmetry.escape.service.update.UpdateManager;
 import com.parallelsymmetry.escape.utility.DateUtil;
@@ -292,6 +296,24 @@ public abstract class Service extends Agent {
 		Log.write( Log.NONE, "                       none, error, warn, info, trace, debug, all" );
 	}
 
+	public int notify( String title, Object message ) {
+		return notify( UIManager.getString( "OptionPane.messageDialogTitle", null ), message, JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null );
+	}
+
+	public int notify( String title, Object message, int optionType ) {
+		return notify( UIManager.getString( "OptionPane.messageDialogTitle", null ), message, optionType, JOptionPane.INFORMATION_MESSAGE, null );
+	}
+
+	public int notify( String title, Object message, int optionType, int messageType, Icon icon ) {
+		return notify( title, message, optionType, messageType, icon, null, null );
+	}
+
+	public int notify( String title, Object message, int optionType, int messageType, Icon icon, Object[] options, Object initialValue ) {
+		// Services do not have any interaction with users but these methods allow 
+		// the service to interact with users of sub-classed programs.
+		return 0;
+	}
+
 	public void error( String message ) {
 		error( "Error", message, null );
 	}
@@ -302,6 +324,34 @@ public abstract class Service extends Agent {
 
 	public void error( String message, Throwable throwable ) {
 		error( "Error", message, throwable );
+	}
+
+	public String[] error( String title, String message, Throwable throwable ) {
+		List<String> elements = new ArrayList<String>();
+		if( throwable != null ) {
+			throwable.printStackTrace();
+	
+			Throwable cause = throwable;
+			while( cause.getCause() != null ) {
+				cause = cause.getCause();
+			}
+			elements.add( cause.getClass().getName() + ": " + cause.getMessage() );
+		}
+	
+		String[] messages = null;
+		if( message == null ) {
+			messages = new String[elements.size()];
+			System.arraycopy( elements.toArray( new String[elements.size()] ), 0, messages, 0, elements.size() );
+		} else {
+			messages = new String[elements.size() + 1];
+			messages[0] = message;
+			System.arraycopy( elements.toArray( new String[elements.size()] ), 0, messages, 1, elements.size() );
+		}
+	
+		// Show message on console.
+		Log.write( Log.ERROR, message );
+	
+		return messages;
 	}
 
 	public UpdateManager.UpdateCheckTask getUpdateCheckTask() {
@@ -326,34 +376,6 @@ public abstract class Service extends Agent {
 	protected boolean requestStop() {
 		getTaskManager().submit( new ShutdownTask( this ) );
 		return true;
-	}
-
-	protected String[] error( String title, String message, Throwable throwable ) {
-		List<String> elements = new ArrayList<String>();
-		if( throwable != null ) {
-			throwable.printStackTrace();
-
-			Throwable cause = throwable;
-			while( cause.getCause() != null ) {
-				cause = cause.getCause();
-			}
-			elements.add( cause.getClass().getName() + ": " + cause.getMessage() );
-		}
-
-		String[] messages = null;
-		if( message == null ) {
-			messages = new String[elements.size()];
-			System.arraycopy( elements.toArray( new String[elements.size()] ), 0, messages, 0, elements.size() );
-		} else {
-			messages = new String[elements.size() + 1];
-			messages[0] = message;
-			System.arraycopy( elements.toArray( new String[elements.size()] ), 0, messages, 1, elements.size() );
-		}
-
-		// Show message on console.
-		Log.write( Log.ERROR, message );
-
-		return messages;
 	}
 
 	/**
