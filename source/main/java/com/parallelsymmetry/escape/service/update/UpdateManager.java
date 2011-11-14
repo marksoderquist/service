@@ -52,7 +52,23 @@ import com.parallelsymmetry.escape.utility.setting.Settings;
  */
 public class UpdateManager extends Agent implements Persistent {
 
+	public enum CheckOption {
+		DISABLED, MANUAL, STARTUP, INTERVAL, SCHEDULE
+	}
+
+	public enum FoundOption {
+		SELECT, CACHESELECT, STAGE
+	}
+
+	public enum ApplyOption {
+		VERIFY, SKIP, RESTART
+	}
+
 	private static final String CHECK = "check";
+
+	private static final String FOUND = "found";
+
+	private static final String APPLY = "apply";
 
 	private static final String UPDATES = "updates";
 
@@ -60,25 +76,25 @@ public class UpdateManager extends Agent implements Persistent {
 
 	private Service service;
 
-	private CheckMode checkMode;
+	private CheckOption checkOption;
+
+	private FoundOption foundOption;
+
+	private ApplyOption applyOption;
 
 	private File updater;
 
 	private Settings settings;
 
-	private Set<UpdateInfo> updates;
+	private Set<StagedUpdate> updates;
 
 	private Set<FeaturePack> installedPacks;
 
 	private Timer timer;
 
-	public enum CheckMode {
-		DISABLED, MANUAL, STARTUP, INTERVAL, SCHEDULE
-	}
-
 	public UpdateManager( Service service ) {
 		this.service = service;
-		updates = new CopyOnWriteArraySet<UpdateInfo>();
+		updates = new CopyOnWriteArraySet<StagedUpdate>();
 		installedPacks = new CopyOnWriteArraySet<FeaturePack>();
 
 		service.getSettings().addSettingListener( "/update", new SettingChangeHandler() );
@@ -124,26 +140,31 @@ public class UpdateManager extends Agent implements Persistent {
 		this.updater = file;
 	}
 
-	public CheckMode getCheckMode() {
-		return checkMode;
+	public CheckOption getCheckOption() {
+		return checkOption;
 	}
 
-	public void setCheckMode( CheckMode checkMode ) {
-		this.checkMode = checkMode;
+	public void setCheckOption( CheckOption checkOption ) {
+		this.checkOption = checkOption;
+		saveSettings( settings );
+	}
+
+	public FoundOption getFoundOption() {
+		return foundOption;
+	}
+
+	public void setFoundOption( FoundOption foundOption ) {
+		this.foundOption = foundOption;
 		saveSettings( settings );
 	}
 
 	/**
-	 * This method returns true if the getPostedUpdates() method returns any
-	 * updates.
+	 * Gets the set of posted updates. If there are no posted updates found an
+	 * empty set is returned.
 	 * 
-	 * @return
+	 * @return The set of posted updates.
 	 * @throws Exception
 	 */
-	public boolean areUpdatesPosted() throws Exception {
-		return getPostedUpdates().size() > 0;
-	}
-
 	public Set<FeaturePack> getPostedUpdates() throws Exception {
 		Set<FeaturePack> newPacks = new HashSet<FeaturePack>();
 		if( !isEnabled() ) return newPacks;
@@ -194,12 +215,37 @@ public class UpdateManager extends Agent implements Persistent {
 		return newPacks;
 	}
 
+	public boolean cacheSelectedUpdates( Set<FeaturePack> packs ) throws Exception {
+		throw new RuntimeException( "Method not implemented yet." );
+	}
+
+	public boolean stageCachedUpdates( Set<FeaturePack> packs ) throws Exception {
+		throw new RuntimeException( "Method not implemented yet." );
+	}
+
+	/**
+	 * Attempt to stage the feature packs from posted updates.
+	 * 
+	 * @return true if one or more feature packs were staged.
+	 * @throws Exception
+	 */
 	public boolean stagePostedUpdates() throws Exception {
 		if( !isEnabled() ) return false;
 
 		Set<FeaturePack> packs = getPostedUpdates();
 		if( packs.size() == 0 ) return false;
 
+		return stageSelectedUpdates( packs );
+	}
+
+	/**
+	 * Attempt to stage the specified feature packs.
+	 * 
+	 * @param packs
+	 * @return true if one or more feature packs were staged.
+	 * @throws Exception
+	 */
+	public boolean stageSelectedUpdates( Set<FeaturePack> packs ) throws Exception {
 		File programDataFolder = service.getProgramDataFolder();
 		File stageFolder = new File( programDataFolder, "stage" );
 		stageFolder.mkdirs();
@@ -246,7 +292,7 @@ public class UpdateManager extends Agent implements Persistent {
 
 			File update = new File( stageFolder, pack.getKey() + ".pak" );
 			createUpdatePack( packResources.get( pack ), update );
-			updates.add( new UpdateInfo( update, installedPack.getInstallFolder() ) );
+			updates.add( new StagedUpdate( update, installedPack.getInstallFolder() ) );
 			Log.write( Log.TRACE, "Update staged: " + update );
 		}
 		saveSettings( settings );
@@ -261,10 +307,10 @@ public class UpdateManager extends Agent implements Persistent {
 		loadSettings( settings );
 		Log.setLevel( level );
 
-		Set<UpdateInfo> staged = new HashSet<UpdateInfo>();
-		Set<UpdateInfo> remove = new HashSet<UpdateInfo>();
+		Set<StagedUpdate> staged = new HashSet<StagedUpdate>();
+		Set<StagedUpdate> remove = new HashSet<StagedUpdate>();
 
-		for( UpdateInfo update : updates ) {
+		for( StagedUpdate update : updates ) {
 			if( update.getSource().exists() ) {
 				staged.add( update );
 				Log.write( Log.DEBUG, "Staged update found: " + update.getSource() );
@@ -276,7 +322,7 @@ public class UpdateManager extends Agent implements Persistent {
 
 		// Remove updates that cannot be found.
 		if( remove.size() > 0 ) {
-			for( UpdateInfo update : remove ) {
+			for( StagedUpdate update : remove ) {
 				updates.remove( update );
 			}
 			saveSettings( settings );
@@ -296,87 +342,94 @@ public class UpdateManager extends Agent implements Persistent {
 	public boolean applyStagedUpdates() throws Exception {
 		if( !isEnabled() || updates.size() == 0 ) return false;
 
-		Log.write( Log.DEBUG, "Starting update process..." );
+		if( service.getParameters().isSet( ServiceFlag.DEVELOPMENT ) ) {
+			Log.write( Log.TRACE, "Running in development. Updates cannot be applied and will be cleaned up." );
 
-		// Copy the updater to a temporary location.
-		File updaterSource = updater;
-		File updaterTarget = new File( FileUtil.TEMP_FOLDER, service.getArtifact() + "-updater.jar" );
-
-		if( updaterSource == null || !updaterSource.exists() ) throw new RuntimeException( "Update library not found: " + updaterSource );
-		if( !FileUtil.copy( updaterSource, updaterTarget ) ) throw new RuntimeException( "Update library not staged: " + updaterTarget );
-
-		// Start the updater in a new JVM.
-		ProcessBuilder builder = new ProcessBuilder();
-
-		builder.directory( updaterTarget.getParentFile() );
-
-		builder.command().add( "java" );
-		builder.command().add( "-jar" );
-		builder.command().add( updaterTarget.toString() );
-
-		// If file logging is enabled append the update process to the log.
-		Parameters parameters = service.getParameters();
-		if( parameters.isSet( LogFlag.LOG_FILE ) ) {
-			builder.command().add( LogFlag.LOG_FILE );
-			builder.command().add( new File( parameters.get( LogFlag.LOG_FILE ) ).getAbsolutePath() );
-			if( parameters.isTrue( LogFlag.LOG_FILE_APPEND ) ) builder.command().add( LogFlag.LOG_FILE_APPEND );
-		}
-
-		// Add the updates.
-		builder.command().add( UpdaterFlag.UPDATE );
-		for( UpdateInfo update : updates ) {
-			builder.command().add( update.getSource().getAbsolutePath() );
-			builder.command().add( update.getTarget().getAbsolutePath() );
-		}
-
-		// Add the launch parameters.
-		builder.command().add( UpdaterFlag.LAUNCH );
-		builder.command().add( "java" );
-
-		// Add the VM parameters to the commands.
-		RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
-		List<String> commands = runtimeBean.getInputArguments();
-		for( String command : commands ) {
-			if( command.startsWith( Parameters.SINGLE ) ) {
-				builder.command().add( "\\" + command );
-			} else {
-				builder.command().add( command );
+			for( StagedUpdate update : updates ) {
+				update.getSource().delete();
 			}
-		}
-
-		// Add the classpath information.
-		List<URI> uris = JavaUtil.parseClasspath( runtimeBean.getClassPath() );
-		if( uris.size() == 1 && uris.get( 0 ).getPath().endsWith( ".jar" ) ) {
-			builder.command().add( "\\-jar" );
 		} else {
-			builder.command().add( "\\-cp" );
-		}
-		builder.command().add( runtimeBean.getClassPath() );
+			Log.write( Log.DEBUG, "Starting update process..." );
+			// Copy the updater to a temporary location.
+			File updaterSource = updater;
+			File updaterTarget = new File( FileUtil.TEMP_FOLDER, service.getArtifact() + "-updater.jar" );
 
-		// Add the original command line parameters.
-		for( String command : service.getParameters().getCommands() ) {
-			if( command.startsWith( Parameters.SINGLE ) ) {
-				builder.command().add( "\\" + command );
-			} else {
-				builder.command().add( command );
+			if( updaterSource == null || !updaterSource.exists() ) throw new RuntimeException( "Update library not found: " + updaterSource );
+			if( !FileUtil.copy( updaterSource, updaterTarget ) ) throw new RuntimeException( "Update library not staged: " + updaterTarget );
+
+			// Start the updater in a new JVM.
+			ProcessBuilder builder = new ProcessBuilder();
+
+			builder.directory( updaterTarget.getParentFile() );
+
+			builder.command().add( "java" );
+			builder.command().add( "-jar" );
+			builder.command().add( updaterTarget.toString() );
+
+			// If file logging is enabled append the update process to the log.
+			Parameters parameters = service.getParameters();
+			if( parameters.isSet( LogFlag.LOG_FILE ) ) {
+				builder.command().add( LogFlag.LOG_FILE );
+				builder.command().add( new File( parameters.get( LogFlag.LOG_FILE ) ).getAbsolutePath() );
+				if( parameters.isTrue( LogFlag.LOG_FILE_APPEND ) ) builder.command().add( LogFlag.LOG_FILE_APPEND );
 			}
+
+			// Add the updates.
+			builder.command().add( UpdaterFlag.UPDATE );
+			for( StagedUpdate update : updates ) {
+				builder.command().add( update.getSource().getAbsolutePath() );
+				builder.command().add( update.getTarget().getAbsolutePath() );
+			}
+
+			// Add the launch parameters.
+			builder.command().add( UpdaterFlag.LAUNCH );
+			builder.command().add( "java" );
+
+			// Add the VM parameters to the commands.
+			RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
+			List<String> commands = runtimeBean.getInputArguments();
+			for( String command : commands ) {
+				if( command.startsWith( Parameters.SINGLE ) ) {
+					builder.command().add( "\\" + command );
+				} else {
+					builder.command().add( command );
+				}
+			}
+
+			// Add the classpath information.
+			List<URI> uris = JavaUtil.parseClasspath( runtimeBean.getClassPath() );
+			if( uris.size() == 1 && uris.get( 0 ).getPath().endsWith( ".jar" ) ) {
+				builder.command().add( "\\-jar" );
+			} else {
+				builder.command().add( "\\-cp" );
+			}
+			builder.command().add( runtimeBean.getClassPath() );
+
+			// Add the original command line parameters.
+			for( String command : service.getParameters().getCommands() ) {
+				if( command.startsWith( Parameters.SINGLE ) ) {
+					builder.command().add( "\\" + command );
+				} else {
+					builder.command().add( command );
+				}
+			}
+
+			builder.command().add( "\\" + ServiceFlag.UPDATE );
+			builder.command().add( "false" );
+
+			builder.command().add( UpdaterFlag.LAUNCH_HOME );
+			builder.command().add( System.getProperty( "user.dir" ) );
+
+			// Print the process commands.
+			Log.write( Log.DEBUG, "Launching: " + TextUtil.toString( builder.command(), " " ) );
+
+			builder.start();
+			Log.write( Log.TRACE, "Update process started." );
 		}
-
-		builder.command().add( "\\" + ServiceFlag.UPDATE );
-		builder.command().add( "false" );
-
-		builder.command().add( UpdaterFlag.LAUNCH_HOME );
-		builder.command().add( System.getProperty( "user.dir" ) );
 
 		// Remove the updates settings.
 		updates.clear();
 		saveSettings( settings );
-
-		// Print the process commands.
-		Log.write( Log.DEBUG, "Launching: " + TextUtil.toString( builder.command(), " " ) );
-
-		builder.start();
-		Log.write( Log.TRACE, "Update process started." );
 
 		return true;
 	}
@@ -387,15 +440,19 @@ public class UpdateManager extends Agent implements Persistent {
 
 		this.settings = settings;
 
-		this.checkMode = CheckMode.valueOf( settings.get( CHECK, CheckMode.DISABLED.name() ) );
-		this.updates = settings.getSet( UPDATES, new HashSet<UpdateInfo>() );
+		this.checkOption = CheckOption.valueOf( settings.get( CHECK, CheckOption.DISABLED.name() ) );
+		this.foundOption = FoundOption.valueOf( settings.get( FOUND, FoundOption.SELECT.name() ) );
+		this.applyOption = ApplyOption.valueOf( settings.get( APPLY, ApplyOption.VERIFY.name() ) );
+		this.updates = settings.getSet( UPDATES, new HashSet<StagedUpdate>() );
 	}
 
 	@Override
 	public void saveSettings( Settings settings ) {
 		if( settings == null ) return;
 
-		settings.put( CHECK, checkMode.name() );
+		settings.put( CHECK, checkOption.name() );
+		settings.put( FOUND, foundOption.name() );
+		settings.put( APPLY, applyOption.name() );
 		settings.putSet( UPDATES, updates );
 		settings.flush();
 	}
@@ -406,7 +463,7 @@ public class UpdateManager extends Agent implements Persistent {
 
 		timer = new Timer();
 
-		if( checkMode == CheckMode.STARTUP ) {
+		if( checkOption == CheckOption.STARTUP ) {
 			//Schedule the update check task for immediate execution.
 			timer.schedule( service.getUpdateCheckTask(), 0 );
 		} else {
@@ -418,11 +475,11 @@ public class UpdateManager extends Agent implements Persistent {
 	protected void stopAgent() throws Exception {
 		if( !isEnabled() ) return;
 
-		timer.cancel();
+		if( timer != null ) timer.cancel();
 	}
 
 	private boolean isEnabled() {
-		return checkMode != CheckMode.DISABLED;
+		return checkOption != CheckOption.DISABLED;
 	}
 
 	private Map<String, FeaturePack> getInstalledPacksMap() {
@@ -469,7 +526,7 @@ public class UpdateManager extends Agent implements Persistent {
 	}
 
 	private void scheduleCheckUpdateTask( UpdateCheckTask task ) {
-		switch( checkMode ) {
+		switch( checkOption ) {
 			case INTERVAL: {
 				// TODO Schedule the task by interval.
 				break;
@@ -510,7 +567,7 @@ public class UpdateManager extends Agent implements Persistent {
 		@Override
 		public void settingChanged( SettingEvent event ) {
 			if( CHECK.equals( event.getKey() ) ) {
-				setCheckMode( CheckMode.valueOf( event.getNewValue() ) );
+				setCheckOption( CheckOption.valueOf( event.getNewValue() ) );
 			}
 		}
 

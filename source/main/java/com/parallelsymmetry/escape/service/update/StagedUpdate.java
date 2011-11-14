@@ -5,15 +5,15 @@ import java.io.File;
 import com.parallelsymmetry.escape.utility.setting.Persistent;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
-public class UpdateInfo implements Persistent {
+public class StagedUpdate implements Persistent {
 
 	private File source;
 
 	private File target;
 
-	public UpdateInfo() {}
+	public StagedUpdate() {}
 
-	public UpdateInfo( File source, File target ) {
+	public StagedUpdate( File source, File target ) {
 		this.source = source;
 		this.target = target;
 	}

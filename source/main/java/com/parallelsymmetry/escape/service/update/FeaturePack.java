@@ -130,7 +130,7 @@ public class FeaturePack {
 	public void setUpdateUri( URI uri ) {
 		this.uri = uri;
 	}
-	
+
 	public File getInstallFolder() {
 		return folder;
 	}
@@ -162,22 +162,23 @@ public class FeaturePack {
 		String uri = descriptor.getValue( UPDATE_URI_PATH );
 
 		FeaturePack pack = new FeaturePack( descriptor );
-		
+
 		Date releaseDate = null;
 		try {
 			releaseDate = new Date( Long.parseLong( timestamp ) );
 		} catch( Throwable throwable ) {
-			releaseDate = DateUtil.INCEPTION_DATE;
+			releaseDate = DateUtil.parse( "2010-01-01 00:00:00", DateUtil.DEFAULT_DATE_FORMAT );
+//			releaseDate = new Date();
 		}
 
-		if( group != null) pack.group = group;
-		if( artifact != null) pack.artifact = artifact;
+		if( group != null ) pack.group = group;
+		if( artifact != null ) pack.artifact = artifact;
 		if( version != null ) pack.release = new Release( version, releaseDate );
 		if( name != null ) pack.name = name;
 		if( provider != null ) pack.provider = provider;
 
 		pack.copyrightHolder = holder == null ? provider : holder;
-		if( notice != null) pack.copyrightNotice = notice;
+		if( notice != null ) pack.copyrightNotice = notice;
 
 		try {
 			if( uri != null ) pack.uri = new URI( uri );
@@ -187,5 +188,4 @@ public class FeaturePack {
 
 		return pack;
 	}
-
 }

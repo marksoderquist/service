@@ -300,8 +300,8 @@ public abstract class Service extends Agent {
 		return notify( UIManager.getString( "OptionPane.messageDialogTitle", null ), message, JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null );
 	}
 
-	public int notify( String title, Object message, int optionType ) {
-		return notify( UIManager.getString( "OptionPane.messageDialogTitle", null ), message, optionType, JOptionPane.INFORMATION_MESSAGE, null );
+	public int notify( String title, Object message, int messageType ) {
+		return notify( UIManager.getString( "OptionPane.messageDialogTitle", null ), message, JOptionPane.DEFAULT_OPTION, messageType, null );
 	}
 
 	public int notify( String title, Object message, int optionType, int messageType, Icon icon ) {
@@ -330,14 +330,14 @@ public abstract class Service extends Agent {
 		List<String> elements = new ArrayList<String>();
 		if( throwable != null ) {
 			throwable.printStackTrace();
-	
+
 			Throwable cause = throwable;
 			while( cause.getCause() != null ) {
 				cause = cause.getCause();
 			}
 			elements.add( cause.getClass().getName() + ": " + cause.getMessage() );
 		}
-	
+
 		String[] messages = null;
 		if( message == null ) {
 			messages = new String[elements.size()];
@@ -347,10 +347,10 @@ public abstract class Service extends Agent {
 			messages[0] = message;
 			System.arraycopy( elements.toArray( new String[elements.size()] ), 0, messages, 1, elements.size() );
 		}
-	
+
 		// Show message on console.
 		Log.write( Log.ERROR, message );
-	
+
 		return messages;
 	}
 
@@ -516,9 +516,9 @@ public abstract class Service extends Agent {
 			}
 
 			// The logic is somewhat complex, the nested if statements help clarify it.
-			if( updateManager.getCheckMode() != UpdateManager.CheckMode.DISABLED && !parameters.isSet( ServiceFlag.DEVELOPMENT ) ) {
+			if( updateManager.getCheckOption() != UpdateManager.CheckOption.DISABLED ) {
 				if( ( parameters.isSet( ServiceFlag.UPDATE ) & parameters.isTrue( ServiceFlag.UPDATE ) ) | ( !parameters.isSet( ServiceFlag.UPDATE ) & !peer ) ) {
-					if( update() ) {
+					if( update() && !parameters.isSet( ServiceFlag.DEVELOPMENT ) ) {
 						// The program should be allowed, but not forced, to exit at this point.
 						Log.write( "Program exiting to apply updates." );
 						return;

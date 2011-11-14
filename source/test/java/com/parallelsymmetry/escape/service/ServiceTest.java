@@ -27,7 +27,7 @@ public class ServiceTest extends BaseTestCase {
 	public void setUp() {
 		super.setUp();
 		service = new MockService();
-		service.getUpdateManager().setCheckMode( UpdateManager.CheckMode.DISABLED );
+		service.getUpdateManager().setCheckOption( UpdateManager.CheckOption.DISABLED );
 	}
 
 	public void testBeforeCall() throws Exception {
@@ -241,14 +241,14 @@ public class ServiceTest extends BaseTestCase {
 		//System.out.println( "...testPassParameters()..." );
 		String name1 = "Mock Service 1";
 		MockService service1 = new MockService( name1 );
-		service1.getUpdateManager().setCheckMode( UpdateManager.CheckMode.DISABLED );
+		service1.getUpdateManager().setCheckOption( UpdateManager.CheckOption.DISABLED );
 		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false, "" ) );
 		assertCommandLineHeader( name1, parser1 );
 		assertTrue( "Service should be running and is not.", service1.isRunning() );
 
 		String name2 = "Mock Service 2";
 		MockService service2 = new MockService( name2 );
-		service2.getUpdateManager().setCheckMode( UpdateManager.CheckMode.DISABLED );
+		service2.getUpdateManager().setCheckOption( UpdateManager.CheckOption.DISABLED );
 		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.INFO, false ) );
 		service2.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertCommandLineHeader( name2, parser2 );
@@ -271,7 +271,7 @@ public class ServiceTest extends BaseTestCase {
 		//Log.write( "...testPassStatus()..." );
 		String name1 = "Mock Service 1";
 		MockService service1 = new MockService( name1 );
-		service1.getUpdateManager().setCheckMode( UpdateManager.CheckMode.DISABLED );
+		service1.getUpdateManager().setCheckOption( UpdateManager.CheckOption.DISABLED );
 		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false, "-status", "-log.level", "none" ) );
 		assertCommandLineHeader( name1, parser1 );
 
@@ -287,7 +287,7 @@ public class ServiceTest extends BaseTestCase {
 
 		String name2 = "Mock Service 2";
 		MockService service2 = new MockService( name2 );
-		service2.getUpdateManager().setCheckMode( UpdateManager.CheckMode.DISABLED );
+		service2.getUpdateManager().setCheckOption( UpdateManager.CheckOption.DISABLED );
 		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.INFO, false, "-status", "-log.level", "none" ) );
 		service2.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertCommandLineHeader( name2, parser2 );

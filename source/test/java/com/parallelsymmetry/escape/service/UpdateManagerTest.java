@@ -58,12 +58,12 @@ public class UpdateManagerTest extends BaseTestCase {
 		UpdateManager manager = service.getUpdateManager();
 		
 		// Enable the update manager temporarily.
-		manager.setCheckMode( UpdateManager.CheckMode.STARTUP );
+		manager.setCheckOption( UpdateManager.CheckOption.STARTUP );
 		manager.stagePostedUpdates();
 		assertTrue( updateFile.exists() );
 
 		// Disable the update manager.
-		manager.setCheckMode( UpdateManager.CheckMode.DISABLED );
+		manager.setCheckOption( UpdateManager.CheckOption.DISABLED );
 
 		// Shutdown the service.
 		service.call( ServiceFlag.STOP );
