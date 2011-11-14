@@ -6,22 +6,18 @@ import java.net.Proxy;
 import java.net.ProxySelector;
 import java.net.SocketAddress;
 import java.net.URI;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import com.parallelsymmetry.escape.utility.Bundles;
 import com.parallelsymmetry.escape.utility.TextUtil;
 import com.parallelsymmetry.escape.utility.log.Log;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
 public class ServiceProxySelector extends ProxySelector {
 	
-	private static final String MESSAGES_BUNDLE = "messages";
-
 	private Service service;
 
 	public ServiceProxySelector( Service service ) {
@@ -53,7 +49,6 @@ public class ServiceProxySelector extends ProxySelector {
 	@Override
 	public void connectFailed( URI uri, SocketAddress address, IOException exception ) {
 		if( "socket".equals( uri.getScheme() ) ) return;
-		service.error( MessageFormat.format( Bundles.getString( MESSAGES_BUNDLE, "proxy.connect.failed" ), address.toString() ) );
 	}
 
 	private Proxy getProxy( String scheme ) {

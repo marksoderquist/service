@@ -158,6 +158,10 @@ public class UpdateManager extends Agent implements Persistent {
 		saveSettings( settings );
 	}
 
+	public void checkForUpdates() {
+		timer.schedule( service.getUpdateCheckTask(), 0 );
+	}
+
 	/**
 	 * Gets the set of posted updates. If there are no posted updates found an
 	 * empty set is returned.
@@ -462,13 +466,7 @@ public class UpdateManager extends Agent implements Persistent {
 		if( !isEnabled() ) return;
 
 		timer = new Timer();
-
-		if( checkOption == CheckOption.STARTUP ) {
-			//Schedule the update check task for immediate execution.
-			timer.schedule( service.getUpdateCheckTask(), 0 );
-		} else {
-			scheduleCheckUpdateTask( service.getUpdateCheckTask() );
-		}
+		scheduleCheckUpdateTask( service.getUpdateCheckTask() );
 	}
 
 	@Override

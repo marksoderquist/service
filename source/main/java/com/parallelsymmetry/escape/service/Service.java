@@ -409,6 +409,8 @@ public abstract class Service extends Agent {
 
 		startService( parameters );
 		Log.write( getName() + " started." );
+		
+		if( updateManager.getCheckOption() == UpdateManager.CheckOption.STARTUP ) updateManager.checkForUpdates();
 	}
 
 	/**
