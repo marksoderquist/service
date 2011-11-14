@@ -365,6 +365,8 @@ public class UpdateManager extends Agent implements Persistent {
 			ProcessBuilder builder = new ProcessBuilder();
 
 			builder.directory( updaterTarget.getParentFile() );
+			
+			// NEXT Check if elevated privileges are necessary.
 
 			builder.command().add( "java" );
 			builder.command().add( "-jar" );
