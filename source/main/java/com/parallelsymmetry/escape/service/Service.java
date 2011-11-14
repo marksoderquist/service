@@ -35,7 +35,6 @@ import com.parallelsymmetry.escape.service.update.FeaturePack;
 import com.parallelsymmetry.escape.service.update.UpdateManager;
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
-import com.parallelsymmetry.escape.utility.JavaUtil;
 import com.parallelsymmetry.escape.utility.OperatingSystem;
 import com.parallelsymmetry.escape.utility.Parameters;
 import com.parallelsymmetry.escape.utility.Release;
@@ -159,10 +158,8 @@ public abstract class Service extends Agent {
 		// Create the settings object.
 		settings = new Settings();
 		try {
-			Descriptor defaultSettingDescriptor = null;
 			InputStream input = getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH );
-			if( input != null ) defaultSettingDescriptor = new Descriptor( input );
-			if( defaultSettingDescriptor != null ) settings.setDefaultProvider( new DescriptorSettingProvider( defaultSettingDescriptor ) );
+			settings.setDefaultProvider( new DescriptorSettingProvider(  new Descriptor( input ) ) );
 		} catch( Exception exception ) {
 			Log.write( exception );
 		}
@@ -409,7 +406,7 @@ public abstract class Service extends Agent {
 
 		startService( parameters );
 		Log.write( getName() + " started." );
-		
+
 		if( updateManager.getCheckOption() == UpdateManager.CheckOption.STARTUP ) updateManager.checkForUpdates();
 	}
 
@@ -588,25 +585,19 @@ public abstract class Service extends Agent {
 				home = new File( parameters.get( "home" ) ).getCanonicalFile();
 			}
 
-			if( home == null && parameters.isSet( ServiceFlag.DEVELOPMENT ) ) {
-				home = new File( System.getProperty( "user.dir" ), "target/install" );
-				home.mkdirs();
-			}
-
-			// Check the class path.
+			// Check the code source.
 			if( home == null ) {
 				try {
-					List<URI> uris = JavaUtil.parseClasspath( System.getProperty( "java.class.path" ) );
-					for( URI uri : uris ) {
-						if( "file".equals( uri.getScheme() ) && uri.getPath().endsWith( ".jar" ) ) {
-							// The following line assumes that the jar is in the home folder.
-							home = new File( uri ).getParentFile();
-							break;
-						}
-					}
+					URI uri = getClass().getProtectionDomain().getCodeSource().getLocation().toURI();
+					if( "file".equals( uri.getScheme() ) && uri.getPath().endsWith( ".jar" ) ) home = new File( uri ).getParentFile();
 				} catch( URISyntaxException exception ) {
 					Log.write( exception );
 				}
+			}
+
+			if( home == null && parameters.isSet( ServiceFlag.DEVELOPMENT ) ) {
+				home = new File( System.getProperty( "user.dir" ), "target/install" );
+				home.mkdirs();
 			}
 
 			if( home != null ) home = home.getCanonicalFile();

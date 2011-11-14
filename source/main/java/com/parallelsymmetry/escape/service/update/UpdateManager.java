@@ -14,7 +14,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
 
 import com.parallelsymmetry.escape.service.Service;
 import com.parallelsymmetry.escape.service.ServiceFlag;
@@ -305,12 +304,6 @@ public class UpdateManager extends Agent implements Persistent {
 	}
 
 	public boolean areUpdatesStaged() {
-		// Reload the settings in the event they have changed.
-		Level level = Log.getLevel();
-		Log.setLevel( Log.DEBUG );
-		loadSettings( settings );
-		Log.setLevel( level );
-
 		Set<StagedUpdate> staged = new HashSet<StagedUpdate>();
 		Set<StagedUpdate> remove = new HashSet<StagedUpdate>();
 
