@@ -365,8 +365,7 @@ public class UpdateManager extends Agent implements Persistent {
 			ElevatedProcessBuilder builder = new ElevatedProcessBuilder( veto );
 			builder.directory( updaterTarget.getParentFile() );
 
-			// NOTE Changing the java command to OperatingSystem.getJavaExecutableName() breaks on Windows.
-			builder.command().add( "java" );
+			builder.command().add( OperatingSystem.getJavaExecutableName() );
 			builder.command().add( "-jar" );
 			builder.command().add( updaterTarget.toString() );
 
