@@ -301,6 +301,10 @@ public abstract class Service extends Agent {
 		return notify( UIManager.getString( "OptionPane.messageDialogTitle", null ), message, JOptionPane.DEFAULT_OPTION, messageType, null );
 	}
 
+	public int notify( String title, Object message, int optionType, int messageType ) {
+		return notify( title, message, optionType, messageType, null, null, null );
+	}
+
 	public int notify( String title, Object message, int optionType, int messageType, Icon icon ) {
 		return notify( title, message, optionType, messageType, icon, null, null );
 	}
