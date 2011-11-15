@@ -20,6 +20,7 @@ import com.parallelsymmetry.escape.service.ServiceFlag;
 import com.parallelsymmetry.escape.service.task.DownloadTask;
 import com.parallelsymmetry.escape.updater.UpdaterFlag;
 import com.parallelsymmetry.escape.utility.Descriptor;
+import com.parallelsymmetry.escape.utility.ElevatedProcessBuilder;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.JavaUtil;
 import com.parallelsymmetry.escape.utility.Parameters;
@@ -355,7 +356,7 @@ public class UpdateManager extends Agent implements Persistent {
 			if( !FileUtil.copy( updaterSource, updaterTarget ) ) throw new RuntimeException( "Update library not staged: " + updaterTarget );
 
 			// Start the updater in a new JVM.
-			ProcessBuilder builder = new ProcessBuilder();
+			ElevatedProcessBuilder builder = new ElevatedProcessBuilder();
 
 			builder.directory( updaterTarget.getParentFile() );
 			
@@ -422,6 +423,7 @@ public class UpdateManager extends Agent implements Persistent {
 			// Print the process commands.
 			Log.write( Log.DEBUG, "Launching: " + TextUtil.toString( builder.command(), " " ) );
 
+			// Start the process.
 			builder.start();
 			Log.write( Log.TRACE, "Update process started." );
 		}
