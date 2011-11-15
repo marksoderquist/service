@@ -23,6 +23,7 @@ import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.ElevatedProcessBuilder;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.JavaUtil;
+import com.parallelsymmetry.escape.utility.OperatingSystem;
 import com.parallelsymmetry.escape.utility.Parameters;
 import com.parallelsymmetry.escape.utility.TextUtil;
 import com.parallelsymmetry.escape.utility.agent.Agent;
@@ -357,16 +358,14 @@ public class UpdateManager extends Agent implements Persistent {
 
 			boolean veto = false;
 			for( StagedUpdate update : updates ) {
-				 veto |= update.getTarget().canWrite();
+				veto |= FileUtil.isWritable( update.getTarget() );
 			}
 
 			// Start the updater in a new JVM.
-			ElevatedProcessBuilder builder = new ElevatedProcessBuilder(veto);
-
+			ElevatedProcessBuilder builder = new ElevatedProcessBuilder( veto );
 			builder.directory( updaterTarget.getParentFile() );
-			
-			// NEXT Check if elevated privileges are necessary.
 
+			// NOTE Changing the java command to OperatingSystem.getJavaExecutableName() breaks on Windows.
 			builder.command().add( "java" );
 			builder.command().add( "-jar" );
 			builder.command().add( updaterTarget.toString() );
@@ -388,7 +387,7 @@ public class UpdateManager extends Agent implements Persistent {
 
 			// Add the launch parameters.
 			builder.command().add( UpdaterFlag.LAUNCH );
-			builder.command().add( "java" );
+			builder.command().add( OperatingSystem.getJavaExecutableName() );
 
 			// Add the VM parameters to the commands.
 			RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
