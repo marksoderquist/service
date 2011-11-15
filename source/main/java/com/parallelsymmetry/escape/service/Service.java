@@ -159,7 +159,7 @@ public abstract class Service extends Agent {
 		settings = new Settings();
 		try {
 			InputStream input = getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH );
-			settings.setDefaultProvider( new DescriptorSettingProvider(  new Descriptor( input ) ) );
+			settings.setDefaultProvider( new DescriptorSettingProvider( new Descriptor( input ) ) );
 		} catch( Exception exception ) {
 			Log.write( exception );
 		}
@@ -595,11 +595,16 @@ public abstract class Service extends Agent {
 				}
 			}
 
+			// Check the development flag.
 			if( home == null && parameters.isSet( ServiceFlag.DEVELOPMENT ) ) {
 				home = new File( System.getProperty( "user.dir" ), "target/install" );
 				home.mkdirs();
 			}
 
+			// Use the user directory as a last resort.
+			if( home == null ) home = new File( System.getProperty( "user.dir" ) );
+
+			// Canonicalize the home path.
 			if( home != null ) home = home.getCanonicalFile();
 		} catch( IOException exception ) {
 			exception.printStackTrace();
