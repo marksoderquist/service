@@ -355,8 +355,13 @@ public class UpdateManager extends Agent implements Persistent {
 			if( updaterSource == null || !updaterSource.exists() ) throw new RuntimeException( "Update library not found: " + updaterSource );
 			if( !FileUtil.copy( updaterSource, updaterTarget ) ) throw new RuntimeException( "Update library not staged: " + updaterTarget );
 
+			boolean veto = false;
+			for( StagedUpdate update : updates ) {
+				 veto |= update.getTarget().canWrite();
+			}
+
 			// Start the updater in a new JVM.
-			ElevatedProcessBuilder builder = new ElevatedProcessBuilder();
+			ElevatedProcessBuilder builder = new ElevatedProcessBuilder(veto);
 
 			builder.directory( updaterTarget.getParentFile() );
 			
