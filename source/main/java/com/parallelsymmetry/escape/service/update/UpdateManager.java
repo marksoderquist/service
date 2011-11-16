@@ -188,7 +188,7 @@ public class UpdateManager extends Agent implements Persistent {
 				Log.write( Log.DEBUG, "Installed pack URI: " + uri );
 			}
 
-			futures.put( oldPack, service.getTaskManager().submit( new DescriptorDownload( uri ) ) );
+			futures.put( oldPack, service.getTaskManager().submit( new DescriptorDownload( service, uri ) ) );
 		}
 
 		for( FeaturePack oldPack : oldPacks ) {
@@ -265,7 +265,7 @@ public class UpdateManager extends Agent implements Persistent {
 			for( FeatureResource resource : resources ) {
 				URI uri = getResolvedUpdateUri( resource.getUri() );
 				Log.write( Log.DEBUG, "Resource source: " + uri );
-				resource.setFuture( service.getTaskManager().submit( new DownloadTask( uri ) ) );
+				resource.setFuture( service.getTaskManager().submit( new DownloadTask( service, uri ) ) );
 			}
 
 			packResources.put( pack, resources );

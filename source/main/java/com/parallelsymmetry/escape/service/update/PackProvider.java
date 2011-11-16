@@ -48,7 +48,7 @@ public class PackProvider implements FeatureProvider {
 		}
 		for( String jnlp : jnlps ) {
 			URI uri = codebase.resolve( jnlp );
-			Future<Descriptor> future = service.getTaskManager().submit( new DescriptorDownload( uri ) );
+			Future<Descriptor> future = service.getTaskManager().submit( new DescriptorDownload( service, uri ) );
 			resources.addAll( new JnlpProvider( service, future.get() ).getResources() );
 		}
 

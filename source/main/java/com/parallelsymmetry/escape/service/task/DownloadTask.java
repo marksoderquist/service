@@ -8,10 +8,13 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import com.parallelsymmetry.escape.service.Service;
+import com.parallelsymmetry.escape.service.ServiceTask;
+import com.parallelsymmetry.escape.utility.BundleKey;
+import com.parallelsymmetry.escape.utility.Bundles;
 import com.parallelsymmetry.escape.utility.log.Log;
-import com.parallelsymmetry.escape.utility.task.Task;
 
-public class DownloadTask extends Task<Download> {
+public class DownloadTask extends ServiceTask<Download> {
 
 	private URI uri;
 
@@ -19,12 +22,13 @@ public class DownloadTask extends Task<Download> {
 
 	private Set<DownloadListener> listeners;
 
-	public DownloadTask( URI uri ) {
-		this( uri, null );
+	public DownloadTask( Service service, URI uri ) {
+		this( service, uri, null );
 		listeners = new CopyOnWriteArraySet<DownloadListener>();
 	}
 
-	public DownloadTask( URI uri, File target ) {
+	public DownloadTask( Service service, URI uri, File target ) {
+		super( service, Bundles.getString( BundleKey.PROMPTS, "download" ) + " " + uri.toString() );
 		this.uri = uri;
 		this.target = target;
 	}
@@ -36,6 +40,9 @@ public class DownloadTask extends Task<Download> {
 		String encoding = connection.getContentEncoding();
 		InputStream input = connection.getInputStream();
 
+		setMinimum( 0 );
+		setMaximum( length );
+
 		byte[] buffer = new byte[8192];
 		Download download = new Download( uri, length, encoding, target );
 
@@ -46,6 +53,7 @@ public class DownloadTask extends Task<Download> {
 				if( isCancelled() ) return null;
 				download.write( buffer, 0, read );
 				offset += read;
+				setProgress( offset );
 				fireEvent( new DownloadEvent( offset, length ) );
 			}
 			if( isCancelled() ) return null;

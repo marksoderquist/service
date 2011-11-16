@@ -294,15 +294,15 @@ public abstract class Service extends Agent {
 	}
 
 	public int notify( String title, Object message ) {
-		return notify( UIManager.getString( "OptionPane.messageDialogTitle", null ), message, JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null );
+		return notify( UIManager.getString( "OptionPane.messageDialogTitle", null ), message, JOptionPane.INFORMATION_MESSAGE );
 	}
 
 	public int notify( String title, Object message, int messageType ) {
-		return notify( UIManager.getString( "OptionPane.messageDialogTitle", null ), message, JOptionPane.DEFAULT_OPTION, messageType, null );
+		return notify( UIManager.getString( "OptionPane.messageDialogTitle", null ), message, JOptionPane.DEFAULT_OPTION, messageType );
 	}
 
 	public int notify( String title, Object message, int optionType, int messageType ) {
-		return notify( title, message, optionType, messageType, null, null, null );
+		return notify( title, message, optionType, messageType, null );
 	}
 
 	public int notify( String title, Object message, int optionType, int messageType, Icon icon ) {
@@ -312,7 +312,7 @@ public abstract class Service extends Agent {
 	public int notify( String title, Object message, int optionType, int messageType, Icon icon, Object[] options, Object initialValue ) {
 		// Services do not have any interaction with users but these methods allow 
 		// the service to interact with users of sub-classed programs.
-		return 0;
+		return -1;
 	}
 
 	public void error( String message ) {

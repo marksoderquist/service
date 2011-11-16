@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import com.parallelsymmetry.escape.utility.BundleKey;
 import com.parallelsymmetry.escape.utility.Bundles;
 import com.parallelsymmetry.escape.utility.TextUtil;
 import com.parallelsymmetry.escape.utility.log.Log;
@@ -51,7 +52,7 @@ public class ServiceProxySelector extends ProxySelector {
 	@Override
 	public void connectFailed( URI uri, SocketAddress address, IOException exception ) {
 		if( "socket".equals( uri.getScheme() ) ) return;
-		service.error( MessageFormat.format( Bundles.getString( "messages", "proxy.connect.failed" ), address.toString() ) );
+		service.error( MessageFormat.format( Bundles.getString( BundleKey.MESSAGES, "proxy.connect.failed" ), address.toString() ) );
 	}
 
 	private Proxy getProxy( String scheme ) {

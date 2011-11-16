@@ -52,7 +52,7 @@ public class JnlpProvider implements FeatureProvider {
 		}
 		for( String extension : extensions ) {
 			URI uri = codebase.resolve( extension );
-			Future<Descriptor> future = service.getTaskManager().submit( new DescriptorDownload( uri ) );
+			Future<Descriptor> future = service.getTaskManager().submit( new DescriptorDownload( service, uri ) );
 			resources.addAll( new JnlpProvider( service, future.get() ).getResources() );
 		}
 
