@@ -7,6 +7,7 @@ public abstract class ServiceTask<V> extends Task<V> {
 	private Service service;
 
 	public ServiceTask( Service service ) {
+		this.service = service;
 	}
 
 	public ServiceTask( Service service, String name ) {
@@ -14,14 +15,8 @@ public abstract class ServiceTask<V> extends Task<V> {
 		this.service = service;
 	}
 
-	@Override
-	public V call() throws Exception {
-		try {
-			return super.call();
-		} catch( Throwable throwable ) {
-			service.error( throwable );
-			return null;
-		}
+	protected Service getService() {
+		return service;
 	}
 
 }

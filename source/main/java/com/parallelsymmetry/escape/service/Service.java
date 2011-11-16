@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.Authenticator;
 import java.net.ConnectException;
 import java.net.ProxySelector;
@@ -16,7 +18,6 @@ import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.InvalidParameterException;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
@@ -328,29 +329,19 @@ public abstract class Service extends Agent {
 	}
 
 	public String[] error( String title, String message, Throwable throwable ) {
-		List<String> elements = new ArrayList<String>();
-		if( throwable != null ) {
-			throwable.printStackTrace();
-
-			Throwable cause = throwable;
-			while( cause.getCause() != null ) {
-				cause = cause.getCause();
-			}
-			elements.add( cause.getClass().getName() + ": " + cause.getMessage() );
-		}
-
 		String[] messages = null;
-		if( message == null ) {
-			messages = new String[elements.size()];
-			System.arraycopy( elements.toArray( new String[elements.size()] ), 0, messages, 0, elements.size() );
-		} else {
-			messages = new String[elements.size() + 1];
+		if( message == null && throwable != null ) message = throwable.getMessage();
+		if( message != null ) {
+			messages = new String[1];
 			messages[0] = message;
-			System.arraycopy( elements.toArray( new String[elements.size()] ), 0, messages, 1, elements.size() );
 		}
+
+		StringWriter writer = new StringWriter();
+		if( throwable != null ) throwable.printStackTrace( new PrintWriter( writer ) );
 
 		// Show message on console.
-		Log.write( Log.ERROR, message );
+		if( message != null ) Log.write(Log.ERROR, message );
+		Log.write( Log.ERROR, writer.toString() );
 
 		return messages;
 	}

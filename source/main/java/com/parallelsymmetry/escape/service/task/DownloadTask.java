@@ -1,6 +1,7 @@
 package com.parallelsymmetry.escape.service.task;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URLConnection;
@@ -35,7 +36,23 @@ public class DownloadTask extends ServiceTask<Download> {
 
 	@Override
 	public Download execute() throws Exception {
+		try {
+			return download();
+		} catch( IOException exception ) {
+			getService().error( Bundles.getString( BundleKey.MESSAGES, "exception.updates.source.cannot.connect" ), exception );
+			throw exception;
+		} catch( Exception exception ) {
+			getService().error( exception );
+			throw exception;
+		}
+	}
+
+	private Download download() throws Exception {
 		URLConnection connection = uri.toURL().openConnection();
+		connection.setUseCaches( false );
+
+		connection.connect();
+
 		int length = connection.getContentLength();
 		String encoding = connection.getContentEncoding();
 		InputStream input = connection.getInputStream();
