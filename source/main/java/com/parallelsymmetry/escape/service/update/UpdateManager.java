@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
 
@@ -89,38 +90,36 @@ public class UpdateManager extends Agent implements Persistent {
 
 	private Set<StagedUpdate> updates;
 
-	private Set<FeaturePack> installedPacks;
+	private Map<String, FeaturePack> installedPacks;
 
 	private Timer timer;
 
 	public UpdateManager( Service service ) {
 		this.service = service;
 		updates = new CopyOnWriteArraySet<StagedUpdate>();
-		installedPacks = new CopyOnWriteArraySet<FeaturePack>();
+		installedPacks = new ConcurrentHashMap<String, FeaturePack>();
 
 		service.getSettings().addSettingListener( "/update", new SettingChangeHandler() );
 	}
 
-	public Set<FeaturePack> getInstalledPacks() {
-		Set<FeaturePack> packs = new HashSet<FeaturePack>();
+	public Map<String, FeaturePack> getInstalledPacks() {
+		Map<String, FeaturePack> packs = new ConcurrentHashMap<String, FeaturePack>();
 
 		// Add the service pack.
-		packs.add( service.getPack() );
+		packs.put( service.getPack().getKey(), service.getPack() );
 
 		// Add the installed packs.
-		for( FeaturePack pack : installedPacks ) {
-			packs.add( pack );
-		}
+		packs.putAll( installedPacks );
 
 		return packs;
 	}
 
 	public void addInstalledPack( FeaturePack pack ) {
-		installedPacks.add( pack );
+		installedPacks.put( pack.getKey(), pack );
 	}
 
 	public void removeInstalledPack( FeaturePack pack ) {
-		installedPacks.remove( pack );
+		installedPacks.remove( pack.getKey() );
 	}
 
 	/**
@@ -176,10 +175,10 @@ public class UpdateManager extends Agent implements Persistent {
 
 		Log.write( Log.TRACE, "Checking for updates..." );
 
-		Set<FeaturePack> oldPacks = getInstalledPacks();
+		Map<String, FeaturePack> oldPacks = getInstalledPacks();
 
 		Map<FeaturePack, Future<Descriptor>> futures = new HashMap<FeaturePack, Future<Descriptor>>();
-		for( FeaturePack oldPack : oldPacks ) {
+		for( FeaturePack oldPack : oldPacks.values() ) {
 			URI uri = getResolvedUpdateUri( oldPack.getUpdateUri() );
 			if( uri == null ) {
 				Log.write( Log.WARN, "Installed pack does not have an update URI: " + oldPack.toString() );
@@ -191,7 +190,7 @@ public class UpdateManager extends Agent implements Persistent {
 			futures.put( oldPack, service.getTaskManager().submit( new DescriptorDownload( service, uri ) ) );
 		}
 
-		for( FeaturePack oldPack : oldPacks ) {
+		for( FeaturePack oldPack : oldPacks.values() ) {
 			Future<Descriptor> future = futures.get( oldPack );
 			if( future == null ) continue;
 			FeaturePack newPack = FeaturePack.load( future.get() );
@@ -279,7 +278,7 @@ public class UpdateManager extends Agent implements Persistent {
 			}
 		}
 
-		Map<String, FeaturePack> installedPacks = getInstalledPacksMap();
+		Map<String, FeaturePack> installedPacks = getInstalledPacks();
 
 		for( String key : installedPacks.keySet() ) {
 			Log.write( Log.TRACE, "Installed pack: " + key );
@@ -478,17 +477,6 @@ public class UpdateManager extends Agent implements Persistent {
 
 	private boolean isEnabled() {
 		return checkOption != CheckOption.DISABLED;
-	}
-
-	private Map<String, FeaturePack> getInstalledPacksMap() {
-		Set<FeaturePack> packs = getInstalledPacks();
-		Map<String, FeaturePack> map = new HashMap<String, FeaturePack>();
-
-		for( FeaturePack pack : packs ) {
-			map.put( pack.getKey(), pack );
-		}
-
-		return map;
 	}
 
 	private URI getResolvedUpdateUri( URI uri ) {
