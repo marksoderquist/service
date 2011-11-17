@@ -47,6 +47,8 @@ import com.parallelsymmetry.escape.utility.log.Log;
 import com.parallelsymmetry.escape.utility.setting.DescriptorSettingProvider;
 import com.parallelsymmetry.escape.utility.setting.ParametersSettingProvider;
 import com.parallelsymmetry.escape.utility.setting.PreferencesSettingProvider;
+import com.parallelsymmetry.escape.utility.setting.SettingEvent;
+import com.parallelsymmetry.escape.utility.setting.SettingListener;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 import com.parallelsymmetry.escape.utility.task.Task;
 import com.parallelsymmetry.escape.utility.task.TaskManager;
@@ -340,8 +342,8 @@ public abstract class Service extends Agent {
 		if( throwable != null ) throwable.printStackTrace( new PrintWriter( writer ) );
 
 		// Show message on console.
-		if( message != null ) Log.write(Log.ERROR, message );
-		Log.write( Log.ERROR, writer.toString() );
+		if( message != null ) Log.write( Log.ERROR, message );
+		Log.write( Log.ERROR, writer.toString().trim() );
 
 		return messages;
 	}
@@ -638,6 +640,9 @@ public abstract class Service extends Agent {
 		} catch( Exception exception ) {
 			Log.write( exception );
 		}
+		
+		settings.addSettingListener( "/network", new NetworkSettingsChangeHandler( this ) );
+		configureNetworkSettings();
 	}
 
 	private final void configureServices( Parameters parameters ) {
@@ -648,6 +653,24 @@ public abstract class Service extends Agent {
 		ProxySelector.setDefault( new ServiceProxySelector( this ) );
 
 		updateManager.loadSettings( settings.getNode( "update" ) );
+	}
+
+	private final void configureNetworkSettings() {
+		Settings settings = getSettings().getNode( "/network" );
+		boolean enableipv6 = settings.getBoolean( "enableipv6", true );
+		boolean preferipv6 = settings.getBoolean( "preferipv6", false );
+
+		if( enableipv6 ) {
+			System.clearProperty( "java.net.preferIPv4Stack" );
+			if( preferipv6 ) {
+				System.setProperty( "java.net.preferIPv6Addresses", "true" );
+			} else {
+				System.clearProperty( "java.net.preferIPv6Addresses" );
+			}
+		} else {
+			System.setProperty( "java.net.preferIPv4Stack", "true" );
+			System.clearProperty( "java.net.preferIPv6Addresses" );
+		}
 	}
 
 	private final void printHeader() {
@@ -992,6 +1015,23 @@ public abstract class Service extends Agent {
 				}
 			} catch( Exception exception ) {
 				Log.write( exception );
+			}
+		}
+
+	}
+
+	private static final class NetworkSettingsChangeHandler implements SettingListener {
+
+		private Service service;
+
+		public NetworkSettingsChangeHandler( Service service ) {
+			this.service = service;
+		}
+
+		@Override
+		public void settingChanged( SettingEvent event ) {
+			if( "/network".equals( event.getNodePath() ) & "enableipv6".equals( event.getKey() ) | "preferipv6".equals( event.getKey() ) ) {
+				service.configureNetworkSettings();
 			}
 		}
 

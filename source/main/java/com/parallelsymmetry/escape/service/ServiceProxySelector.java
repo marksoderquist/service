@@ -30,7 +30,7 @@ public class ServiceProxySelector extends ProxySelector {
 	@Override
 	public List<Proxy> select( URI uri ) {
 		Log.write( Log.DEBUG, "Select proxy for: " + uri );
-
+		
 		List<Proxy> proxies = new ArrayList<Proxy>();
 
 		Settings settings = service.getSettings().getNode( "/network/proxy" );
@@ -52,7 +52,7 @@ public class ServiceProxySelector extends ProxySelector {
 	@Override
 	public void connectFailed( URI uri, SocketAddress address, IOException exception ) {
 		if( "socket".equals( uri.getScheme() ) ) return;
-		service.error( MessageFormat.format( Bundles.getString( BundleKey.MESSAGES, "proxy.connect.failed" ), address.toString() ) );
+		service.error( MessageFormat.format( Bundles.getString( BundleKey.MESSAGES, "proxy.connect.failed" ), address.toString() ), exception );
 	}
 
 	private Proxy getProxy( String scheme ) {
