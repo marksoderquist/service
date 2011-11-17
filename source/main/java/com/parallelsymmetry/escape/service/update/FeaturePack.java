@@ -5,7 +5,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
 
-import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.Release;
 import com.parallelsymmetry.escape.utility.Version;
@@ -167,8 +166,7 @@ public class FeaturePack {
 		try {
 			releaseDate = new Date( Long.parseLong( timestamp ) );
 		} catch( Throwable throwable ) {
-			releaseDate = DateUtil.parse( "2010-01-01 00:00:00", DateUtil.DEFAULT_DATE_FORMAT );
-//			releaseDate = new Date();
+			// Leave the date blank.
 		}
 
 		if( group != null ) pack.group = group;
