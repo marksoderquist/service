@@ -694,7 +694,7 @@ public abstract class Service extends Agent {
 	private final boolean peerExists( Parameters parameters ) {
 		boolean exists = false;
 		String peer = null;
-		String host = parameters.get( "host", InetAddress.getLoopbackAddress().getHostAddress() );
+		String host = parameters.get( "host", "localhost" );
 		int port = peerServer.getServicePortNumber();
 
 		if( port != 0 ) {
@@ -787,7 +787,7 @@ public abstract class Service extends Agent {
 		private List<PeerHandler> handlers = new CopyOnWriteArrayList<PeerHandler>();
 
 		public PeerServer( Service service ) {
-			super( "Peer Server", InetAddress.getLoopbackAddress().getHostAddress() );
+			super( "Peer Server", "localhost" );
 			this.service = service;
 		}
 
