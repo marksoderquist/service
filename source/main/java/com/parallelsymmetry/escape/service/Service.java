@@ -12,6 +12,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.Authenticator;
 import java.net.ConnectException;
+import java.net.InetAddress;
 import java.net.ProxySelector;
 import java.net.Socket;
 import java.net.SocketException;
@@ -70,8 +71,6 @@ public abstract class Service extends Agent {
 	private static final String DEFAULT_SETTINGS_PATH = "/META-INF/settings.xml";
 
 	private static final String JAVA_VERSION_MINIMUM = "1.6.0";
-
-	private static final String LOCALHOST = "127.0.0.1";
 
 	private static final String COPYRIGHT = "(C)";
 
@@ -640,7 +639,7 @@ public abstract class Service extends Agent {
 		} catch( Exception exception ) {
 			Log.write( exception );
 		}
-		
+
 		settings.addSettingListener( "/network", new NetworkSettingsChangeHandler( this ) );
 		configureNetworkSettings();
 	}
@@ -657,7 +656,7 @@ public abstract class Service extends Agent {
 
 	private final void configureNetworkSettings() {
 		Settings settings = getSettings().getNode( "/network" );
-		boolean enableipv6 = settings.getBoolean( "enableipv6", true );
+		boolean enableipv6 = settings.getBoolean( "enableipv6", false );
 		boolean preferipv6 = settings.getBoolean( "preferipv6", false );
 
 		if( enableipv6 ) {
@@ -695,7 +694,7 @@ public abstract class Service extends Agent {
 	private final boolean peerExists( Parameters parameters ) {
 		boolean exists = false;
 		String peer = null;
-		String host = parameters.get( "host", LOCALHOST );
+		String host = parameters.get( "host", InetAddress.getLoopbackAddress().getHostAddress() );
 		int port = peerServer.getServicePortNumber();
 
 		if( port != 0 ) {
@@ -788,7 +787,7 @@ public abstract class Service extends Agent {
 		private List<PeerHandler> handlers = new CopyOnWriteArrayList<PeerHandler>();
 
 		public PeerServer( Service service ) {
-			super( "Peer Server", LOCALHOST );
+			super( "Peer Server", InetAddress.getLoopbackAddress().getHostAddress() );
 			this.service = service;
 		}
 

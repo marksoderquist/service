@@ -31,7 +31,7 @@ public class UpdateManagerTest extends BaseTestCase {
 	public void setUp() {
 		super.setUp();
 	}
-
+	
 	public void testStagePostedUpdates() throws Exception {
 		stageUpdate();
 
@@ -49,21 +49,22 @@ public class UpdateManagerTest extends BaseTestCase {
 		service.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertFalse( service.isRunning() );
 
-		// Start the task manager.
+		// Start the service.
 		service.call();
 		service.waitForStartup( TIMEOUT, TIMEUNIT );
 		assertTrue( service.isRunning() );
 
-		// Stage the posted updates.
 		UpdateManager manager = service.getUpdateManager();
-		
-		// Enable the update manager temporarily.
-		manager.setCheckOption( UpdateManager.CheckOption.STARTUP );
-		manager.stagePostedUpdates();
-		assertTrue( updateFile.exists() );
-
-		// Disable the update manager.
-		manager.setCheckOption( UpdateManager.CheckOption.DISABLED );
+		try {
+			// Enable the update manager temporarily.
+			manager.setCheckOption( UpdateManager.CheckOption.STARTUP );
+			// Stage the posted updates.
+			manager.stagePostedUpdates();
+			assertTrue( updateFile.exists() );
+		} finally {
+			// Disable the update manager.
+			manager.setCheckOption( UpdateManager.CheckOption.DISABLED );
+		}
 
 		// Shutdown the service.
 		service.call( ServiceFlag.STOP );
