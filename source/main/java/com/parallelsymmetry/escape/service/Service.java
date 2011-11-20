@@ -12,7 +12,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.Authenticator;
 import java.net.ConnectException;
-import java.net.InetAddress;
 import java.net.ProxySelector;
 import java.net.Socket;
 import java.net.SocketException;
