@@ -674,12 +674,12 @@ public abstract class Service extends Agent {
 	private final void printHeader() {
 		String notice = getLicenseSummary();
 
-		Log.write( Log.NONE, TextUtil.pad( 60, '-' ) );
+		Log.write( Log.NONE, TextUtil.pad( 75, '-' ) );
 		Log.write( Log.NONE, getName() + " " + getRelease().toHumanString() );
 		Log.write( Log.NONE, getCopyright(), " ", getCopyrightNotice() );
 		Log.write( Log.NONE );
 		if( notice != null ) {
-			Log.write( Log.NONE, notice );
+			Log.write( Log.NONE, TextUtil.reline( notice, 75 ) );
 			Log.write( Log.NONE );
 		}
 
