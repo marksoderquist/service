@@ -268,13 +268,16 @@ public abstract class Service extends Agent {
 		if( "true".equals( topic ) ) {
 			Log.write( Log.NONE, "Usage: java -jar <jar file name> [<option>...]" );
 			Log.write( Log.NONE );
+
+			Log.write( Log.NONE, "Commands:" );
 			printHelpCommands();
+
+			Log.write( Log.NONE, "Options:" );
 			printHelpOptions();
 		}
 	}
 
 	public void printHelpCommands() {
-		Log.write( Log.NONE, "Commands:" );
 		Log.write( Log.NONE, "  If no command is specified the program is started." );
 		Log.write( Log.NONE );
 		Log.write( Log.NONE, "  -help [topic]    Show help information." );
@@ -288,7 +291,6 @@ public abstract class Service extends Agent {
 	}
 
 	public void printHelpOptions() {
-		Log.write( Log.NONE, "Options:" );
 		Log.write( Log.NONE, "  -log.color           Use ANSI color in the console output." );
 		Log.write( Log.NONE, "  -log.level <level>   Change the output log level. Levels are:" );
 		Log.write( Log.NONE, "                       none, error, warn, info, trace, debug, all" );
