@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -43,7 +44,9 @@ import com.parallelsymmetry.escape.utility.TextUtil;
 import com.parallelsymmetry.escape.utility.agent.Agent;
 import com.parallelsymmetry.escape.utility.agent.ServerAgent;
 import com.parallelsymmetry.escape.utility.agent.Worker;
+import com.parallelsymmetry.escape.utility.log.DefaultFormatter;
 import com.parallelsymmetry.escape.utility.log.Log;
+import com.parallelsymmetry.escape.utility.log.LogFlag;
 import com.parallelsymmetry.escape.utility.setting.DescriptorSettingProvider;
 import com.parallelsymmetry.escape.utility.setting.ParametersSettingProvider;
 import com.parallelsymmetry.escape.utility.setting.PreferencesSettingProvider;
@@ -474,7 +477,19 @@ public abstract class Service extends Agent {
 
 		try {
 			// Initialize logging.
-			Log.init( parameters );
+			Log.config( parameters );
+			if( !parameters.isSet( LogFlag.LOG_FILE ) ) {
+				try {
+					String pattern = new File( getProgramDataFolder(), "program.log" ).getCanonicalPath();
+					FileHandler handler = new FileHandler( pattern, parameters.isTrue( LogFlag.LOG_FILE_APPEND ) );
+					handler.setLevel( Log.INFO );
+					if( parameters.isSet( LogFlag.LOG_FILE_LEVEL ) ) handler.setLevel( Log.parseLevel( parameters.get( LogFlag.LOG_FILE_LEVEL ) ) );
+					handler.setFormatter( new DefaultFormatter() );
+					Log.addHandler( handler );
+				} catch( IOException exception ) {
+					Log.write( exception );
+				}
+			}
 
 			// Set the locale.
 			if( parameters.isSet( LOCALE ) ) setLocale( parameters );
