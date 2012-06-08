@@ -481,7 +481,7 @@ public abstract class Service extends Agent {
 			if( !parameters.isSet( LogFlag.LOG_FILE ) ) {
 				try {
 					File folder = getProgramDataFolder();
-					String pattern = new File( folder, "program.%u.log" ).getCanonicalPath().replace( '\\', '/');
+					String pattern = new File( folder, "program.log" ).getCanonicalPath().replace( '\\', '/');
 					folder.mkdirs();
 
 					FileHandler handler = new FileHandler( pattern, parameters.isTrue( LogFlag.LOG_FILE_APPEND ) );
