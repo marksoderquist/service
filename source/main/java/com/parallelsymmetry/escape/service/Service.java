@@ -480,7 +480,10 @@ public abstract class Service extends Agent {
 			Log.config( parameters );
 			if( !parameters.isSet( LogFlag.LOG_FILE ) ) {
 				try {
-					String pattern = new File( getProgramDataFolder(), "program.log" ).getCanonicalPath();
+					File folder = getProgramDataFolder();
+					String pattern = new File( folder, "program.%u.log" ).getCanonicalPath().replace( '\\', '/');
+					folder.mkdirs();
+
 					FileHandler handler = new FileHandler( pattern, parameters.isTrue( LogFlag.LOG_FILE_APPEND ) );
 					handler.setLevel( Log.INFO );
 					if( parameters.isSet( LogFlag.LOG_FILE_LEVEL ) ) handler.setLevel( Log.parseLevel( parameters.get( LogFlag.LOG_FILE_LEVEL ) ) );
