@@ -21,7 +21,6 @@ import com.parallelsymmetry.escape.service.ServiceFlag;
 import com.parallelsymmetry.escape.service.task.DownloadTask;
 import com.parallelsymmetry.escape.updater.UpdaterFlag;
 import com.parallelsymmetry.escape.utility.Descriptor;
-import com.parallelsymmetry.escape.utility.ElevatedProcessBuilder;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.JavaUtil;
 import com.parallelsymmetry.escape.utility.OperatingSystem;
@@ -355,13 +354,14 @@ public class UpdateManager extends Agent implements Persistent {
 			if( updaterSource == null || !updaterSource.exists() ) throw new RuntimeException( "Update library not found: " + updaterSource );
 			if( !FileUtil.copy( updaterSource, updaterTarget ) ) throw new RuntimeException( "Update library not staged: " + updaterTarget );
 
-			boolean veto = false;
+			// Check if process elevation is necessary.
+			boolean elevate = false;
 			for( StagedUpdate update : updates ) {
-				veto |= FileUtil.isWritable( update.getTarget() );
+				elevate |= !FileUtil.isWritable( update.getTarget() );
 			}
 
 			// Start the updater in a new JVM.
-			ElevatedProcessBuilder builder = new ElevatedProcessBuilder( veto );
+			ProcessBuilder builder = new ProcessBuilder();
 			builder.directory( updaterTarget.getParentFile() );
 
 			builder.command().add( OperatingSystem.getJavaExecutableName() );
@@ -421,6 +421,9 @@ public class UpdateManager extends Agent implements Persistent {
 
 			builder.command().add( UpdaterFlag.LAUNCH_HOME );
 			builder.command().add( System.getProperty( "user.dir" ) );
+			
+			// Configure the builder with elevated privilege commands.
+			if( elevate ) OperatingSystem.elevateProcessBuilder( builder );
 
 			// Print the process commands.
 			Log.write( Log.DEBUG, "Launching: " + TextUtil.toString( builder.command(), " " ) );
