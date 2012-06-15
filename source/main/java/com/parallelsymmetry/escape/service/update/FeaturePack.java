@@ -22,6 +22,8 @@ public class FeaturePack {
 
 	public static final String NAME_PATH = "/pack/name";
 
+	public static final String SUMMARY_PATH = "/pack/summary";
+
 	public static final String PROVIDER_PATH = "/pack/provider";
 
 	public static final String COPYRIGHT_HOLDER_PATH = "/pack/copyright/holder";
@@ -43,6 +45,8 @@ public class FeaturePack {
 	private Release release = new Release( new Version() );
 
 	private String name = "Unknown";
+	
+	private String summary = "No summary.";
 
 	private String provider = "Unknown";
 
@@ -96,6 +100,14 @@ public class FeaturePack {
 
 	public void setName( String name ) {
 		this.name = name;
+	}
+	
+	public String getSummary() {
+		return summary;
+	}
+	
+	public void setSummary( String summary ) {
+		this.summary = summary;
 	}
 
 	public String getProvider() {
@@ -155,6 +167,7 @@ public class FeaturePack {
 		String version = descriptor.getValue( VERSION_PATH );
 		String timestamp = descriptor.getValue( TIMESTAMP_PATH );
 		String name = descriptor.getValue( NAME_PATH );
+		String summary = descriptor.getValue( SUMMARY_PATH );
 		String provider = descriptor.getValue( PROVIDER_PATH );
 		String holder = descriptor.getValue( COPYRIGHT_HOLDER_PATH );
 		String notice = descriptor.getValue( COPYRIGHT_NOTICE_PATH );
@@ -173,6 +186,7 @@ public class FeaturePack {
 		if( artifact != null ) pack.artifact = artifact;
 		if( version != null ) pack.release = new Release( version, releaseDate );
 		if( name != null ) pack.name = name;
+		if( summary != null ) pack.summary = summary;
 		if( provider != null ) pack.provider = provider;
 
 		pack.copyrightHolder = holder == null ? provider : holder;
