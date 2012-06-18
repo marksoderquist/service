@@ -35,8 +35,40 @@ public class FeaturePackTest extends BaseTestCase {
 		assertEquals( "mock", pack.getArtifact() );
 	}
 
+	public void testGetRelease() throws Exception {
+		assertEquals( "1.0.0 Alpha 00  1973-08-14 22:29:00", pack.getRelease().toHumanString() );
+	}
+
+	public void testGetName() throws Exception {
+		assertEquals( "Mock Service", pack.getName() );
+	}
+
+	public void testGetProvider() throws Exception {
+		assertEquals( "Parallel Symmetry", pack.getProvider() );
+	}
+
+	public void testGetInceptionYear() throws Exception {
+		assertEquals( 1973, pack.getInceptionYear() );
+	}
+
 	public void testGetSummary() throws Exception {
 		assertEquals( "No summary.", pack.getSummary() );
+	}
+
+	public void testGetCopyrightHolder() throws Exception {
+		assertEquals( "Parallel Symmetry", pack.getCopyrightHolder() );
+	}
+
+	public void testGetCopyrightNotice() throws Exception {
+		assertEquals( "All rights reserved.", pack.getCopyrightNotice() );
+	}
+
+	public void testGetLicenseSummary() throws Exception {
+		assertEquals( "Mock Service comes with ABSOLUTELY NO WARRANTY. This is open software,\nand you are welcome to redistribute it under certain conditions.", pack.getLicenseSummary() );
+	}
+	
+	public void testGetUpdateUri() throws Exception {
+		assertEquals( "target/sandbox/update.xml", pack.getUpdateUri().toString() );
 	}
 
 	public void testIsInstallFolderValid() throws Exception {

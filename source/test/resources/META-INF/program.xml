@@ -14,16 +14,13 @@
 	</copyright>
 
 	<license>
-		<summary>Mock Service comes with ABSOLUTELY NO WARRANTY. This is open
-			software,&#10;and you are welcome to redistribute it under certain
-			conditions.
-		</summary>
+		<summary>Mock Service comes with ABSOLUTELY NO WARRANTY. This is open software,&#10;and you are welcome to redistribute it under certain conditions.</summary>
 	</license>
 
 	<resources>
-		<java version="1.6.0_11" />
-		<pack uri="update.jar" />
+		<java version="1.6.0_11"/>
+		<pack uri="update.jar"/>
 	</resources>
 
-	<update uri="target/sandbox/update.xml" />
+	<update uri="target/sandbox/update.xml"/>
 </pack>

@@ -84,15 +84,9 @@ public abstract class Service extends Agent {
 
 	private Settings settings;
 
-	private FeaturePack pack;
-
 	private Descriptor descriptor;
 
-	private int inceptionYear = DateUtil.getCurrentYear();
-
-	private String copyrightHolder = "Unknown";
-
-	private String licenseSummary;
+	private FeaturePack pack;
 
 	private String javaVersionMinimum = JAVA_VERSION_MINIMUM;
 
@@ -215,6 +209,9 @@ public abstract class Service extends Agent {
 
 	public String getCopyright() {
 		int currentYear = DateUtil.getCurrentYear();
+		int inceptionYear = pack.getInceptionYear();
+		if( inceptionYear == 0 ) inceptionYear = Calendar.getInstance().get( Calendar.YEAR );
+
 		return COPYRIGHT + " " + ( currentYear == inceptionYear ? currentYear : inceptionYear + "-" + currentYear ) + " " + pack.getCopyrightHolder();
 	}
 
@@ -227,7 +224,7 @@ public abstract class Service extends Agent {
 	}
 
 	public String getLicenseSummary() {
-		return licenseSummary;
+		return TextUtil.reline( pack.getLicenseSummary(), 72 );
 	}
 
 	public Parameters getParameters() {
@@ -442,24 +439,13 @@ public abstract class Service extends Agent {
 
 	private final synchronized void describe( Descriptor descriptor ) {
 		if( this.descriptor != null ) return;
-
 		this.descriptor = descriptor;
 
 		pack = FeaturePack.load( descriptor );
 
 		// Determine the program name.
+		if( name == null ) setName( pack.getName() );
 		setName( name == null ? pack.getName() : name );
-
-		// Determine the program copyright information.
-		try {
-			inceptionYear = Integer.parseInt( descriptor.getValue( "/pack/inception" ) );
-		} catch( NumberFormatException exception ) {
-			inceptionYear = Calendar.getInstance().get( Calendar.YEAR );
-		}
-		copyrightHolder = descriptor.getValue( "/pack/provider", copyrightHolder );
-
-		licenseSummary = descriptor.getValue( "/pack/license/summary", licenseSummary );
-		if( licenseSummary != null ) licenseSummary = TextUtil.reline( licenseSummary, 72 );
 
 		// Minimum Java runtime version.
 		javaVersionMinimum = descriptor.getValue( "/pack/resources/java/@version", JAVA_VERSION_MINIMUM );
