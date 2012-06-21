@@ -35,19 +35,11 @@ public class DownloadTask extends ServiceTask<Download> {
 	}
 
 	@Override
-	public Download execute() throws Exception {
-		try {
-			return download();
-		} catch( IOException exception ) {
-			getService().error( Bundles.getString( BundleKey.MESSAGES, "exception.updates.source.cannot.connect" ), exception );
-			throw exception;
-		} catch( Exception exception ) {
-			getService().error( exception );
-			throw exception;
-		}
+	public Download execute() throws IOException {
+		return download();
 	}
 
-	private Download download() throws Exception {
+	private Download download() throws IOException {
 		URLConnection connection = uri.toURL().openConnection();
 		connection.setUseCaches( false );
 
