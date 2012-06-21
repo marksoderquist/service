@@ -19,6 +19,11 @@ public class FeatureSite implements Persistent {
 		this.uri = uri;
 	}
 
+	public FeatureSite( URI uri, String name ) {
+		this.uri = uri;
+		this.name = name;
+	}
+
 	public String getName() {
 		return name;
 	}
