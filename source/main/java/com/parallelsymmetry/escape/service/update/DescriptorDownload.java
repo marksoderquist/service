@@ -10,7 +10,7 @@ import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.task.Task;
 import com.parallelsymmetry.escape.utility.task.TaskListener;
 
-final class DescriptorDownload extends Task<Descriptor> {
+public final class DescriptorDownload extends Task<Descriptor> {
 
 	private DownloadTask task;
 
@@ -43,10 +43,7 @@ final class DescriptorDownload extends Task<Descriptor> {
 	public Descriptor execute() throws Exception {
 		Download download = task.execute();
 		if( download == null ) return null;
-
-		Descriptor descriptor = new Descriptor( new FileInputStream( download.getTarget() ) );
-
-		return descriptor;
+		return new Descriptor( new FileInputStream( download.getTarget() ) );
 	}
 
 }
