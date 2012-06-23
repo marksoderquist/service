@@ -16,6 +16,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
 
+import com.parallelsymmetry.escape.product.CardProvider;
+import com.parallelsymmetry.escape.product.ProductCard;
+import com.parallelsymmetry.escape.product.ProductResource;
 import com.parallelsymmetry.escape.service.Service;
 import com.parallelsymmetry.escape.service.ServiceFlag;
 import com.parallelsymmetry.escape.service.task.DownloadTask;
@@ -35,7 +38,7 @@ import com.parallelsymmetry.escape.utility.setting.SettingListener;
 import com.parallelsymmetry.escape.utility.setting.Settings;
 
 /**
- * The update manager handles discovery, staging and applying program updates.
+ * The update manager handles discovery, staging and applying product updates.
  * <p>
  * Discovery involves checking for updates over the network (usually over the
  * Internet) and comparing the release information of installed packs with the
@@ -89,23 +92,29 @@ public class UpdateManager extends Agent implements Persistent {
 
 	private Set<StagedUpdate> updates;
 
-	private Map<String, FeaturePack> installedPacks;
+	private Map<String, ProductCard> installedPacks;
 
 	private Timer timer;
 
 	public UpdateManager( Service service ) {
 		this.service = service;
 		updates = new CopyOnWriteArraySet<StagedUpdate>();
-		installedPacks = new ConcurrentHashMap<String, FeaturePack>();
+		installedPacks = new ConcurrentHashMap<String, ProductCard>();
 
 		service.getSettings().addSettingListener( "/update", new SettingChangeHandler() );
 	}
 
-	public Map<String, FeaturePack> getInstalledPacks() {
-		Map<String, FeaturePack> packs = new ConcurrentHashMap<String, FeaturePack>();
+	/**
+	 * Get the installed packs. The map entry key is the product card key and the
+	 * map entry value is the product card that represents the pack.
+	 * 
+	 * @return A map of the installed packs.
+	 */
+	public Map<String, ProductCard> getInstalledPacks() {
+		Map<String, ProductCard> packs = new ConcurrentHashMap<String, ProductCard>();
 
 		// Add the service pack.
-		packs.put( service.getPack().getKey(), service.getPack() );
+		packs.put( service.getCard().getKey(), service.getCard() );
 
 		// Add the installed packs.
 		packs.putAll( installedPacks );
@@ -113,12 +122,12 @@ public class UpdateManager extends Agent implements Persistent {
 		return packs;
 	}
 
-	public void addInstalledPack( FeaturePack pack ) {
-		installedPacks.put( pack.getKey(), pack );
+	public void addInstalledPack( ProductCard card ) {
+		installedPacks.put( card.getKey(), card );
 	}
 
-	public void removeInstalledPack( FeaturePack pack ) {
-		installedPacks.remove( pack.getKey() );
+	public void removeInstalledPack( ProductCard card ) {
+		installedPacks.remove( card.getKey() );
 	}
 
 	/**
@@ -162,37 +171,37 @@ public class UpdateManager extends Agent implements Persistent {
 	}
 
 	/**
-	 * Gets the set of posted updates. If there are no posted updates found an
-	 * empty set is returned.
+	 * Gets the set of posted product updates. If there are no posted updates
+	 * found an empty set is returned.
 	 * 
 	 * @return The set of posted updates.
 	 * @throws Exception
 	 */
-	public Set<FeaturePack> getPostedUpdates() throws Exception {
-		Set<FeaturePack> newPacks = new HashSet<FeaturePack>();
+	public Set<ProductCard> getPostedUpdates() throws Exception {
+		Set<ProductCard> newPacks = new HashSet<ProductCard>();
 		if( !isEnabled() ) return newPacks;
 
 		Log.write( Log.TRACE, "Checking for updates..." );
 
-		Map<String, FeaturePack> oldPacks = getInstalledPacks();
+		Map<String, ProductCard> oldPacks = getInstalledPacks();
 
-		Map<FeaturePack, Future<Descriptor>> futures = new HashMap<FeaturePack, Future<Descriptor>>();
-		for( FeaturePack oldPack : oldPacks.values() ) {
+		Map<ProductCard, Future<Descriptor>> futures = new HashMap<ProductCard, Future<Descriptor>>();
+		for( ProductCard oldPack : oldPacks.values() ) {
 			URI uri = getResolvedUpdateUri( oldPack.getUpdateUri() );
 			if( uri == null ) {
-				Log.write( Log.WARN, "Installed pack does not have an update URI: " + oldPack.toString() );
+				Log.write( Log.WARN, "Installed pack does not have source defined: " + oldPack.toString() );
 				continue;
 			} else {
-				Log.write( Log.DEBUG, "Installed pack URI: " + uri );
+				Log.write( Log.DEBUG, "Installed pack source: " + uri );
 			}
 
-			futures.put( oldPack, service.getTaskManager().submit( new DescriptorDownload( service, uri ) ) );
+			futures.put( oldPack, service.getTaskManager().submit( new DescriptorDownload( uri ) ) );
 		}
 
-		for( FeaturePack oldPack : oldPacks.values() ) {
+		for( ProductCard oldPack : oldPacks.values() ) {
 			Future<Descriptor> future = futures.get( oldPack );
 			if( future == null ) continue;
-			FeaturePack newPack = FeaturePack.load( future.get() );
+			ProductCard newPack = ProductCard.load( future.get() );
 
 			// Handle the development command line flag.
 			boolean development = service.getParameters().isSet( ServiceFlag.DEVELOPMENT );
@@ -218,37 +227,38 @@ public class UpdateManager extends Agent implements Persistent {
 		return newPacks;
 	}
 
-	public boolean cacheSelectedUpdates( Set<FeaturePack> packs ) throws Exception {
+	public boolean cacheSelectedUpdates( Set<ProductCard> packs ) throws Exception {
 		throw new RuntimeException( "Method not implemented yet." );
 	}
 
-	public boolean stageCachedUpdates( Set<FeaturePack> packs ) throws Exception {
+	public boolean stageCachedUpdates( Set<ProductCard> packs ) throws Exception {
 		throw new RuntimeException( "Method not implemented yet." );
 	}
 
 	/**
-	 * Attempt to stage the feature packs from posted updates.
+	 * Attempt to stage the product packs from posted updates.
 	 * 
-	 * @return true if one or more feature packs were staged.
+	 * @return true if one or more product packs were staged.
 	 * @throws Exception
 	 */
 	public boolean stagePostedUpdates() throws Exception {
 		if( !isEnabled() ) return false;
 
-		Set<FeaturePack> packs = getPostedUpdates();
+		Set<ProductCard> packs = getPostedUpdates();
 		if( packs.size() == 0 ) return false;
 
 		return stageSelectedUpdates( packs );
 	}
 
 	/**
-	 * Attempt to stage the specified feature packs.
+	 * Attempt to stage the product packs described by the specified product
+	 * cards.
 	 * 
-	 * @param packs
-	 * @return true if one or more feature packs were staged.
+	 * @param cards
+	 * @return true if one or more product packs were staged.
 	 * @throws Exception
 	 */
-	public boolean stageSelectedUpdates( Set<FeaturePack> packs ) throws Exception {
+	public boolean stageSelectedUpdates( Set<ProductCard> cards ) throws Exception {
 		File programDataFolder = service.getProgramDataFolder();
 		File stageFolder = new File( programDataFolder, "stage" );
 		stageFolder.mkdirs();
@@ -256,45 +266,45 @@ public class UpdateManager extends Agent implements Persistent {
 		Log.write( Log.DEBUG, "Pack stage folder: " + stageFolder );
 
 		// Determine all the resources to download.
-		Map<FeaturePack, Set<FeatureResource>> packResources = new HashMap<FeaturePack, Set<FeatureResource>>();
-		for( FeaturePack pack : packs ) {
-			Set<FeatureResource> resources = new PackProvider( service, pack ).getResources();
+		Map<ProductCard, Set<ProductResource>> productResources = new HashMap<ProductCard, Set<ProductResource>>();
+		for( ProductCard card : cards ) {
+			Set<ProductResource> resources = new CardProvider( card, service.getTaskManager() ).getResources();
 
-			for( FeatureResource resource : resources ) {
+			for( ProductResource resource : resources ) {
 				URI uri = getResolvedUpdateUri( resource.getUri() );
 				Log.write( Log.DEBUG, "Resource source: " + uri );
-				resource.setFuture( service.getTaskManager().submit( new DownloadTask( service, uri ) ) );
+				resource.setFuture( service.getTaskManager().submit( new DownloadTask( uri ) ) );
 			}
 
-			packResources.put( pack, resources );
+			productResources.put( card, resources );
 		}
 
 		// Download all resources.
-		for( FeaturePack pack : packs ) {
-			for( FeatureResource resource : packResources.get( pack ) ) {
+		for( ProductCard card : cards ) {
+			for( ProductResource resource : productResources.get( card ) ) {
 				resource.waitFor();
 				Log.write( Log.DEBUG, "Resource target: " + resource.getLocalFile() );
 			}
 		}
 
-		Map<String, FeaturePack> installedPacks = getInstalledPacks();
+		Map<String, ProductCard> installedPacks = getInstalledPacks();
 
 		for( String key : installedPacks.keySet() ) {
 			Log.write( Log.TRACE, "Installed pack: " + key );
 		}
 
 		// Create an update for each pack.
-		for( FeaturePack pack : packs ) {
-			FeaturePack installedPack = installedPacks.get( pack.getKey() );
+		for( ProductCard card : cards ) {
+			ProductCard installedPack = installedPacks.get( card.getKey() );
 
 			// Check that the pack is valid.
 			if( installedPack == null || !installedPack.isInstallFolderValid() ) {
-				Log.write( Log.WARN, "Pack not installed: " + pack );
+				Log.write( Log.WARN, "Pack not installed: " + card );
 				continue;
 			}
 
-			File update = new File( stageFolder, pack.getKey() + ".pak" );
-			createUpdatePack( packResources.get( pack ), update );
+			File update = new File( stageFolder, card.getKey() + ".pak" );
+			createUpdatePack( productResources.get( card ), update );
 			updates.add( new StagedUpdate( update, installedPack.getInstallFolder() ) );
 			Log.write( Log.TRACE, "Update staged: " + update );
 		}
@@ -349,7 +359,7 @@ public class UpdateManager extends Agent implements Persistent {
 			Log.write( Log.DEBUG, "Starting update process..." );
 			// Copy the updater to a temporary location.
 			File updaterSource = updater;
-			File updaterTarget = new File( FileUtil.TEMP_FOLDER, service.getArtifact() + "-updater.jar" );
+			File updaterTarget = new File( FileUtil.TEMP_FOLDER, service.getCard().getArtifact() + "-updater.jar" );
 
 			if( updaterSource == null || !updaterSource.exists() ) throw new RuntimeException( "Update library not found: " + updaterSource );
 			if( !FileUtil.copy( updaterSource, updaterTarget ) ) throw new RuntimeException( "Update library not staged: " + updaterTarget );
@@ -421,7 +431,7 @@ public class UpdateManager extends Agent implements Persistent {
 
 			builder.command().add( UpdaterFlag.LAUNCH_HOME );
 			builder.command().add( System.getProperty( "user.dir" ) );
-			
+
 			// Configure the builder with elevated privilege commands.
 			if( elevate ) OperatingSystem.elevateProcessBuilder( builder );
 
@@ -488,10 +498,10 @@ public class UpdateManager extends Agent implements Persistent {
 		return uri;
 	}
 
-	private void createUpdatePack( Set<FeatureResource> resources, File update ) throws IOException {
+	private void createUpdatePack( Set<ProductResource> resources, File update ) throws IOException {
 		File updateFolder = FileUtil.createTempFolder( "update", "folder" );
 
-		for( FeatureResource resource : resources ) {
+		for( ProductResource resource : resources ) {
 			switch( resource.getType() ) {
 				case FILE: {
 					// Just copy the file.

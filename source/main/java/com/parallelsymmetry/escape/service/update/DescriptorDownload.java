@@ -3,7 +3,6 @@ package com.parallelsymmetry.escape.service.update;
 import java.io.FileInputStream;
 import java.net.URI;
 
-import com.parallelsymmetry.escape.service.Service;
 import com.parallelsymmetry.escape.service.task.Download;
 import com.parallelsymmetry.escape.service.task.DownloadTask;
 import com.parallelsymmetry.escape.utility.Descriptor;
@@ -14,9 +13,9 @@ public final class DescriptorDownload extends Task<Descriptor> {
 
 	private DownloadTask task;
 
-	public DescriptorDownload( Service service, URI uri ) {
+	public DescriptorDownload( URI uri ) {
 		super( uri.toString() );
-		this.task = new DownloadTask( service, uri );
+		this.task = new DownloadTask( uri );
 	}
 
 	public long getMinimum() {

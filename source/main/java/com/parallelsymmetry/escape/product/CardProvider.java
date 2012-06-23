@@ -1,4 +1,4 @@
-package com.parallelsymmetry.escape.service.update;
+package com.parallelsymmetry.escape.product;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -8,30 +8,27 @@ import java.util.concurrent.Future;
 
 import org.w3c.dom.Node;
 
-import com.parallelsymmetry.escape.service.Service;
+import com.parallelsymmetry.escape.service.update.DescriptorDownload;
 import com.parallelsymmetry.escape.utility.Descriptor;
+import com.parallelsymmetry.escape.utility.task.TaskManager;
 
-public class PackProvider implements FeatureProvider {
+public class CardProvider implements ProductResourceProvider {
 
-	private Service service;
+	private TaskManager taskManager;
 
-	private FeaturePack pack;
+	private ProductCard card;
 
-	public PackProvider( Service service, FeaturePack pack ) {
-		this.service = service;
-		this.pack = pack;
+	public CardProvider( ProductCard card, TaskManager taskManager ) {
+		this.card = card;
+		this.taskManager = taskManager;
 	}
 
 	@Override
-	public Set<FeatureResource> getResources() throws Exception {
-		return getResources( pack );
-	}
+	public Set<ProductResource> getResources() throws Exception {
+		URI codebase = card.getUpdateUri();
+		Descriptor descriptor = card.getDescriptor();
 
-	private Set<FeatureResource> getResources( FeaturePack source ) throws Exception {
-		URI codebase = source.getUpdateUri();
-		Descriptor descriptor = source.getDescriptor();
-
-		Set<FeatureResource> resources = new HashSet<FeatureResource>();
+		Set<ProductResource> resources = new HashSet<ProductResource>();
 
 		// Resolve all the files to download.
 		String[] files = getResources( descriptor, "file/@uri" );
@@ -40,16 +37,16 @@ public class PackProvider implements FeatureProvider {
 
 		for( String file : files ) {
 			URI uri = codebase.resolve( file );
-			resources.add( new FeatureResource( FeatureResource.Type.FILE, uri ) );
+			resources.add( new ProductResource( ProductResource.Type.FILE, uri ) );
 		}
 		for( String pack : packs ) {
 			URI uri = codebase.resolve( pack );
-			resources.add( new FeatureResource( FeatureResource.Type.PACK, uri ) );
+			resources.add( new ProductResource( ProductResource.Type.PACK, uri ) );
 		}
 		for( String jnlp : jnlps ) {
 			URI uri = codebase.resolve( jnlp );
-			Future<Descriptor> future = service.getTaskManager().submit( new DescriptorDownload( service, uri ) );
-			resources.addAll( new JnlpProvider( service, future.get() ).getResources() );
+			Future<Descriptor> future = taskManager.submit( new DescriptorDownload( uri ) );
+			resources.addAll( new JnlpProvider( future.get(), taskManager ).getResources() );
 		}
 
 		return resources;

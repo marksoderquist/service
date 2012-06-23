@@ -9,13 +9,12 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import com.parallelsymmetry.escape.service.Service;
-import com.parallelsymmetry.escape.service.ServiceTask;
 import com.parallelsymmetry.escape.utility.BundleKey;
 import com.parallelsymmetry.escape.utility.Bundles;
 import com.parallelsymmetry.escape.utility.log.Log;
+import com.parallelsymmetry.escape.utility.task.Task;
 
-public class DownloadTask extends ServiceTask<Download> {
+public class DownloadTask extends Task<Download> {
 
 	private URI uri;
 
@@ -23,13 +22,13 @@ public class DownloadTask extends ServiceTask<Download> {
 
 	private Set<DownloadListener> listeners;
 
-	public DownloadTask( Service service, URI uri ) {
-		this( service, uri, null );
+	public DownloadTask( URI uri ) {
+		this( uri, null );
 		listeners = new CopyOnWriteArraySet<DownloadListener>();
 	}
 
-	public DownloadTask( Service service, URI uri, File target ) {
-		super( service, Bundles.getString( BundleKey.PROMPTS, "download" ) + " " + uri.toString() );
+	public DownloadTask( URI uri, File target ) {
+		super( Bundles.getString( BundleKey.PROMPTS, "download" ) + " " + uri.toString() );
 		this.uri = uri;
 		this.target = target;
 	}

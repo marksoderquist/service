@@ -31,11 +31,11 @@ public class ServiceTest extends BaseTestCase {
 	}
 
 	public void testBeforeCall() throws Exception {
-		assertEquals( "com.parallelsymmetry.escape.service", service.getGroup() );
-		assertEquals( "mock", service.getArtifact() );
-		assertEquals( "1.0.0-a-00  1973-08-14 22:29:00", service.getRelease().toString() );
-		assertEquals( "(C) 1973-" + DateUtil.getCurrentYear() + " Parallel Symmetry", service.getCopyright() );
-		assertEquals( "All rights reserved.", service.getCopyrightNotice() );
+		assertEquals( "com.parallelsymmetry.escape.service", service.getCard().getGroup() );
+		assertEquals( "mock", service.getCard().getArtifact() );
+		assertEquals( "1.0.0-a-00  1973-08-14 22:29:00", service.getCard().getRelease().toString() );
+		assertEquals( "(C) 1973-" + DateUtil.getCurrentYear() + " Parallel Symmetry", service.getCard().getCopyright() );
+		assertEquals( "All rights reserved.", service.getCard().getCopyrightNotice() );
 	}
 
 	public void testCall() throws Exception {
@@ -43,7 +43,7 @@ public class ServiceTest extends BaseTestCase {
 		service.waitForStartup( TIMEOUT, TIMEUNIT );
 		assertTrue( service.isRunning() );
 
-		assertEquals( MOCK_RELEASE, service.getRelease().toHumanString() );
+		assertEquals( MOCK_RELEASE, service.getCard().getRelease().toHumanString() );
 
 		service.call( ServiceFlag.STOP );
 		service.waitForShutdown( TIMEOUT, TIMEUNIT );

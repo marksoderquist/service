@@ -38,7 +38,7 @@ public class UpdateManagerTest extends BaseTestCase {
 		Service service = new MockService();
 
 		File stageFolder = new File( service.getProgramDataFolder(), "stage" );
-		File updateFile = new File( stageFolder, service.getPack().getKey() + ".pak" );
+		File updateFile = new File( stageFolder, service.getCard().getKey() + ".pak" );
 
 		// Cleanup from previous run.
 		FileUtil.delete( stageFolder );

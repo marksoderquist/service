@@ -1,4 +1,4 @@
-package com.parallelsymmetry.escape.service.update;
+package com.parallelsymmetry.escape.product;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -8,29 +8,30 @@ import java.util.concurrent.Future;
 
 import org.w3c.dom.Node;
 
-import com.parallelsymmetry.escape.service.Service;
+import com.parallelsymmetry.escape.service.update.DescriptorDownload;
 import com.parallelsymmetry.escape.utility.Descriptor;
+import com.parallelsymmetry.escape.utility.task.TaskManager;
 
-public class JnlpProvider implements FeatureProvider {
+public class JnlpProvider implements ProductResourceProvider {
 
-	private Service service;
+	private TaskManager taskManager;
 
 	private Descriptor descriptor;
 
-	public JnlpProvider( Service service, Descriptor descriptor ) {
-		this.service = service;
+	public JnlpProvider( Descriptor descriptor, TaskManager taskManager ) {
 		this.descriptor = descriptor;
+		this.taskManager = taskManager;
 	}
 
 	@Override
-	public Set<FeatureResource> getResources() throws Exception {
+	public Set<ProductResource> getResources() throws Exception {
 		return getResources( descriptor );
 	}
 
-	private Set<FeatureResource> getResources( Descriptor descriptor ) throws Exception {
+	private Set<ProductResource> getResources( Descriptor descriptor ) throws Exception {
 		URI codebase = new URI( descriptor.getValue( "/jnlp/@codebase" ) );
 
-		Set<FeatureResource> resources = new HashSet<FeatureResource>();
+		Set<ProductResource> resources = new HashSet<ProductResource>();
 
 		// Resolve all the files to download.
 		String[] jars = getResources( descriptor, "jar/@href" );
@@ -40,20 +41,20 @@ public class JnlpProvider implements FeatureProvider {
 
 		for( String jar : jars ) {
 			URI uri = codebase.resolve( jar );
-			resources.add( new FeatureResource( FeatureResource.Type.FILE, uri ) );
+			resources.add( new ProductResource( ProductResource.Type.FILE, uri ) );
 		}
 		for( String lib : libs ) {
 			URI uri = codebase.resolve( lib );
-			resources.add( new FeatureResource( FeatureResource.Type.PACK, uri ) );
+			resources.add( new ProductResource( ProductResource.Type.PACK, uri ) );
 		}
 		for( String lib : natives ) {
 			URI uri = codebase.resolve( lib );
-			resources.add( new FeatureResource( FeatureResource.Type.PACK, uri ) );
+			resources.add( new ProductResource( ProductResource.Type.PACK, uri ) );
 		}
 		for( String extension : extensions ) {
 			URI uri = codebase.resolve( extension );
-			Future<Descriptor> future = service.getTaskManager().submit( new DescriptorDownload( service, uri ) );
-			resources.addAll( new JnlpProvider( service, future.get() ).getResources() );
+			Future<Descriptor> future = taskManager.submit( new DescriptorDownload( uri ) );
+			resources.addAll( new JnlpProvider( future.get(), taskManager ).getResources() );
 		}
 
 		return resources;

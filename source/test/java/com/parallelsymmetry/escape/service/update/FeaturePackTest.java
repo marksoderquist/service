@@ -5,19 +5,20 @@ import java.io.InputStream;
 
 import org.junit.Before;
 
+import com.parallelsymmetry.escape.product.ProductCard;
 import com.parallelsymmetry.escape.service.BaseTestCase;
 import com.parallelsymmetry.escape.utility.Descriptor;
 
 public class FeaturePackTest extends BaseTestCase {
 
-	private FeaturePack pack;
+	private ProductCard pack;
 
 	@Before
 	public void setUp() {
 		try {
 			InputStream input = getClass().getResourceAsStream( "/META-INF/program.xml" );
 			Descriptor descriptor = new Descriptor( input );
-			pack = FeaturePack.load( descriptor );
+			pack = ProductCard.load( descriptor );
 		} catch( Exception exception ) {
 			fail( exception.getMessage() );
 		}

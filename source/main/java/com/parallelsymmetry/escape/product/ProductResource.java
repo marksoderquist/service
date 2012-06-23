@@ -1,4 +1,4 @@
-package com.parallelsymmetry.escape.service.update;
+package com.parallelsymmetry.escape.product;
 
 import java.io.File;
 import java.net.URI;
@@ -6,13 +6,13 @@ import java.util.concurrent.Future;
 
 import com.parallelsymmetry.escape.service.task.Download;
 
-public final class FeatureResource {
+public final class ProductResource {
 
 	public enum Type {
 		FILE, PACK
 	};
 
-	private FeatureResource.Type type;
+	private ProductResource.Type type;
 
 	private URI uri;
 
@@ -20,12 +20,12 @@ public final class FeatureResource {
 	
 	private File file;
 
-	public FeatureResource( FeatureResource.Type type, URI uri ) {
+	public ProductResource( ProductResource.Type type, URI uri ) {
 		this.type = type;
 		this.uri = uri;
 	}
 
-	public FeatureResource.Type getType() {
+	public ProductResource.Type getType() {
 		return type;
 	}
 

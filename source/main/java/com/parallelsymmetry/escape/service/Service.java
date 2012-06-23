@@ -18,7 +18,6 @@ import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.InvalidParameterException;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -33,13 +32,12 @@ import javax.swing.Icon;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
-import com.parallelsymmetry.escape.service.update.FeaturePack;
+import com.parallelsymmetry.escape.product.Product;
+import com.parallelsymmetry.escape.product.ProductCard;
 import com.parallelsymmetry.escape.service.update.UpdateManager;
-import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.OperatingSystem;
 import com.parallelsymmetry.escape.utility.Parameters;
-import com.parallelsymmetry.escape.utility.Release;
 import com.parallelsymmetry.escape.utility.TextUtil;
 import com.parallelsymmetry.escape.utility.agent.Agent;
 import com.parallelsymmetry.escape.utility.agent.ServerAgent;
@@ -56,7 +54,7 @@ import com.parallelsymmetry.escape.utility.setting.Settings;
 import com.parallelsymmetry.escape.utility.task.Task;
 import com.parallelsymmetry.escape.utility.task.TaskManager;
 
-public abstract class Service extends Agent {
+public abstract class Service extends Agent implements Product {
 
 	public static final String MANAGER_SETTINGS_ROOT = "/manager";
 
@@ -72,9 +70,7 @@ public abstract class Service extends Agent {
 
 	private static final String DEFAULT_SETTINGS_PATH = "/META-INF/settings.xml";
 
-	private static final String JAVA_VERSION_MINIMUM = "1.6.0";
-
-	private static final String COPYRIGHT = "(C)";
+	private static final String JAVA_VERSION_MINIMUM = "1.6";
 
 	private static RestartShutdownHook restartShutdownHook;
 
@@ -86,7 +82,7 @@ public abstract class Service extends Agent {
 
 	private Descriptor descriptor;
 
-	private FeaturePack pack;
+	private ProductCard card;
 
 	private String javaVersionMinimum = JAVA_VERSION_MINIMUM;
 
@@ -191,40 +187,8 @@ public abstract class Service extends Agent {
 		processParameters( parameters, false );
 	}
 
-	public String getGroup() {
-		return pack.getGroup();
-	}
-
-	public String getArtifact() {
-		return pack.getArtifact();
-	}
-
-	public Release getRelease() {
-		return pack.getRelease();
-	}
-
-	public String getProvider() {
-		return pack.getProvider();
-	}
-
-	public String getCopyright() {
-		int currentYear = DateUtil.getCurrentYear();
-		int inceptionYear = pack.getInceptionYear();
-		if( inceptionYear == 0 ) inceptionYear = Calendar.getInstance().get( Calendar.YEAR );
-
-		return COPYRIGHT + " " + ( currentYear == inceptionYear ? currentYear : inceptionYear + "-" + currentYear ) + " " + pack.getCopyrightHolder();
-	}
-
-	public String getCopyrightHolder() {
-		return pack.getCopyrightHolder();
-	}
-
-	public String getCopyrightNotice() {
-		return pack.getCopyrightNotice();
-	}
-
-	public String getLicenseSummary() {
-		return TextUtil.reline( pack.getLicenseSummary(), 72 );
+	public ProductCard getCard() {
+		return card;
 	}
 
 	public Parameters getParameters() {
@@ -233,10 +197,6 @@ public abstract class Service extends Agent {
 
 	public Settings getSettings() {
 		return settings;
-	}
-
-	public FeaturePack getPack() {
-		return pack;
 	}
 
 	/**
@@ -259,7 +219,7 @@ public abstract class Service extends Agent {
 	}
 
 	public File getProgramDataFolder() {
-		return OperatingSystem.getUserProgramDataFolder( getArtifact(), getName() );
+		return OperatingSystem.getUserProgramDataFolder( card.getArtifact(), getName() );
 	}
 
 	public void printHelp( String topic ) {
@@ -441,11 +401,11 @@ public abstract class Service extends Agent {
 		if( this.descriptor != null ) return;
 		this.descriptor = descriptor;
 
-		pack = FeaturePack.load( descriptor );
+		card = ProductCard.load( descriptor );
 
 		// Determine the program name.
-		if( name == null ) setName( pack.getName() );
-		setName( name == null ? pack.getName() : name );
+		if( name == null ) setName( card.getName() );
+		setName( name == null ? card.getName() : name );
 
 		// Minimum Java runtime version.
 		javaVersionMinimum = descriptor.getValue( "/pack/resources/java/@version", JAVA_VERSION_MINIMUM );
@@ -613,26 +573,26 @@ public abstract class Service extends Agent {
 
 		Log.write( Log.TRACE, "Home: ", home );
 
-		pack.setInstallFolder( home );
+		card.setInstallFolder( home );
 	}
 
 	private final void configureArtifact( Parameters parameters ) {
 		// Set the artifact name if specified.
 		if( parameters.isSet( ServiceFlag.ARTIFACT ) ) {
-			pack.setArtifact( parameters.get( ServiceFlag.ARTIFACT ) );
+			card.setArtifact( parameters.get( ServiceFlag.ARTIFACT ) );
 		}
 
 		// Update the artifact if the development flag is set.
-		if( parameters.isTrue( ServiceFlag.DEVELOPMENT ) && !pack.getArtifact().startsWith( DEVELOPMENT_PREFIX ) ) {
-			pack.setArtifact( DEVELOPMENT_PREFIX + pack.getArtifact() );
+		if( parameters.isTrue( ServiceFlag.DEVELOPMENT ) && !card.getArtifact().startsWith( DEVELOPMENT_PREFIX ) ) {
+			card.setArtifact( DEVELOPMENT_PREFIX + card.getArtifact() );
 		}
 
-		Log.write( Log.TRACE, "Pack: ", pack.getKey() );
+		Log.write( Log.TRACE, "Pack: ", card.getKey() );
 	}
 
 	private final void configureSettings( Parameters parameters ) {
 		try {
-			String preferencesPath = "/" + pack.getGroup().replace( '.', '/' ) + "/" + pack.getArtifact();
+			String preferencesPath = "/" + card.getGroup().replace( '.', '/' ) + "/" + card.getArtifact();
 			Preferences preferences = Preferences.userRoot().node( preferencesPath );
 
 			settings.addProvider( new ParametersSettingProvider( parameters ) );
@@ -678,11 +638,11 @@ public abstract class Service extends Agent {
 	}
 
 	private final void printHeader() {
-		String notice = getLicenseSummary();
+		String notice = card.getLicenseSummary();
 
 		Log.write( Log.NONE, TextUtil.pad( 75, '-' ) );
-		Log.write( Log.NONE, getName() + " " + getRelease().toHumanString() );
-		Log.write( Log.NONE, getCopyright(), " ", getCopyrightNotice() );
+		Log.write( Log.NONE, getName() + " " + card.getRelease().toHumanString() );
+		Log.write( Log.NONE, card.getCopyright(), " ", card.getCopyrightNotice() );
 		Log.write( Log.NONE );
 		if( notice != null ) {
 			Log.write( Log.NONE, TextUtil.reline( notice, 75 ) );

@@ -1,16 +1,20 @@
-package com.parallelsymmetry.escape.service.update;
+package com.parallelsymmetry.escape.product;
 
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Calendar;
 import java.util.Date;
 
+import javax.swing.Icon;
+
+import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.Release;
 import com.parallelsymmetry.escape.utility.Version;
 import com.parallelsymmetry.escape.utility.log.Log;
 
-public class FeaturePack {
+public class ProductCard {
 
 	public static final String GROUP_PATH = "/pack/group";
 
@@ -40,6 +44,8 @@ public class FeaturePack {
 
 	private static final String DEFAULT_ARTIFACT = "unknown";
 
+	private static final String COPYRIGHT = "(C)";
+
 	private Descriptor descriptor;
 
 	private String group = DEFAULT_GROUP;
@@ -66,7 +72,7 @@ public class FeaturePack {
 
 	private File folder;
 
-	private FeaturePack( Descriptor descriptor ) {
+	private ProductCard( Descriptor descriptor ) {
 		this.descriptor = descriptor;
 	}
 
@@ -101,6 +107,15 @@ public class FeaturePack {
 	public void setRelease( Release release ) {
 		this.release = release;
 	}
+	
+	public Icon getIcon() {
+		// TODO ProductCard.getIcon() get the icon from the icon cache.
+		return null;
+	}
+	
+	public void setIcon( Icon icon ) {
+		// TODO ProductCard.setIcon() set the icon in the icon cache.
+	}
 
 	public String getName() {
 		return name;
@@ -132,6 +147,14 @@ public class FeaturePack {
 
 	public void setSummary( String summary ) {
 		this.summary = summary;
+	}
+
+	public String getCopyright() {
+		int currentYear = DateUtil.getCurrentYear();
+		int inceptionYear = getInceptionYear();
+		if( inceptionYear == 0 ) inceptionYear = Calendar.getInstance().get( Calendar.YEAR );
+
+		return COPYRIGHT + " " + ( currentYear == inceptionYear ? currentYear : inceptionYear + "-" + currentYear ) + " " + getCopyrightHolder();
 	}
 
 	public void setCopyrightHolder( String holder ) {
@@ -183,7 +206,7 @@ public class FeaturePack {
 		return getKey();
 	}
 
-	public static final FeaturePack load( Descriptor descriptor ) {
+	public static final ProductCard load( Descriptor descriptor ) {
 		if( descriptor == null ) return null;
 
 		String group = descriptor.getValue( GROUP_PATH );
@@ -199,7 +222,7 @@ public class FeaturePack {
 		String lSummary = descriptor.getValue( LICENSE_SUMMARY_PATH );
 		String uri = descriptor.getValue( UPDATE_URI_PATH );
 
-		FeaturePack pack = new FeaturePack( descriptor );
+		ProductCard pack = new ProductCard( descriptor );
 
 		// Determine the release date.
 		Date releaseDate = null;
