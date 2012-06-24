@@ -5,6 +5,7 @@
 	<version>1.0.0-a-00</version>
 	<timestamp>114215340000</timestamp>
 
+	<icon uri="target/sandbox/icon.png" />
 	<name>Mock Service</name>
 	<provider>Parallel Symmetry</provider>
 	<inception>1973</inception>

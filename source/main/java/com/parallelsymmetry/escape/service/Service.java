@@ -34,6 +34,7 @@ import javax.swing.UIManager;
 
 import com.parallelsymmetry.escape.product.Product;
 import com.parallelsymmetry.escape.product.ProductCard;
+import com.parallelsymmetry.escape.service.update.UpdateCheckTask;
 import com.parallelsymmetry.escape.service.update.UpdateManager;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.OperatingSystem;
@@ -309,7 +310,7 @@ public abstract class Service extends Agent implements Product {
 		return messages;
 	}
 
-	public UpdateManager.UpdateCheckTask getUpdateCheckTask() {
+	public UpdateCheckTask getUpdateCheckTask() {
 		return new ServiceUpdateTask();
 	}
 
@@ -964,7 +965,7 @@ public abstract class Service extends Agent implements Product {
 
 	}
 
-	private class ServiceUpdateTask extends UpdateManager.UpdateCheckTask {
+	private class ServiceUpdateTask extends UpdateCheckTask {
 
 		public ServiceUpdateTask() {
 			super( Service.this );

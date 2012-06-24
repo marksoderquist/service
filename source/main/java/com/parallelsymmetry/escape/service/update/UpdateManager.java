@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
@@ -100,6 +99,11 @@ public class UpdateManager extends Agent implements Persistent {
 		this.service = service;
 		updates = new CopyOnWriteArraySet<StagedUpdate>();
 		installedPacks = new ConcurrentHashMap<String, ProductCard>();
+		updater = new File( service.getHomeFolder(), UPDATER_JAR_NAME );
+		
+		checkOption = CheckOption.DISABLED;
+		foundOption = FoundOption.STAGE;
+		applyOption = ApplyOption.RESTART;
 
 		service.getSettings().addSettingListener( "/update", new SettingChangeHandler() );
 	}
@@ -163,6 +167,15 @@ public class UpdateManager extends Agent implements Persistent {
 
 	public void setFoundOption( FoundOption foundOption ) {
 		this.foundOption = foundOption;
+		saveSettings( settings );
+	}
+	
+	public ApplyOption getApplyOption() {
+		return applyOption;
+	}
+	
+	public void setApplyOption( ApplyOption applyOption ) {
+		this.applyOption = applyOption;
 		saveSettings( settings );
 	}
 
@@ -452,13 +465,11 @@ public class UpdateManager extends Agent implements Persistent {
 
 	@Override
 	public void loadSettings( Settings settings ) {
-		this.updater = new File( service.getHomeFolder(), UPDATER_JAR_NAME );
-
 		this.settings = settings;
 
 		this.checkOption = CheckOption.valueOf( settings.get( CHECK, CheckOption.DISABLED.name() ) );
-		this.foundOption = FoundOption.valueOf( settings.get( FOUND, FoundOption.SELECT.name() ) );
-		this.applyOption = ApplyOption.valueOf( settings.get( APPLY, ApplyOption.VERIFY.name() ) );
+		this.foundOption = FoundOption.valueOf( settings.get( FOUND, FoundOption.STAGE.name() ) );
+		this.applyOption = ApplyOption.valueOf( settings.get( APPLY, ApplyOption.RESTART.name() ) );
 		this.updates = settings.getSet( UPDATES, new HashSet<StagedUpdate>() );
 	}
 
@@ -486,6 +497,19 @@ public class UpdateManager extends Agent implements Persistent {
 		if( !isEnabled() ) return;
 
 		if( timer != null ) timer.cancel();
+	}
+
+	void scheduleCheckUpdateTask( UpdateCheckTask task ) {
+		switch( checkOption ) {
+			case INTERVAL: {
+				// TODO Schedule the task by interval.
+				break;
+			}
+			case SCHEDULE: {
+				// TODO Schedule the task by schedule.
+				break;
+			}
+		}
 	}
 
 	private boolean isEnabled() {
@@ -522,43 +546,6 @@ public class UpdateManager extends Agent implements Persistent {
 		FileUtil.deleteOnExit( updateFolder );
 
 		FileUtil.zip( updateFolder, update );
-	}
-
-	private void scheduleCheckUpdateTask( UpdateCheckTask task ) {
-		switch( checkOption ) {
-			case INTERVAL: {
-				// TODO Schedule the task by interval.
-				break;
-			}
-			case SCHEDULE: {
-				// TODO Schedule the task by schedule.
-				break;
-			}
-		}
-	}
-
-	public static abstract class UpdateCheckTask extends TimerTask {
-
-		private Service service;
-
-		public UpdateCheckTask( Service service ) {
-			this.service = service;
-		}
-
-		public Service getService() {
-			return service;
-		}
-
-		@Override
-		public void run() {
-			try {
-				execute();
-			} finally {
-				service.getUpdateManager().scheduleCheckUpdateTask( service.getUpdateCheckTask() );
-			}
-		}
-
-		public abstract void execute();
 	}
 
 	private final class SettingChangeHandler implements SettingListener {

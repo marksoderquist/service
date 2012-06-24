@@ -6,8 +6,6 @@ import java.net.URISyntaxException;
 import java.util.Calendar;
 import java.util.Date;
 
-import javax.swing.Icon;
-
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.Release;
@@ -23,6 +21,8 @@ public class ProductCard {
 	public static final String VERSION_PATH = "/pack/version";
 
 	public static final String TIMESTAMP_PATH = "/pack/timestamp";
+
+	public static final String ICON_PATH = "/pack/icon/@uri";
 
 	public static final String NAME_PATH = "/pack/name";
 
@@ -54,7 +54,9 @@ public class ProductCard {
 
 	private Release release = new Release( new Version() );
 
-	private String name = "Unknown";
+	private URI icon;
+
+	private String name;
 
 	private String provider = "Unknown";
 
@@ -107,14 +109,15 @@ public class ProductCard {
 	public void setRelease( Release release ) {
 		this.release = release;
 	}
-	
-	public Icon getIcon() {
+
+	public URI getIcon() {
 		// TODO ProductCard.getIcon() get the icon from the icon cache.
-		return null;
+		return icon;
 	}
-	
-	public void setIcon( Icon icon ) {
+
+	public void setIcon( URI icon ) {
 		// TODO ProductCard.setIcon() set the icon in the icon cache.
+		this.icon = icon;
 	}
 
 	public String getName() {
@@ -213,6 +216,7 @@ public class ProductCard {
 		String artifact = descriptor.getValue( ARTIFACT_PATH );
 		String version = descriptor.getValue( VERSION_PATH );
 		String timestamp = descriptor.getValue( TIMESTAMP_PATH );
+		String icon = descriptor.getValue( ICON_PATH );
 		String name = descriptor.getValue( NAME_PATH );
 		String provider = descriptor.getValue( PROVIDER_PATH );
 		String inception = descriptor.getValue( INCEPTION_YEAR_PATH );
@@ -231,7 +235,7 @@ public class ProductCard {
 		} catch( Throwable throwable ) {
 			// Leave the date null.
 		}
-		
+
 		// Determine the program inception year.
 		int inceptionYear = 0;
 		try {
@@ -243,6 +247,12 @@ public class ProductCard {
 		if( group != null ) pack.group = group;
 		if( artifact != null ) pack.artifact = artifact;
 		if( version != null ) pack.release = new Release( version, releaseDate );
+
+		try {
+			if( icon != null ) pack.icon = new URI( icon );
+		} catch( URISyntaxException exception ) {
+			Log.write( exception );
+		}
 
 		if( name != null ) pack.name = name;
 		if( provider != null ) pack.provider = provider;
