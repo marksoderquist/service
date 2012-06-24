@@ -20,6 +20,7 @@ import com.parallelsymmetry.escape.product.ProductCard;
 import com.parallelsymmetry.escape.product.ProductResource;
 import com.parallelsymmetry.escape.service.Service;
 import com.parallelsymmetry.escape.service.ServiceFlag;
+import com.parallelsymmetry.escape.service.task.DescriptorDownloadTask;
 import com.parallelsymmetry.escape.service.task.DownloadTask;
 import com.parallelsymmetry.escape.updater.UpdaterFlag;
 import com.parallelsymmetry.escape.utility.Descriptor;
@@ -208,7 +209,7 @@ public class UpdateManager extends Agent implements Persistent {
 				Log.write( Log.DEBUG, "Installed pack source: " + uri );
 			}
 
-			futures.put( oldPack, service.getTaskManager().submit( new DescriptorDownload( uri ) ) );
+			futures.put( oldPack, service.getTaskManager().submit( new DescriptorDownloadTask( uri ) ) );
 		}
 
 		for( ProductCard oldPack : oldPacks.values() ) {

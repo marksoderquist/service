@@ -1,19 +1,17 @@
-package com.parallelsymmetry.escape.service.update;
+package com.parallelsymmetry.escape.service.task;
 
 import java.io.FileInputStream;
 import java.net.URI;
 
-import com.parallelsymmetry.escape.service.task.Download;
-import com.parallelsymmetry.escape.service.task.DownloadTask;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.task.Task;
 import com.parallelsymmetry.escape.utility.task.TaskListener;
 
-public final class DescriptorDownload extends Task<Descriptor> {
+public final class DescriptorDownloadTask extends Task<Descriptor> {
 
 	private DownloadTask task;
 
-	public DescriptorDownload( URI uri ) {
+	public DescriptorDownloadTask( URI uri ) {
 		super( uri.toString() );
 		this.task = new DownloadTask( uri );
 	}

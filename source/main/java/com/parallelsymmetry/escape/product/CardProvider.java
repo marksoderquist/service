@@ -8,7 +8,7 @@ import java.util.concurrent.Future;
 
 import org.w3c.dom.Node;
 
-import com.parallelsymmetry.escape.service.update.DescriptorDownload;
+import com.parallelsymmetry.escape.service.task.DescriptorDownloadTask;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.task.TaskManager;
 
@@ -45,7 +45,7 @@ public class CardProvider implements ProductResourceProvider {
 		}
 		for( String jnlp : jnlps ) {
 			URI uri = codebase.resolve( jnlp );
-			Future<Descriptor> future = taskManager.submit( new DescriptorDownload( uri ) );
+			Future<Descriptor> future = taskManager.submit( new DescriptorDownloadTask( uri ) );
 			resources.addAll( new JnlpProvider( future.get(), taskManager ).getResources() );
 		}
 
