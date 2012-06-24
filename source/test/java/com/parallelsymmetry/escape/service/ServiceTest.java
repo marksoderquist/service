@@ -24,6 +24,7 @@ public class ServiceTest extends BaseTestCase {
 
 	private MockService service;
 
+	@Override
 	public void setUp() {
 		super.setUp();
 		service = new MockService();

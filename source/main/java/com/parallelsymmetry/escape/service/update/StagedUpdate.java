@@ -26,6 +26,7 @@ public class StagedUpdate implements Persistent {
 		return target;
 	}
 
+	@Override
 	public void loadSettings( Settings settings ) {
 		String sourcePath = settings.get( "source", null );
 		String targetPath = settings.get( "target", null );
@@ -33,6 +34,7 @@ public class StagedUpdate implements Persistent {
 		target = targetPath == null ? null : new File( targetPath );
 	}
 
+	@Override
 	public void saveSettings( Settings settings ) {
 		settings.put( "source", source.getPath() );
 		settings.put( "target", target.getPath() );

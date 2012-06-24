@@ -50,6 +50,7 @@ public class RestartShutdownHook extends Thread {
 		Log.write( Log.DEBUG, TextUtil.toString( builder.command(), " " ) );
 	}
 
+	@Override
 	public void run() {
 		if( builder == null ) return;
 

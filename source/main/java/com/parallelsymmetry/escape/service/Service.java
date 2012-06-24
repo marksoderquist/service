@@ -187,6 +187,7 @@ public abstract class Service extends Agent implements Product {
 		processParameters( parameters, false );
 	}
 
+	@Override
 	public ProductCard getCard() {
 		return card;
 	}
@@ -1009,6 +1010,7 @@ public abstract class Service extends Agent implements Product {
 			this.service = service;
 		}
 
+		@Override
 		public void run() {
 			try {
 				service.stop();

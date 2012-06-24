@@ -13,6 +13,7 @@ public class FeaturePackTest extends BaseTestCase {
 
 	private ProductCard pack;
 
+	@Override
 	@Before
 	public void setUp() {
 		try {

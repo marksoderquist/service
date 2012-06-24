@@ -18,22 +18,27 @@ public final class DescriptorDownload extends Task<Descriptor> {
 		this.task = new DownloadTask( uri );
 	}
 
+	@Override
 	public long getMinimum() {
 		return task.getMinimum();
 	}
 
+	@Override
 	public long getMaximum() {
 		return task.getMaximum();
 	}
 
+	@Override
 	public long getProgress() {
 		return task.getProgress();
 	}
 
+	@Override
 	public void addTaskListener( TaskListener listener ) {
 		task.addTaskListener( listener );
 	}
 
+	@Override
 	public void removeTaskListener( TaskListener listener ) {
 		task.removeTaskListener( listener );
 	}
