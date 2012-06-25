@@ -71,7 +71,7 @@ public class ProductCardTest extends BaseTestCase {
 	}
 
 	public void testGetLicenseSummary() throws Exception {
-		assertEquals( "Mock Service comes with ABSOLUTELY NO WARRANTY. This is open software,\nand you are welcome to redistribute it under certain conditions.", card.getLicenseSummary() );
+		assertEquals( "Mock Service comes with ABSOLUTELY NO WARRANTY. This is open software, and you are welcome to redistribute it under certain conditions.", card.getLicenseSummary() );
 	}
 	
 	public void testGetUpdateUri() throws Exception {

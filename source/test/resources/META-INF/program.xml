@@ -5,7 +5,7 @@
 	<version>1.0.0-a-00</version>
 	<timestamp>114215340000</timestamp>
 
-	<icon uri="target/sandbox/icon.png" />
+	<icon uri="target/sandbox/icon.png"/>
 	<name>Mock Service</name>
 	<provider>Parallel Symmetry</provider>
 	<inception>1973</inception>
@@ -15,7 +15,9 @@
 	</copyright>
 
 	<license>
-		<summary>Mock Service comes with ABSOLUTELY NO WARRANTY. This is open software,&#10;and you are welcome to redistribute it under certain conditions.</summary>
+		<summary>Mock Service comes with ABSOLUTELY NO WARRANTY. This is open
+			software, and you are welcome to redistribute it under certain conditions.
+		</summary>
 	</license>
 
 	<resources>
