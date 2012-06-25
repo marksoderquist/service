@@ -119,7 +119,6 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 
 		// Add the service pack.
 		packs.put( service.getCard().getKey(), service.getCard() );
-		Log.write( Log.WARN, service.getCard().getRelease() );
 
 		// Add the installed packs.
 		packs.putAll( installedPacks );
@@ -557,6 +556,12 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 		}
 	}
 
+	/**
+	 * NOTE: This class is Persistent and changing the package will most likely
+	 * result in a ClassNotFoundException being thrown at runtime.
+	 * 
+	 * @author SoderquistMV
+	 */
 	private static final class StagedUpdate implements Persistent {
 
 		private File source;
