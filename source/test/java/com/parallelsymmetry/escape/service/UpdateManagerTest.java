@@ -1,6 +1,7 @@
 package com.parallelsymmetry.escape.service;
 
 import java.io.File;
+import java.util.concurrent.ExecutionException;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
@@ -9,9 +10,12 @@ import javax.xml.xpath.XPathFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
-import com.parallelsymmetry.escape.service.update.UpdateManager;
+import com.parallelsymmetry.escape.service.ServiceUpdateManager.ApplyOption;
+import com.parallelsymmetry.escape.service.ServiceUpdateManager.CheckOption;
+import com.parallelsymmetry.escape.service.ServiceUpdateManager.FoundOption;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.XmlUtil;
+import com.parallelsymmetry.escape.utility.log.Log;
 
 public class UpdateManagerTest extends BaseTestCase {
 
@@ -25,17 +29,101 @@ public class UpdateManagerTest extends BaseTestCase {
 
 	protected static final String UPDATE_PACK_NAME = "update.jar";
 
-	protected static final String UPDATE_PACK_DESCRIPTOR_NAME = "update.xml";
+	protected static final String UPDATE_CARD_NAME = "update.xml";
+
+	private static final File SOURCE_PRODUCT_CARD = new File( SOURCE, "test/resources/META-INF/program.xml" );
+
+	private static final File SOURCE_PRODUCT_PACK = new File( SOURCE, "test/update.jar" );
+
+	private static final File TARGET_SERVICE_CARD = new File( TARGET, "test/java/META-INF/program.xml" );
+
+	private static final File TARGET_UPDATE_PACK = new File( SANDBOX, UPDATE_PACK_NAME );
+
+	private static final File TARGET_UPDATE_CARD = new File( SANDBOX, UPDATE_CARD_NAME );
+
+	private static final int TIMESTAMP_OFFSET = 61174;
+
+	private MockService service;
+
+	private ServiceUpdateManager updateManager;
 
 	@Override
 	public void setUp() {
 		super.setUp();
+		service = new MockService();
+		updateManager = service.getUpdateManager();
 	}
-	
+
+	public void testGetInstalledPacks() {
+		assertEquals( service.getCard(), updateManager.getInstalledPacks().values().iterator().next() );
+	}
+
+	public void testGetUpdaterPath() {
+		assertEquals( new File( service.getHomeFolder(), "updater.jar" ), updateManager.getUpdaterPath() );
+	}
+
+	public void testSetUpdaterPath() {
+		String updater = "testupdater.jar";
+		updateManager.setUpdaterPath( new File( service.getHomeFolder(), updater ) );
+		assertEquals( new File( service.getHomeFolder(), updater ), updateManager.getUpdaterPath() );
+	}
+
+	public void testGetCheckOption() {
+		assertEquals( CheckOption.DISABLED, updateManager.getCheckOption() );
+	}
+
+	public void testSetCheckOption() {
+		updateManager.setCheckOption( CheckOption.MANUAL );
+		assertEquals( CheckOption.MANUAL, updateManager.getCheckOption() );
+	}
+
+	public void testGetFoundOption() {
+		assertEquals( FoundOption.STAGE, updateManager.getFoundOption() );
+	}
+
+	public void testSetFoundOption() {
+		updateManager.setFoundOption( FoundOption.SELECT );
+		assertEquals( FoundOption.SELECT, updateManager.getFoundOption() );
+	}
+
+	public void testGetApplyOption() {
+		assertEquals( ApplyOption.RESTART, updateManager.getApplyOption() );
+	}
+
+	public void testSetApplyOption() {
+		updateManager.setApplyOption( ApplyOption.VERIFY );
+		assertEquals( ApplyOption.VERIFY, updateManager.getApplyOption() );
+	}
+
+	public void testGetPostedUpdates() throws Exception {
+		// Initialize the product card before starting the service.
+		assertTrue( FileUtil.copy( SOURCE_PRODUCT_CARD, TARGET_SERVICE_CARD ) );
+
+		// Start the service set the update manager for manual checks.
+		service.getTaskManager().start();
+		updateManager.setCheckOption( CheckOption.MANUAL );
+
+		// Remove the old update card if it exists.
+		FileUtil.delete( TARGET_UPDATE_CARD );
+
+		// Ensure there are no posted updates.
+		try {
+			updateManager.getPostedUpdates().size();
+			fail( "UpdateManager should throw an exception when the pack descriptor cannot be found." );
+		} catch( ExecutionException exception ) {
+			// Intentionally ignore exception.
+		}
+
+		// Create the update card and modify the timestamp.
+		assertTrue( FileUtil.copy( SOURCE_PRODUCT_CARD, TARGET_UPDATE_CARD ) );
+		updatePackDescriptorTimestamp( TARGET_UPDATE_CARD );
+
+		// Ensure there are posted updates.
+		assertEquals( 1, updateManager.getPostedUpdates().size() );
+	}
+
 	public void testStagePostedUpdates() throws Exception {
 		stageUpdate();
-
-		Service service = new MockService();
 
 		File stageFolder = new File( service.getProgramDataFolder(), "stage" );
 		File updateFile = new File( stageFolder, service.getCard().getKey() + ".pak" );
@@ -54,16 +142,15 @@ public class UpdateManagerTest extends BaseTestCase {
 		service.waitForStartup( TIMEOUT, TIMEUNIT );
 		assertTrue( service.isRunning() );
 
-		UpdateManager manager = service.getUpdateManager();
+		ServiceUpdateManager manager = service.getUpdateManager();
 		try {
 			// Enable the update manager temporarily.
-			manager.setCheckOption( UpdateManager.CheckOption.STARTUP );
-			// Stage the posted updates.
+			manager.setCheckOption( ServiceUpdateManager.CheckOption.STARTUP );
 			manager.stagePostedUpdates();
 			assertTrue( updateFile.exists() );
 		} finally {
 			// Disable the update manager.
-			manager.setCheckOption( UpdateManager.CheckOption.DISABLED );
+			manager.setCheckOption( ServiceUpdateManager.CheckOption.DISABLED );
 		}
 
 		// Shutdown the service.
@@ -73,28 +160,32 @@ public class UpdateManagerTest extends BaseTestCase {
 	}
 
 	private void stageUpdate() throws Exception {
-		UPDATE.mkdirs();
-
 		// Create an update for the deployed project.
 		UPDATE.mkdirs();
 
-		// Zip up the update folder to make the update.
-		FileUtil.copy( new File( SOURCE, "test/update.jar" ), new File( SANDBOX, UPDATE_PACK_NAME ) );
+		// Create the update pack.
+		FileUtil.copy( SOURCE_PRODUCT_PACK, TARGET_UPDATE_PACK );
 
-		// Copy the pack descriptor.
-		File programDescriptorFile = new File( TARGET, "test/java/META-INF/program.xml" );
-		Document programDescriptor = XmlUtil.loadXmlDocument( programDescriptorFile );
+		// Create the update card and modify the timestamp.
+		assertTrue( FileUtil.copy( SOURCE_PRODUCT_CARD, TARGET_UPDATE_CARD ) );
+		updatePackDescriptorTimestamp( TARGET_UPDATE_CARD );
+	}
 
-		// Change the timestamp.
-		XPath xpath = XPathFactory.newInstance().newXPath();
-		Node node = (Node)xpath.evaluate( "/pack/timestamp", programDescriptor, XPathConstants.NODE );
+	private void updatePackDescriptorTimestamp( File descriptor ) throws Exception {
+		// Update the timestamp in the descriptor file.
+		if( descriptor.exists() ) {
+			Document programDescriptor = XmlUtil.loadXmlDocument( descriptor );
+			XPath xpath = XPathFactory.newInstance().newXPath();
+			Node node = (Node)xpath.evaluate( "/pack/timestamp", programDescriptor, XPathConstants.NODE );
 
-		long timestamp = Long.parseLong( node.getTextContent() );
-		node.setTextContent( String.valueOf( timestamp + 1000 ) );
+			if( node != null ) {
+				long timestamp = Long.parseLong( node.getTextContent() );
+				Log.write( Log.WARN, "Parsed timestamp: " + timestamp );
+				node.setTextContent( String.valueOf( timestamp + TIMESTAMP_OFFSET ) );
+				XmlUtil.save( programDescriptor, descriptor );
+			}
+		}
 
-		// Save the pack descriptor.
-		File updatePackDescriptor = new File( SANDBOX, UPDATE_PACK_DESCRIPTOR_NAME );
-		XmlUtil.save( programDescriptor, updatePackDescriptor );
 	}
 
 }

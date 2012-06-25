@@ -34,8 +34,6 @@ import javax.swing.UIManager;
 
 import com.parallelsymmetry.escape.product.Product;
 import com.parallelsymmetry.escape.product.ProductCard;
-import com.parallelsymmetry.escape.service.update.UpdateCheckTask;
-import com.parallelsymmetry.escape.service.update.UpdateManager;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.OperatingSystem;
 import com.parallelsymmetry.escape.utility.Parameters;
@@ -97,7 +95,7 @@ public abstract class Service extends Agent implements Product {
 
 	private TaskManager taskManager;
 
-	private UpdateManager updateManager;
+	protected ServiceUpdateManager updateManager;
 
 	/**
 	 * Construct the service with the default descriptor path of
@@ -159,14 +157,9 @@ public abstract class Service extends Agent implements Product {
 			Log.write( exception );
 		}
 
-		// Create the task queue.
-		taskManager = new TaskManager();
-
-		// Create update manager.
-		updateManager = new UpdateManager( this );
-
-		// Create the peer server.
 		peerServer = new PeerServer( this );
+		taskManager = new TaskManager();
+		updateManager = new ServiceUpdateManager( this );
 	}
 
 	/**
@@ -216,7 +209,7 @@ public abstract class Service extends Agent implements Product {
 		return taskManager;
 	}
 
-	public UpdateManager getUpdateManager() {
+	public ServiceUpdateManager getUpdateManager() {
 		return updateManager;
 	}
 
@@ -310,41 +303,6 @@ public abstract class Service extends Agent implements Product {
 		return messages;
 	}
 
-	public UpdateCheckTask getUpdateCheckTask() {
-		return new ServiceUpdateTask();
-	}
-
-	protected void serviceRestart() {
-		// Register a shutdown hook to restart the application.
-		restartShutdownHook = new RestartShutdownHook( this );
-		Runtime.getRuntime().addShutdownHook( restartShutdownHook );
-
-		// Request the program stop.
-		if( !requestStop() ) {
-			Runtime.getRuntime().removeShutdownHook( restartShutdownHook );
-			return;
-		}
-
-		// The shutdown hook should restart the application.
-		Log.write( Log.INFO, "Restarting..." );
-	}
-
-	protected boolean requestStop() {
-		getTaskManager().submit( new ShutdownTask( this ) );
-		return true;
-	}
-
-	/**
-	 * Override this method and return a set of valid command line flags if you
-	 * want the service to validate command line flags. By default this method
-	 * returns null and allows any command line flags.
-	 * 
-	 * @return
-	 */
-	protected Set<String> getValidCommandLineFlags() {
-		return null;
-	}
-
 	/**
 	 * This method should only be called through the processParameters() method.
 	 */
@@ -366,7 +324,7 @@ public abstract class Service extends Agent implements Product {
 		startService( parameters );
 		Log.write( getName() + " started." );
 
-		if( updateManager.getCheckOption() == UpdateManager.CheckOption.STARTUP ) updateManager.checkForUpdates();
+		if( updateManager.getCheckOption() == ServiceUpdateManager.CheckOption.STARTUP ) updateManager.checkForUpdates();
 	}
 
 	/**
@@ -391,6 +349,37 @@ public abstract class Service extends Agent implements Product {
 			// Intentionally ignore exception.
 		}
 		Log.write( getName() + " stopped." );
+	}
+
+	protected boolean requestStop() {
+		getTaskManager().submit( new ShutdownTask( this ) );
+		return true;
+	}
+
+	protected void serviceRestart() {
+		// Register a shutdown hook to restart the application.
+		restartShutdownHook = new RestartShutdownHook( this );
+		Runtime.getRuntime().addShutdownHook( restartShutdownHook );
+	
+		// Request the program stop.
+		if( !requestStop() ) {
+			Runtime.getRuntime().removeShutdownHook( restartShutdownHook );
+			return;
+		}
+	
+		// The shutdown hook should restart the application.
+		Log.write( Log.INFO, "Restarting..." );
+	}
+
+	/**
+	 * Override this method and return a set of valid command line flags if you
+	 * want the service to validate command line flags. By default this method
+	 * returns null and allows any command line flags.
+	 * 
+	 * @return
+	 */
+	protected Set<String> getValidCommandLineFlags() {
+		return null;
 	}
 
 	protected abstract void startService( Parameters parameters ) throws Exception;
@@ -478,7 +467,7 @@ public abstract class Service extends Agent implements Product {
 			}
 
 			// The logic is somewhat complex, the nested if statements help clarify it.
-			if( updateManager.getCheckOption() != UpdateManager.CheckOption.DISABLED ) {
+			if( updateManager.getCheckOption() != ServiceUpdateManager.CheckOption.DISABLED ) {
 				if( ( parameters.isSet( ServiceFlag.UPDATE ) & parameters.isTrue( ServiceFlag.UPDATE ) ) | ( !parameters.isSet( ServiceFlag.UPDATE ) & !peer ) ) {
 					if( update() && !parameters.isSet( ServiceFlag.DEVELOPMENT ) ) {
 						// The program should be allowed, but not forced, to exit at this point.
@@ -961,27 +950,6 @@ public abstract class Service extends Agent implements Product {
 			setLevel( Log.NONE );
 			Log.write( throwable );
 			setLevel( level );
-		}
-
-	}
-
-	private class ServiceUpdateTask extends UpdateCheckTask {
-
-		public ServiceUpdateTask() {
-			super( Service.this );
-		}
-
-		@Override
-		public void execute() {
-			try {
-				Log.write( Log.TRACE, "Checking for updates..." );
-				if( getService().getUpdateManager().stagePostedUpdates() ) {
-					Log.write( Log.TRACE, "Updates staged, restarting..." );
-					serviceRestart();
-				}
-			} catch( Exception exception ) {
-				Log.write( exception );
-			}
 		}
 
 	}

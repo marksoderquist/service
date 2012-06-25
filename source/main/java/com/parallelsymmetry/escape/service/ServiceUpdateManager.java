@@ -1,4 +1,4 @@
-package com.parallelsymmetry.escape.service.update;
+package com.parallelsymmetry.escape.service;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
@@ -18,8 +19,6 @@ import java.util.concurrent.Future;
 import com.parallelsymmetry.escape.product.CardProvider;
 import com.parallelsymmetry.escape.product.ProductCard;
 import com.parallelsymmetry.escape.product.ProductResource;
-import com.parallelsymmetry.escape.service.Service;
-import com.parallelsymmetry.escape.service.ServiceFlag;
 import com.parallelsymmetry.escape.service.task.DescriptorDownloadTask;
 import com.parallelsymmetry.escape.service.task.DownloadTask;
 import com.parallelsymmetry.escape.updater.UpdaterFlag;
@@ -54,7 +53,7 @@ import com.parallelsymmetry.escape.utility.setting.Settings;
  * 
  * @author SoderquistMV
  */
-public class UpdateManager extends Agent implements Persistent {
+public class ServiceUpdateManager extends Agent implements Persistent {
 
 	public enum CheckOption {
 		DISABLED, MANUAL, STARTUP, INTERVAL, SCHEDULE
@@ -96,12 +95,12 @@ public class UpdateManager extends Agent implements Persistent {
 
 	private Timer timer;
 
-	public UpdateManager( Service service ) {
+	public ServiceUpdateManager( Service service ) {
 		this.service = service;
 		updates = new CopyOnWriteArraySet<StagedUpdate>();
 		installedPacks = new ConcurrentHashMap<String, ProductCard>();
 		updater = new File( service.getHomeFolder(), UPDATER_JAR_NAME );
-		
+
 		checkOption = CheckOption.DISABLED;
 		foundOption = FoundOption.STAGE;
 		applyOption = ApplyOption.RESTART;
@@ -120,6 +119,7 @@ public class UpdateManager extends Agent implements Persistent {
 
 		// Add the service pack.
 		packs.put( service.getCard().getKey(), service.getCard() );
+		Log.write( Log.WARN, service.getCard().getRelease() );
 
 		// Add the installed packs.
 		packs.putAll( installedPacks );
@@ -170,18 +170,26 @@ public class UpdateManager extends Agent implements Persistent {
 		this.foundOption = foundOption;
 		saveSettings( settings );
 	}
-	
+
 	public ApplyOption getApplyOption() {
 		return applyOption;
 	}
-	
+
 	public void setApplyOption( ApplyOption applyOption ) {
 		this.applyOption = applyOption;
 		saveSettings( settings );
 	}
 
 	public void checkForUpdates() {
-		timer.schedule( service.getUpdateCheckTask(), 0 );
+		try {
+			Log.write( Log.TRACE, "Checking for updates..." );
+			if( service.getUpdateManager().stagePostedUpdates() ) {
+				Log.write( Log.TRACE, "Updates staged, restarting..." );
+				service.serviceRestart();
+			}
+		} catch( Exception exception ) {
+			Log.write( exception );
+		}
 	}
 
 	/**
@@ -490,7 +498,7 @@ public class UpdateManager extends Agent implements Persistent {
 		if( !isEnabled() ) return;
 
 		timer = new Timer();
-		scheduleCheckUpdateTask( service.getUpdateCheckTask() );
+		scheduleCheckUpdateTask( new UpdateCheckTask( service ) );
 	}
 
 	@Override
@@ -498,19 +506,6 @@ public class UpdateManager extends Agent implements Persistent {
 		if( !isEnabled() ) return;
 
 		if( timer != null ) timer.cancel();
-	}
-
-	void scheduleCheckUpdateTask( UpdateCheckTask task ) {
-		switch( checkOption ) {
-			case INTERVAL: {
-				// TODO Schedule the task by interval.
-				break;
-			}
-			case SCHEDULE: {
-				// TODO Schedule the task by schedule.
-				break;
-			}
-		}
 	}
 
 	private boolean isEnabled() {
@@ -547,6 +542,75 @@ public class UpdateManager extends Agent implements Persistent {
 		FileUtil.deleteOnExit( updateFolder );
 
 		FileUtil.zip( updateFolder, update );
+	}
+
+	private void scheduleCheckUpdateTask( UpdateCheckTask task ) {
+		switch( checkOption ) {
+			case INTERVAL: {
+				// TODO Schedule the task by interval.
+				break;
+			}
+			case SCHEDULE: {
+				// TODO Schedule the task by schedule.
+				break;
+			}
+		}
+	}
+
+	private static final class StagedUpdate implements Persistent {
+
+		private File source;
+
+		private File target;
+
+		/*
+		 * This constructor is used by the settings API via reflection.
+		 */
+		@SuppressWarnings( "unused" )
+		public StagedUpdate() {}
+
+		public StagedUpdate( File source, File target ) {
+			this.source = source;
+			this.target = target;
+		}
+
+		public File getSource() {
+			return source;
+		}
+
+		public File getTarget() {
+			return target;
+		}
+
+		@Override
+		public void loadSettings( Settings settings ) {
+			String sourcePath = settings.get( "source", null );
+			String targetPath = settings.get( "target", null );
+			source = sourcePath == null ? null : new File( sourcePath );
+			target = targetPath == null ? null : new File( targetPath );
+		}
+
+		@Override
+		public void saveSettings( Settings settings ) {
+			settings.put( "source", source.getPath() );
+			settings.put( "target", target.getPath() );
+		}
+
+	}
+
+	private final class UpdateCheckTask extends TimerTask {
+
+		private Service service;
+
+		public UpdateCheckTask( Service service ) {
+			this.service = service;
+		}
+
+		@Override
+		public void run() {
+			service.getUpdateManager().checkForUpdates();
+		}
+
 	}
 
 	private final class SettingChangeHandler implements SettingListener {
