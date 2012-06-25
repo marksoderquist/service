@@ -38,7 +38,7 @@ public class ProductCard {
 
 	public static final String LICENSE_SUMMARY_PATH = "/pack/license/summary";
 
-	public static final String UPDATE_URI_PATH = "/pack/update/@uri";
+	public static final String SOURCE_URI_PATH = "/pack/update/@uri";
 
 	private static final String DEFAULT_GROUP = "com.parallelsymmetry";
 
@@ -54,7 +54,7 @@ public class ProductCard {
 
 	private Release release = new Release( new Version() );
 
-	private URI icon;
+	private URI iconUri;
 
 	private String name;
 
@@ -70,7 +70,7 @@ public class ProductCard {
 
 	private String licenseSummary;
 
-	private URI uri;
+	private URI sourceUri;
 
 	private File folder;
 
@@ -110,14 +110,14 @@ public class ProductCard {
 		this.release = release;
 	}
 
-	public URI getIcon() {
+	public URI getIconUri() {
 		// TODO ProductCard.getIcon() get the icon from the icon cache.
-		return icon;
+		return iconUri;
 	}
 
-	public void setIcon( URI icon ) {
+	public void setIconUri( URI uri ) {
 		// TODO ProductCard.setIcon() set the icon in the icon cache.
-		this.icon = icon;
+		this.iconUri = uri;
 	}
 
 	public String getName() {
@@ -184,12 +184,12 @@ public class ProductCard {
 		this.licenseSummary = summary;
 	}
 
-	public URI getUpdateUri() {
-		return uri;
+	public URI getSourceUri() {
+		return sourceUri;
 	}
 
-	public void setUpdateUri( URI uri ) {
-		this.uri = uri;
+	public void setSourceUri( URI uri ) {
+		this.sourceUri = uri;
 	}
 
 	public File getInstallFolder() {
@@ -216,7 +216,7 @@ public class ProductCard {
 		String artifact = descriptor.getValue( ARTIFACT_PATH );
 		String version = descriptor.getValue( VERSION_PATH );
 		String timestamp = descriptor.getValue( TIMESTAMP_PATH );
-		String icon = descriptor.getValue( ICON_PATH );
+		String iconUri = descriptor.getValue( ICON_PATH );
 		String name = descriptor.getValue( NAME_PATH );
 		String provider = descriptor.getValue( PROVIDER_PATH );
 		String inception = descriptor.getValue( INCEPTION_YEAR_PATH );
@@ -224,7 +224,7 @@ public class ProductCard {
 		String holder = descriptor.getValue( COPYRIGHT_HOLDER_PATH );
 		String notice = descriptor.getValue( COPYRIGHT_NOTICE_PATH );
 		String lSummary = descriptor.getValue( LICENSE_SUMMARY_PATH );
-		String uri = descriptor.getValue( UPDATE_URI_PATH );
+		String sourceUri = descriptor.getValue( SOURCE_URI_PATH );
 
 		ProductCard pack = new ProductCard( descriptor );
 
@@ -249,7 +249,7 @@ public class ProductCard {
 		if( version != null ) pack.release = new Release( version, releaseDate );
 
 		try {
-			if( icon != null ) pack.icon = new URI( icon );
+			if( iconUri != null ) pack.iconUri = new URI( iconUri );
 		} catch( URISyntaxException exception ) {
 			Log.write( exception );
 		}
@@ -265,11 +265,12 @@ public class ProductCard {
 		if( lSummary != null ) pack.licenseSummary = lSummary;
 
 		try {
-			if( uri != null ) pack.uri = new URI( uri );
+			if( sourceUri != null ) pack.sourceUri = new URI( sourceUri );
 		} catch( URISyntaxException exception ) {
 			Log.write( exception );
 		}
 
 		return pack;
 	}
+	
 }

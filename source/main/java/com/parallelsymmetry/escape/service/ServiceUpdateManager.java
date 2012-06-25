@@ -208,7 +208,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 
 		Map<ProductCard, Future<Descriptor>> futures = new HashMap<ProductCard, Future<Descriptor>>();
 		for( ProductCard oldPack : oldPacks.values() ) {
-			URI uri = getResolvedUpdateUri( oldPack.getUpdateUri() );
+			URI uri = getResolvedUpdateUri( oldPack.getSourceUri() );
 			if( uri == null ) {
 				Log.write( Log.WARN, "Installed pack does not have source defined: " + oldPack.toString() );
 				continue;

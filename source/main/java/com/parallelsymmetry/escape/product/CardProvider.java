@@ -25,7 +25,7 @@ public class CardProvider implements ProductResourceProvider {
 
 	@Override
 	public Set<ProductResource> getResources() throws Exception {
-		URI codebase = card.getUpdateUri();
+		URI codebase = card.getSourceUri();
 		Descriptor descriptor = card.getDescriptor();
 
 		Set<ProductResource> resources = new HashSet<ProductResource>();

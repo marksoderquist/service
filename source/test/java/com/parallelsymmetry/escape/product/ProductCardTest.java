@@ -43,7 +43,7 @@ public class ProductCardTest extends BaseTestCase {
 	}
 	
 	public void testGetIcon() throws Exception {
-		assertEquals( URI.create( "target/sandbox/icon.png" ), card.getIcon() );
+		assertEquals( URI.create( "target/sandbox/icon.png" ), card.getIconUri() );
 	}
 
 	public void testGetName() throws Exception {
@@ -75,7 +75,7 @@ public class ProductCardTest extends BaseTestCase {
 	}
 	
 	public void testGetUpdateUri() throws Exception {
-		assertEquals( "target/sandbox/update.xml", card.getUpdateUri().toString() );
+		assertEquals( "target/sandbox/update.xml", card.getSourceUri().toString() );
 	}
 
 	public void testIsInstallFolderValid() throws Exception {
