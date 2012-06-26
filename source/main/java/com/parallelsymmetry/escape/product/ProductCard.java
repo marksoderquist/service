@@ -38,7 +38,7 @@ public class ProductCard {
 
 	public static final String LICENSE_SUMMARY_PATH = "/pack/license/summary";
 
-	public static final String SOURCE_URI_PATH = "/pack/update/@uri";
+	public static final String SOURCE_URI_PATH = "/pack/source/@uri";
 
 	private static final String DEFAULT_GROUP = "com.parallelsymmetry";
 

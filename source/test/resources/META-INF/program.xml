@@ -25,5 +25,5 @@
 		<pack uri="update.jar"/>
 	</resources>
 
-	<update uri="target/sandbox/update.xml"/>
+	<source uri="target/sandbox/update.xml"/>
 </pack>
