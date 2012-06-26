@@ -265,10 +265,10 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 	public boolean stagePostedUpdates() throws Exception {
 		if( !isEnabled() ) return false;
 
-		Set<ProductCard> packs = getPostedUpdates();
-		if( packs.size() == 0 ) return false;
+		Set<ProductCard> cards = getPostedUpdates();
+		if( cards.size() == 0 ) return false;
 
-		return stageSelectedUpdates( packs );
+		return stageSelectedUpdates( cards );
 	}
 
 	/**
@@ -284,6 +284,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 		File stageFolder = new File( programDataFolder, "stage" );
 		stageFolder.mkdirs();
 
+		Log.write( Log.TRACE, "Number of packs to stage for update: " + cards.size() );
 		Log.write( Log.DEBUG, "Pack stage folder: " + stageFolder );
 
 		// Determine all the resources to download.
