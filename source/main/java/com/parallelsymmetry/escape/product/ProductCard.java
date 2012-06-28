@@ -74,9 +74,7 @@ public class ProductCard {
 
 	private File folder;
 
-	private ProductCard( Descriptor descriptor ) {
-		this.descriptor = descriptor;
-	}
+	private ProductCard() {}
 
 	public Descriptor getDescriptor() {
 		return descriptor;
@@ -209,7 +207,7 @@ public class ProductCard {
 		return getKey();
 	}
 
-	public static final ProductCard load( Descriptor descriptor ) {
+	public static final ProductCard create( Descriptor descriptor ) {
 		if( descriptor == null ) return null;
 
 		String group = descriptor.getValue( GROUP_PATH );
@@ -226,7 +224,9 @@ public class ProductCard {
 		String lSummary = descriptor.getValue( LICENSE_SUMMARY_PATH );
 		String sourceUri = descriptor.getValue( SOURCE_URI_PATH );
 
-		ProductCard pack = new ProductCard( descriptor );
+		ProductCard card = new ProductCard();
+
+		card.descriptor = descriptor;
 
 		// Determine the release date.
 		Date releaseDate = null;
@@ -244,33 +244,33 @@ public class ProductCard {
 			// Leave the inception year zero.
 		}
 
-		if( group != null ) pack.group = group;
-		if( artifact != null ) pack.artifact = artifact;
-		if( version != null ) pack.release = new Release( version, releaseDate );
+		if( group != null ) card.group = group;
+		if( artifact != null ) card.artifact = artifact;
+		if( version != null ) card.release = new Release( version, releaseDate );
 
 		try {
-			if( iconUri != null ) pack.iconUri = new URI( iconUri );
+			if( iconUri != null ) card.iconUri = new URI( iconUri );
 		} catch( URISyntaxException exception ) {
 			Log.write( exception );
 		}
 
-		if( name != null ) pack.name = name;
-		if( provider != null ) pack.provider = provider;
-		if( inceptionYear != 0 ) pack.inceptionYear = inceptionYear;
-		if( summary != null ) pack.summary = summary;
+		if( name != null ) card.name = name;
+		if( provider != null ) card.provider = provider;
+		if( inceptionYear != 0 ) card.inceptionYear = inceptionYear;
+		if( summary != null ) card.summary = summary;
 
-		pack.copyrightHolder = holder == null ? provider : holder;
-		if( notice != null ) pack.copyrightNotice = notice;
+		card.copyrightHolder = holder == null ? provider : holder;
+		if( notice != null ) card.copyrightNotice = notice;
 
-		if( lSummary != null ) pack.licenseSummary = lSummary;
+		if( lSummary != null ) card.licenseSummary = lSummary;
 
 		try {
-			if( sourceUri != null ) pack.sourceUri = new URI( sourceUri );
+			if( sourceUri != null ) card.sourceUri = new URI( sourceUri );
 		} catch( URISyntaxException exception ) {
 			Log.write( exception );
 		}
 
-		return pack;
+		return card;
 	}
-	
+
 }

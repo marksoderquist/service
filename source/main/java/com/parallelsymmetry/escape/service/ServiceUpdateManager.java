@@ -222,7 +222,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 		for( ProductCard oldPack : oldPacks.values() ) {
 			Future<Descriptor> future = futures.get( oldPack );
 			if( future == null ) continue;
-			ProductCard newPack = ProductCard.load( future.get() );
+			ProductCard newPack = ProductCard.create( future.get() );
 
 			// Handle the development command line flag.
 			boolean development = service.getParameters().isSet( ServiceFlag.DEVELOPMENT );
