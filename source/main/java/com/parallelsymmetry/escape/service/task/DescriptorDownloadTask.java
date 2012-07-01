@@ -7,13 +7,17 @@ import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.task.Task;
 import com.parallelsymmetry.escape.utility.task.TaskListener;
 
-public final class DescriptorDownloadTask extends Task<Descriptor> {
-
+public class DescriptorDownloadTask extends Task<Descriptor> {
+	
 	private DownloadTask task;
 
 	public DescriptorDownloadTask( URI uri ) {
 		super( uri.toString() );
 		this.task = new DownloadTask( uri );
+	}
+	
+	public URI getUri() {
+		return task.getUri();
 	}
 
 	@Override

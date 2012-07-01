@@ -33,6 +33,10 @@ public class DownloadTask extends Task<Download> {
 		this.target = target;
 	}
 
+	public URI getUri() {
+		return uri;
+	}
+
 	@Override
 	public Download execute() throws IOException {
 		return download();
