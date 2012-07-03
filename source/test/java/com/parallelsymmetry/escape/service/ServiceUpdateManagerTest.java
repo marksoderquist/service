@@ -17,7 +17,7 @@ import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.XmlUtil;
 import com.parallelsymmetry.escape.utility.log.Log;
 
-public class UpdateManagerTest extends BaseTestCase {
+public class ServiceUpdateManagerTest extends BaseTestCase {
 
 	protected static final File SOURCE = new File( "source" );
 
