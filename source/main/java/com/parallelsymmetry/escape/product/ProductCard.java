@@ -11,6 +11,7 @@ import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.Release;
 import com.parallelsymmetry.escape.utility.log.Log;
 
+// FIXME Change name to ProductVoucher?
 public class ProductCard {
 	
 	public static final String PRODUCT_PATH = "/pack";
