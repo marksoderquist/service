@@ -9,58 +9,55 @@ import java.util.Date;
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.Release;
-import com.parallelsymmetry.escape.utility.Version;
 import com.parallelsymmetry.escape.utility.log.Log;
 
 public class ProductCard {
+	
+	public static final String PRODUCT_PATH = "/pack";
 
-	public static final String GROUP_PATH = "/pack/group";
+	public static final String GROUP_PATH = PRODUCT_PATH + "/group";
 
-	public static final String ARTIFACT_PATH = "/pack/artifact";
+	public static final String ARTIFACT_PATH = PRODUCT_PATH + "/artifact";
 
-	public static final String VERSION_PATH = "/pack/version";
+	public static final String VERSION_PATH = PRODUCT_PATH + "/version";
 
-	public static final String TIMESTAMP_PATH = "/pack/timestamp";
+	public static final String TIMESTAMP_PATH = PRODUCT_PATH + "/timestamp";
 
-	public static final String ICON_PATH = "/pack/icon/@uri";
+	public static final String ICON_PATH = PRODUCT_PATH + "/icon/@uri";
 
-	public static final String NAME_PATH = "/pack/name";
+	public static final String NAME_PATH = PRODUCT_PATH + "/name";
 
-	public static final String PROVIDER_PATH = "/pack/provider";
+	public static final String PROVIDER_PATH = PRODUCT_PATH + "/provider";
 
-	public static final String INCEPTION_YEAR_PATH = "/pack/inception";
+	public static final String INCEPTION_YEAR_PATH = PRODUCT_PATH + "/inception";
 
-	public static final String SUMMARY_PATH = "/pack/summary";
+	public static final String PRODUCT_SUMMARY_PATH = PRODUCT_PATH + "/summary";
 
-	public static final String COPYRIGHT_HOLDER_PATH = "/pack/copyright/holder";
+	public static final String COPYRIGHT_HOLDER_PATH = PRODUCT_PATH + "/copyright/holder";
 
-	public static final String COPYRIGHT_NOTICE_PATH = "/pack/copyright/notice";
+	public static final String COPYRIGHT_NOTICE_PATH = PRODUCT_PATH + "/copyright/notice";
 
-	public static final String LICENSE_SUMMARY_PATH = "/pack/license/summary";
+	public static final String LICENSE_SUMMARY_PATH = PRODUCT_PATH + "/license/summary";
 
-	public static final String SOURCE_URI_PATH = "/pack/source/@uri";
-
-	private static final String DEFAULT_GROUP = "com.parallelsymmetry";
-
-	private static final String DEFAULT_ARTIFACT = "unknown";
+	public static final String SOURCE_URI_PATH = PRODUCT_PATH + "/source/@uri";
 
 	private static final String COPYRIGHT = "(C)";
 
 	private Descriptor descriptor;
 
-	private String group = DEFAULT_GROUP;
+	private String group;
 
-	private String artifact = DEFAULT_ARTIFACT;
+	private String artifact;
 
-	private Release release = new Release( new Version() );
+	private Release release;
 
 	private URI iconUri;
 
-	private String name;
+	private String name = "Unknown";
 
 	private String provider = "Unknown";
 
-	private int inceptionYear;
+	private int inceptionYear = DateUtil.getCurrentYear();
 
 	private String summary = "No summary.";
 
@@ -75,6 +72,14 @@ public class ProductCard {
 	private File folder;
 
 	private ProductCard() {}
+
+	public ProductCard( Descriptor descriptor ) throws ProductCardException {
+		update( descriptor );
+	}
+
+	public static final ProductCard create( Descriptor descriptor ) throws ProductCardException {
+		return new ProductCard().update( descriptor );
+	}
 
 	public Descriptor getDescriptor() {
 		return descriptor;
@@ -190,25 +195,21 @@ public class ProductCard {
 		this.sourceUri = uri;
 	}
 
-	public File getInstallFolder() {
+	public File getTargetFolder() {
 		return folder;
 	}
 
-	public void setInstallFolder( File folder ) {
+	public void setTargetFolder( File folder ) {
 		this.folder = folder;
 	}
 
-	public boolean isInstallFolderValid() {
+	public boolean isTargetFolderValid() {
 		return folder != null && folder.exists();
 	}
 
-	@Override
-	public String toString() {
-		return getKey();
-	}
-
-	public static final ProductCard create( Descriptor descriptor ) {
-		if( descriptor == null ) return null;
+	public ProductCard update( Descriptor descriptor ) throws ProductCardException {
+		if( descriptor == null ) throw new ProductCardException( "Descriptor cannot be null." );
+		this.descriptor = descriptor;
 
 		String group = descriptor.getValue( GROUP_PATH );
 		String artifact = descriptor.getValue( ARTIFACT_PATH );
@@ -218,15 +219,11 @@ public class ProductCard {
 		String name = descriptor.getValue( NAME_PATH );
 		String provider = descriptor.getValue( PROVIDER_PATH );
 		String inception = descriptor.getValue( INCEPTION_YEAR_PATH );
-		String summary = descriptor.getValue( SUMMARY_PATH );
+		String productSummary = descriptor.getValue( PRODUCT_SUMMARY_PATH );
 		String holder = descriptor.getValue( COPYRIGHT_HOLDER_PATH );
 		String notice = descriptor.getValue( COPYRIGHT_NOTICE_PATH );
-		String lSummary = descriptor.getValue( LICENSE_SUMMARY_PATH );
+		String licenseSummary = descriptor.getValue( LICENSE_SUMMARY_PATH );
 		String sourceUri = descriptor.getValue( SOURCE_URI_PATH );
-
-		ProductCard card = new ProductCard();
-
-		card.descriptor = descriptor;
 
 		// Determine the release date.
 		Date releaseDate = null;
@@ -244,33 +241,52 @@ public class ProductCard {
 			// Leave the inception year zero.
 		}
 
-		if( group != null ) card.group = group;
-		if( artifact != null ) card.artifact = artifact;
-		if( version != null ) card.release = new Release( version, releaseDate );
+		if( group == null ) throw new ProductCardException( "Product group cannot be null." );
+		if( artifact == null ) throw new ProductCardException( "Product artifact cannot be null." );
+		this.group = group;
+		this.artifact = artifact;
+		this.release = new Release( version, releaseDate );
 
 		try {
-			if( iconUri != null ) card.iconUri = new URI( iconUri );
+			if( iconUri != null ) this.iconUri = new URI( iconUri );
 		} catch( URISyntaxException exception ) {
 			Log.write( exception );
 		}
 
-		if( name != null ) card.name = name;
-		if( provider != null ) card.provider = provider;
-		if( inceptionYear != 0 ) card.inceptionYear = inceptionYear;
-		if( summary != null ) card.summary = summary;
+		if( name != null ) this.name = name;
+		if( provider != null ) this.provider = provider;
+		if( inceptionYear != 0 ) this.inceptionYear = inceptionYear;
+		if( productSummary != null ) this.summary = productSummary;
 
-		card.copyrightHolder = holder == null ? provider : holder;
-		if( notice != null ) card.copyrightNotice = notice;
+		this.copyrightHolder = holder == null ? provider : holder;
+		if( notice != null ) this.copyrightNotice = notice;
 
-		if( lSummary != null ) card.licenseSummary = lSummary;
+		if( licenseSummary != null ) this.licenseSummary = licenseSummary;
 
 		try {
-			if( sourceUri != null ) card.sourceUri = new URI( sourceUri );
+			if( sourceUri != null ) this.sourceUri = new URI( sourceUri );
 		} catch( URISyntaxException exception ) {
 			Log.write( exception );
 		}
 
-		return card;
+		return this;
+	}
+
+	@Override
+	public String toString() {
+		return getKey();
+	}
+
+	@Override
+	public boolean equals( Object object ) {
+		if( !( object instanceof ProductCard ) ) return false;
+		ProductCard that = (ProductCard)object;
+		return this.group.equals( that.group ) && this.artifact.equals( that.artifact ) && this.release.equals( that.release );
+	}
+
+	@Override
+	public int hashCode() {
+		return this.group.hashCode() + this.artifact.hashCode() + this.release.hashCode();
 	}
 
 }

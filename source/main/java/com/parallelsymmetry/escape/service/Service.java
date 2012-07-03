@@ -34,6 +34,7 @@ import javax.swing.UIManager;
 
 import com.parallelsymmetry.escape.product.Product;
 import com.parallelsymmetry.escape.product.ProductCard;
+import com.parallelsymmetry.escape.product.ProductCardException;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.OperatingSystem;
 import com.parallelsymmetry.escape.utility.Parameters;
@@ -146,7 +147,11 @@ public abstract class Service extends Agent implements Product {
 			}
 		}
 
-		describe( descriptor );
+		try {
+			describe( descriptor );
+		} catch( ProductCardException exception ) {
+			Log.write( exception );
+		}
 
 		// Create the settings object.
 		settings = new Settings();
@@ -360,13 +365,13 @@ public abstract class Service extends Agent implements Product {
 		// Register a shutdown hook to restart the application.
 		restartShutdownHook = new RestartShutdownHook( this );
 		Runtime.getRuntime().addShutdownHook( restartShutdownHook );
-	
+
 		// Request the program stop.
 		if( !requestStop() ) {
 			Runtime.getRuntime().removeShutdownHook( restartShutdownHook );
 			return;
 		}
-	
+
 		// The shutdown hook should restart the application.
 		Log.write( Log.INFO, "Restarting..." );
 	}
@@ -388,7 +393,7 @@ public abstract class Service extends Agent implements Product {
 
 	protected abstract void stopService( Parameters parameters ) throws Exception;
 
-	private final synchronized void describe( Descriptor descriptor ) {
+	private final synchronized void describe( Descriptor descriptor ) throws ProductCardException {
 		if( this.descriptor != null ) return;
 		this.descriptor = descriptor;
 
@@ -418,7 +423,7 @@ public abstract class Service extends Agent implements Product {
 			if( !parameters.isSet( LogFlag.LOG_FILE ) ) {
 				try {
 					File folder = getProgramDataFolder();
-					String pattern = new File( folder, "program.log" ).getCanonicalPath().replace( '\\', '/');
+					String pattern = new File( folder, "program.log" ).getCanonicalPath().replace( '\\', '/' );
 					folder.mkdirs();
 
 					FileHandler handler = new FileHandler( pattern, parameters.isTrue( LogFlag.LOG_FILE_APPEND ) );
@@ -564,7 +569,7 @@ public abstract class Service extends Agent implements Product {
 
 		Log.write( Log.TRACE, "Home: ", home );
 
-		card.setInstallFolder( home );
+		card.setTargetFolder( home );
 	}
 
 	private final void configureArtifact( Parameters parameters ) {

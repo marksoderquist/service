@@ -101,6 +101,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 		installedPacks = new ConcurrentHashMap<String, ProductCard>();
 		updater = new File( service.getHomeFolder(), UPDATER_JAR_NAME );
 
+		// Default options.
 		checkOption = CheckOption.DISABLED;
 		foundOption = FoundOption.STAGE;
 		applyOption = ApplyOption.RESTART;
@@ -108,22 +109,18 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 		service.getSettings().addSettingListener( "/update", new SettingChangeHandler() );
 	}
 
-	/**
-	 * Get the installed packs. The map entry key is the product card key and the
-	 * map entry value is the product card that represents the pack.
-	 * 
-	 * @return A map of the installed packs.
-	 */
-	public Map<String, ProductCard> getInstalledPacks() {
-		Map<String, ProductCard> packs = new ConcurrentHashMap<String, ProductCard>();
+	// FIXME This method is technically incorrect. It gets products registered for updates, not installed products.
+	public boolean isInstalled( ProductCard pack ) {
+		return getInstalledPacks().contains( pack );
+	}
 
-		// Add the service pack.
-		packs.put( service.getCard().getKey(), service.getCard() );
+	public Set<ProductCard> getInstalledPacks() {
+		Set<ProductCard> cards = new HashSet<ProductCard>();
 
-		// Add the installed packs.
-		packs.putAll( installedPacks );
+		cards.add( service.getCard() );
+		cards.addAll( installedPacks.values() );
 
-		return packs;
+		return cards;
 	}
 
 	public void addInstalledPack( ProductCard card ) {
@@ -204,10 +201,10 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 
 		Log.write( Log.TRACE, "Checking for updates..." );
 
-		Map<String, ProductCard> oldPacks = getInstalledPacks();
+		Set<ProductCard> oldPacks = getInstalledPacks();
 
 		Map<ProductCard, Future<Descriptor>> futures = new HashMap<ProductCard, Future<Descriptor>>();
-		for( ProductCard oldPack : oldPacks.values() ) {
+		for( ProductCard oldPack : oldPacks ) {
 			URI uri = getResolvedUpdateUri( oldPack.getSourceUri() );
 			if( uri == null ) {
 				Log.write( Log.WARN, "Installed pack does not have source defined: " + oldPack.toString() );
@@ -219,7 +216,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 			futures.put( oldPack, service.getTaskManager().submit( new DescriptorDownloadTask( uri ) ) );
 		}
 
-		for( ProductCard oldPack : oldPacks.values() ) {
+		for( ProductCard oldPack : oldPacks ) {
 			Future<Descriptor> future = futures.get( oldPack );
 			if( future == null ) continue;
 			ProductCard newPack = ProductCard.create( future.get() );
@@ -309,25 +306,21 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 			}
 		}
 
-		Map<String, ProductCard> installedPacks = getInstalledPacks();
-
-		for( String key : installedPacks.keySet() ) {
-			Log.write( Log.TRACE, "Installed pack: " + key );
-		}
+		Map<String, ProductCard> installedPacks = getInstalledPackMap();
 
 		// Create an update for each pack.
 		for( ProductCard card : cards ) {
 			ProductCard installedPack = installedPacks.get( card.getKey() );
 
 			// Check that the pack is valid.
-			if( installedPack == null || !installedPack.isInstallFolderValid() ) {
+			if( installedPack == null || !installedPack.isTargetFolderValid() ) {
 				Log.write( Log.WARN, "Pack not installed: " + card );
 				continue;
 			}
 
 			File update = new File( stageFolder, card.getKey() + ".pak" );
 			createUpdatePack( productResources.get( card ), update );
-			updates.add( new StagedUpdate( update, installedPack.getInstallFolder() ) );
+			updates.add( new StagedUpdate( update, installedPack.getTargetFolder() ) );
 			Log.write( Log.TRACE, "Update staged: " + update );
 		}
 		saveSettings( settings );
@@ -510,6 +503,24 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 
 	private boolean isEnabled() {
 		return checkOption != CheckOption.DISABLED;
+	}
+
+	/**
+	 * Get the installed packs. The map entry key is the product card key and the
+	 * map entry value is the product card that represents the pack.
+	 * 
+	 * @return A map of the installed packs.
+	 */
+	private Map<String, ProductCard> getInstalledPackMap() {
+		Map<String, ProductCard> packs = new ConcurrentHashMap<String, ProductCard>();
+	
+		// Add the service pack.
+		packs.put( service.getCard().getKey(), service.getCard() );
+	
+		// Add the installed packs.
+		packs.putAll( installedPacks );
+	
+		return packs;
 	}
 
 	private URI getResolvedUpdateUri( URI uri ) {

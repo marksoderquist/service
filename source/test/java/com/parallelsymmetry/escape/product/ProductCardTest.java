@@ -79,9 +79,9 @@ public class ProductCardTest extends BaseTestCase {
 	}
 
 	public void testIsInstallFolderValid() throws Exception {
-		assertFalse( card.isInstallFolderValid() );
-		card.setInstallFolder( new File( "." ) );
-		assertTrue( card.isInstallFolderValid() );
+		assertFalse( card.isTargetFolderValid() );
+		card.setTargetFolder( new File( "." ) );
+		assertTrue( card.isTargetFolderValid() );
 	}
 
 }

@@ -55,7 +55,7 @@ public class UpdateManagerTest extends BaseTestCase {
 	}
 
 	public void testGetInstalledPacks() {
-		assertEquals( service.getCard(), updateManager.getInstalledPacks().values().iterator().next() );
+		assertEquals( service.getCard(), updateManager.getInstalledPacks().iterator().next() );
 	}
 
 	public void testGetUpdaterPath() {
