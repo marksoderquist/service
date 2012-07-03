@@ -282,12 +282,12 @@ public class ProductCard {
 	public boolean equals( Object object ) {
 		if( !( object instanceof ProductCard ) ) return false;
 		ProductCard that = (ProductCard)object;
-		return this.group.equals( that.group ) && this.artifact.equals( that.artifact ) && this.release.equals( that.release );
+		return this.group.equals( that.group ) && this.artifact.equals( that.artifact );
 	}
 
 	@Override
 	public int hashCode() {
-		return this.group.hashCode() + this.artifact.hashCode() + this.release.hashCode();
+		return this.group.hashCode() ^ this.artifact.hashCode();
 	}
 
 }
