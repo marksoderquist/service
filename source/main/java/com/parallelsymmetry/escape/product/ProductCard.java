@@ -204,10 +204,6 @@ public class ProductCard {
 		this.folder = folder;
 	}
 
-	public boolean isTargetFolderValid() {
-		return folder != null && folder.exists();
-	}
-
 	public ProductCard update( Descriptor descriptor ) throws ProductCardException {
 		if( descriptor == null ) throw new ProductCardException( "Descriptor cannot be null." );
 		this.descriptor = descriptor;

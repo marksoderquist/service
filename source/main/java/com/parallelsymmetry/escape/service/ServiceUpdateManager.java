@@ -110,8 +110,13 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 	}
 
 	// FIXME This method is technically incorrect. It gets products registered for updates, not installed products.
-	public boolean isInstalled( ProductCard pack ) {
-		return getInstalledPacks().contains( pack );
+	public boolean isInstalled( ProductCard card ) {
+		boolean inMap = getInstalledPackMap().get( card.getKey() ) != null;
+		boolean inSet = getInstalledPacks().contains( card );
+
+		Log.write( Log.WARN, "In set(" + getInstalledPacks().size() + "): " + inSet + "  In map(" + getInstalledPackMap().size() + "): " + inMap );
+
+		return inSet;
 	}
 
 	public Set<ProductCard> getInstalledPacks() {
@@ -312,15 +317,18 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 		for( ProductCard card : cards ) {
 			ProductCard installedPack = installedPacks.get( card.getKey() );
 
+			File targetFolder = installedPack.getTargetFolder();
+			boolean targetFolderValid = targetFolder != null && targetFolder.exists();
+
 			// Check that the pack is valid.
-			if( installedPack == null || !installedPack.isTargetFolderValid() ) {
+			if( installedPack == null || !targetFolderValid ) {
 				Log.write( Log.WARN, "Pack not installed: " + card );
 				continue;
 			}
 
 			File update = new File( stageFolder, card.getKey() + ".pak" );
 			createUpdatePack( productResources.get( card ), update );
-			updates.add( new StagedUpdate( update, installedPack.getTargetFolder() ) );
+			updates.add( new StagedUpdate( update, targetFolder ) );
 			Log.write( Log.TRACE, "Update staged: " + update );
 		}
 		saveSettings( settings );
@@ -513,13 +521,13 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 	 */
 	private Map<String, ProductCard> getInstalledPackMap() {
 		Map<String, ProductCard> packs = new ConcurrentHashMap<String, ProductCard>();
-	
+
 		// Add the service pack.
 		packs.put( service.getCard().getKey(), service.getCard() );
-	
+
 		// Add the installed packs.
 		packs.putAll( installedPacks );
-	
+
 		return packs;
 	}
 

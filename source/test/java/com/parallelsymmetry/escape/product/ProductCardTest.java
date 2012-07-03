@@ -1,6 +1,5 @@
 package com.parallelsymmetry.escape.product;
 
-import java.io.File;
 import java.io.InputStream;
 import java.net.URI;
 
@@ -79,12 +78,6 @@ public class ProductCardTest extends BaseTestCase {
 
 	public void testGetUpdateUri() throws Exception {
 		assertEquals( "target/sandbox/update.xml", card.getSourceUri().toString() );
-	}
-
-	public void testIsInstallFolderValid() throws Exception {
-		assertFalse( card.isTargetFolderValid() );
-		card.setTargetFolder( new File( "." ) );
-		assertTrue( card.isTargetFolderValid() );
 	}
 
 	public void testEquals() throws Exception {
