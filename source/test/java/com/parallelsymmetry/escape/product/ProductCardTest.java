@@ -27,6 +27,12 @@ public class ProductCardTest extends BaseTestCase {
 			fail( exception.getMessage() );
 		}
 	}
+	
+	public void testAssertDescriptorPaths() {
+		assertEquals( "/product", ProductCard.PRODUCT_PATH );
+		assertEquals( "/product/group", ProductCard.GROUP_PATH );
+		assertEquals( "/product/archive", ProductCard.ARTIFACT_PATH );
+	}
 
 	public void testGetKey() throws Exception {
 		assertEquals( "com.parallelsymmetry.escape.service.mock", card.getKey() );

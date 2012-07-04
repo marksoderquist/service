@@ -1,5 +1,6 @@
-<pack>
+<?xml version="1.0"?>
 
+<product version="1">
 	<group>com.parallelsymmetry.escape.service</group>
 	<artifact>mock</artifact>
 	<version>1.0.0-a-00</version>
@@ -26,4 +27,4 @@
 	</resources>
 
 	<source uri="target/sandbox/update.xml"/>
-</pack>
+</product>

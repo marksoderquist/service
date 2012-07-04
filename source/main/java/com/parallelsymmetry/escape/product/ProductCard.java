@@ -14,7 +14,7 @@ import com.parallelsymmetry.escape.utility.log.Log;
 // FIXME Change name to ProductVoucher?
 public class ProductCard {
 	
-	public static final String PRODUCT_PATH = "/pack";
+	public static final String PRODUCT_PATH = "/product";
 
 	public static final String GROUP_PATH = PRODUCT_PATH + "/group";
 
