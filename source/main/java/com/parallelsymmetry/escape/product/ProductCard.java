@@ -11,7 +11,6 @@ import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.Release;
 import com.parallelsymmetry.escape.utility.log.Log;
 
-// FIXME Change name to ProductVoucher?
 public class ProductCard {
 	
 	public static final String PRODUCT_PATH = "/product";
@@ -39,6 +38,8 @@ public class ProductCard {
 	public static final String COPYRIGHT_NOTICE_PATH = PRODUCT_PATH + "/copyright/notice";
 
 	public static final String LICENSE_SUMMARY_PATH = PRODUCT_PATH + "/license/summary";
+	
+	public static final String RESOURCES_PATH = PRODUCT_PATH + "/resources";
 
 	public static final String SOURCE_URI_PATH = PRODUCT_PATH + "/source/@uri";
 

@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
 
-import com.parallelsymmetry.escape.product.CardProvider;
+import com.parallelsymmetry.escape.product.PackProvider;
 import com.parallelsymmetry.escape.product.ProductCard;
 import com.parallelsymmetry.escape.product.ProductResource;
 import com.parallelsymmetry.escape.service.task.DescriptorDownloadTask;
@@ -287,7 +287,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 		// Determine all the resources to download.
 		Map<ProductCard, Set<ProductResource>> productResources = new HashMap<ProductCard, Set<ProductResource>>();
 		for( ProductCard card : cards ) {
-			Set<ProductResource> resources = new CardProvider( card, service.getTaskManager() ).getResources();
+			Set<ProductResource> resources = new PackProvider( card, service.getTaskManager() ).getResources();
 
 			for( ProductResource resource : resources ) {
 				URI uri = getResolvedUpdateUri( resource.getUri() );

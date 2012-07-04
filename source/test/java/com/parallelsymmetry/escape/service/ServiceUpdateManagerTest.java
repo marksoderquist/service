@@ -10,6 +10,7 @@ import javax.xml.xpath.XPathFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
+import com.parallelsymmetry.escape.product.ProductCard;
 import com.parallelsymmetry.escape.service.ServiceUpdateManager.ApplyOption;
 import com.parallelsymmetry.escape.service.ServiceUpdateManager.CheckOption;
 import com.parallelsymmetry.escape.service.ServiceUpdateManager.FoundOption;
@@ -176,7 +177,7 @@ public class ServiceUpdateManagerTest extends BaseTestCase {
 		if( descriptor.exists() ) {
 			Document programDescriptor = XmlUtil.loadXmlDocument( descriptor );
 			XPath xpath = XPathFactory.newInstance().newXPath();
-			Node node = (Node)xpath.evaluate( "/pack/timestamp", programDescriptor, XPathConstants.NODE );
+			Node node = (Node)xpath.evaluate( ProductCard.TIMESTAMP_PATH, programDescriptor, XPathConstants.NODE );
 
 			if( node != null ) {
 				long timestamp = Long.parseLong( node.getTextContent() );

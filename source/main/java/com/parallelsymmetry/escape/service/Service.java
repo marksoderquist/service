@@ -404,7 +404,7 @@ public abstract class Service extends Agent implements Product {
 		setName( name == null ? card.getName() : name );
 
 		// Minimum Java runtime version.
-		javaVersionMinimum = descriptor.getValue( "/pack/resources/java/@version", JAVA_VERSION_MINIMUM );
+		javaVersionMinimum = descriptor.getValue( ProductCard.RESOURCES_PATH + "/java/@version", JAVA_VERSION_MINIMUM );
 	}
 
 	/**

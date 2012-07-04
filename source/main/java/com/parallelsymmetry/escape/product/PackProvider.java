@@ -12,13 +12,13 @@ import com.parallelsymmetry.escape.service.task.DescriptorDownloadTask;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.task.TaskManager;
 
-public class CardProvider implements ProductResourceProvider {
+public class PackProvider implements ProductResourceProvider {
 
 	private TaskManager taskManager;
 
 	private ProductCard card;
 
-	public CardProvider( ProductCard card, TaskManager taskManager ) {
+	public PackProvider( ProductCard card, TaskManager taskManager ) {
 		this.card = card;
 		this.taskManager = taskManager;
 	}
@@ -60,7 +60,7 @@ public class CardProvider implements ProductResourceProvider {
 		Set<String> resources = new HashSet<String>();
 
 		// Determine the resources.
-		Node[] nodes = descriptor.getNodes( "/pack/resources" );
+		Node[] nodes = descriptor.getNodes( ProductCard.RESOURCES_PATH );
 		for( Node node : nodes ) {
 			Descriptor resourcesDescriptor = new Descriptor( node );
 			Node osNameNode = node.getAttributes().getNamedItem( "os" );
