@@ -31,7 +31,7 @@ public class ProductCardTest extends BaseTestCase {
 	public void testAssertDescriptorPaths() {
 		assertEquals( "/product", ProductCard.PRODUCT_PATH );
 		assertEquals( "/product/group", ProductCard.GROUP_PATH );
-		assertEquals( "/product/archive", ProductCard.ARTIFACT_PATH );
+		assertEquals( "/product/artifact", ProductCard.ARTIFACT_PATH );
 	}
 
 	public void testGetKey() throws Exception {
