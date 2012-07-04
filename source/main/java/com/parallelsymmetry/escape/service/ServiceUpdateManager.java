@@ -113,6 +113,10 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 	public boolean isInstalled( ProductCard card ) {
 		return getInstalledPacks().contains( card );
 	}
+	
+	public boolean isReleaseInstalled( ProductCard card ) {
+		return false;
+	}
 
 	public Set<ProductCard> getInstalledPacks() {
 		Set<ProductCard> cards = new HashSet<ProductCard>();
