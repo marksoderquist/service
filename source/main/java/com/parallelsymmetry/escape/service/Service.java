@@ -397,7 +397,7 @@ public abstract class Service extends Agent implements Product {
 		if( this.descriptor != null ) return;
 		this.descriptor = descriptor;
 
-		card = ProductCard.create( descriptor );
+		card = new ProductCard( descriptor );
 
 		// Determine the program name.
 		if( name == null ) setName( card.getName() );

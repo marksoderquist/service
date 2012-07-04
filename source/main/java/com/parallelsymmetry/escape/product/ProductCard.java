@@ -72,14 +72,73 @@ public class ProductCard {
 
 	private File folder;
 
-	private ProductCard() {}
-
 	public ProductCard( Descriptor descriptor ) throws ProductCardException {
 		update( descriptor );
 	}
 
-	public static final ProductCard create( Descriptor descriptor ) throws ProductCardException {
-		return new ProductCard().update( descriptor );
+	public ProductCard update( Descriptor descriptor ) throws ProductCardException {
+		if( descriptor == null ) throw new ProductCardException( "Descriptor cannot be null." );
+		this.descriptor = descriptor;
+	
+		String group = descriptor.getValue( GROUP_PATH );
+		String artifact = descriptor.getValue( ARTIFACT_PATH );
+		String version = descriptor.getValue( VERSION_PATH );
+		String timestamp = descriptor.getValue( TIMESTAMP_PATH );
+		String iconUri = descriptor.getValue( ICON_PATH );
+		String name = descriptor.getValue( NAME_PATH );
+		String provider = descriptor.getValue( PROVIDER_PATH );
+		String inception = descriptor.getValue( INCEPTION_YEAR_PATH );
+		String productSummary = descriptor.getValue( PRODUCT_SUMMARY_PATH );
+		String holder = descriptor.getValue( COPYRIGHT_HOLDER_PATH );
+		String notice = descriptor.getValue( COPYRIGHT_NOTICE_PATH );
+		String licenseSummary = descriptor.getValue( LICENSE_SUMMARY_PATH );
+		String sourceUri = descriptor.getValue( SOURCE_URI_PATH );
+	
+		// Determine the release date.
+		Date releaseDate = null;
+		try {
+			releaseDate = new Date( Long.parseLong( timestamp ) );
+		} catch( Throwable throwable ) {
+			// Leave the date null.
+		}
+	
+		// Determine the program inception year.
+		int inceptionYear = 0;
+		try {
+			inceptionYear = Integer.parseInt( inception );
+		} catch( NumberFormatException exception ) {
+			// Leave the inception year zero.
+		}
+	
+		if( group == null ) throw new ProductCardException( "Product group cannot be null." );
+		if( artifact == null ) throw new ProductCardException( "Product artifact cannot be null." );
+		this.group = group;
+		this.artifact = artifact;
+		this.release = new Release( version, releaseDate );
+	
+		try {
+			if( iconUri != null ) this.iconUri = new URI( iconUri );
+		} catch( URISyntaxException exception ) {
+			Log.write( exception );
+		}
+	
+		if( name != null ) this.name = name;
+		if( provider != null ) this.provider = provider;
+		if( inceptionYear != 0 ) this.inceptionYear = inceptionYear;
+		if( productSummary != null ) this.summary = productSummary;
+	
+		this.copyrightHolder = holder == null ? provider : holder;
+		if( notice != null ) this.copyrightNotice = notice;
+	
+		if( licenseSummary != null ) this.licenseSummary = licenseSummary;
+	
+		try {
+			if( sourceUri != null ) this.sourceUri = new URI( sourceUri );
+		} catch( URISyntaxException exception ) {
+			Log.write( exception );
+		}
+	
+		return this;
 	}
 
 	public Descriptor getDescriptor() {
@@ -202,71 +261,6 @@ public class ProductCard {
 
 	public void setTargetFolder( File folder ) {
 		this.folder = folder;
-	}
-
-	public ProductCard update( Descriptor descriptor ) throws ProductCardException {
-		if( descriptor == null ) throw new ProductCardException( "Descriptor cannot be null." );
-		this.descriptor = descriptor;
-
-		String group = descriptor.getValue( GROUP_PATH );
-		String artifact = descriptor.getValue( ARTIFACT_PATH );
-		String version = descriptor.getValue( VERSION_PATH );
-		String timestamp = descriptor.getValue( TIMESTAMP_PATH );
-		String iconUri = descriptor.getValue( ICON_PATH );
-		String name = descriptor.getValue( NAME_PATH );
-		String provider = descriptor.getValue( PROVIDER_PATH );
-		String inception = descriptor.getValue( INCEPTION_YEAR_PATH );
-		String productSummary = descriptor.getValue( PRODUCT_SUMMARY_PATH );
-		String holder = descriptor.getValue( COPYRIGHT_HOLDER_PATH );
-		String notice = descriptor.getValue( COPYRIGHT_NOTICE_PATH );
-		String licenseSummary = descriptor.getValue( LICENSE_SUMMARY_PATH );
-		String sourceUri = descriptor.getValue( SOURCE_URI_PATH );
-
-		// Determine the release date.
-		Date releaseDate = null;
-		try {
-			releaseDate = new Date( Long.parseLong( timestamp ) );
-		} catch( Throwable throwable ) {
-			// Leave the date null.
-		}
-
-		// Determine the program inception year.
-		int inceptionYear = 0;
-		try {
-			inceptionYear = Integer.parseInt( inception );
-		} catch( NumberFormatException exception ) {
-			// Leave the inception year zero.
-		}
-
-		if( group == null ) throw new ProductCardException( "Product group cannot be null." );
-		if( artifact == null ) throw new ProductCardException( "Product artifact cannot be null." );
-		this.group = group;
-		this.artifact = artifact;
-		this.release = new Release( version, releaseDate );
-
-		try {
-			if( iconUri != null ) this.iconUri = new URI( iconUri );
-		} catch( URISyntaxException exception ) {
-			Log.write( exception );
-		}
-
-		if( name != null ) this.name = name;
-		if( provider != null ) this.provider = provider;
-		if( inceptionYear != 0 ) this.inceptionYear = inceptionYear;
-		if( productSummary != null ) this.summary = productSummary;
-
-		this.copyrightHolder = holder == null ? provider : holder;
-		if( notice != null ) this.copyrightNotice = notice;
-
-		if( licenseSummary != null ) this.licenseSummary = licenseSummary;
-
-		try {
-			if( sourceUri != null ) this.sourceUri = new URI( sourceUri );
-		} catch( URISyntaxException exception ) {
-			Log.write( exception );
-		}
-
-		return this;
 	}
 
 	@Override

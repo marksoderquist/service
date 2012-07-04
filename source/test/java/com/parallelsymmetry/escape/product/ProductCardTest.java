@@ -22,7 +22,7 @@ public class ProductCardTest extends BaseTestCase {
 		try {
 			InputStream input = getClass().getResourceAsStream( "/META-INF/program.xml" );
 			descriptor = new Descriptor( input );
-			card = ProductCard.create( descriptor );
+			card = new ProductCard( descriptor );
 		} catch( Exception exception ) {
 			fail( exception.getMessage() );
 		}

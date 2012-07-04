@@ -111,12 +111,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 
 	// FIXME This method is technically incorrect. It gets products registered for updates, not installed products.
 	public boolean isInstalled( ProductCard card ) {
-		boolean inMap = getInstalledPackMap().get( card.getKey() ) != null;
-		boolean inSet = getInstalledPacks().contains( card );
-
-		Log.write( Log.WARN, "In set(" + getInstalledPacks().size() + "): " + inSet + "  In map(" + getInstalledPackMap().size() + "): " + inMap );
-
-		return inSet;
+		return getInstalledPacks().contains( card );
 	}
 
 	public Set<ProductCard> getInstalledPacks() {
@@ -224,7 +219,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 		for( ProductCard oldPack : oldPacks ) {
 			Future<Descriptor> future = futures.get( oldPack );
 			if( future == null ) continue;
-			ProductCard newPack = ProductCard.create( future.get() );
+			ProductCard newPack = new ProductCard( future.get() );
 
 			// Handle the development command line flag.
 			boolean development = service.getParameters().isSet( ServiceFlag.DEVELOPMENT );
