@@ -138,14 +138,16 @@ public abstract class Service extends Agent implements Product {
 		super( name );
 		this.name = name;
 
-		if( descriptor == null ) {
-			try {
+		try {
+			if( descriptor == null ) {
 				URL url = getClass().getResource( DEFAULT_DESCRIPTOR_PATH );
 				if( url != null ) Log.write( Log.DEBUG, "Application descriptor found: " + DEFAULT_DESCRIPTOR_PATH );
 				describe( new Descriptor( url ), url.toURI() );
-			} catch( Exception exception ) {
-				Log.write( exception );
+			} else {
+				describe( descriptor, descriptor.getSource() );
 			}
+		} catch( Exception exception ) {
+			Log.write( exception );
 		}
 
 		// Create the settings object.
