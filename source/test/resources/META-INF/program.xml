@@ -6,7 +6,7 @@
 	<version>1.0.0-a-00</version>
 	<timestamp>114215340000</timestamp>
 
-	<icon uri="target/sandbox/icon.png"/>
+	<icon uri="../../../sandbox/icon.png"/>
 	<name>Mock Service</name>
 	<provider>Parallel Symmetry</provider>
 	<inception>1973</inception>
@@ -23,8 +23,8 @@
 
 	<resources>
 		<java version="1.6.0_11"/>
-		<pack uri="update.jar"/>
+		<pack uri="../../../sandbox/update.jar"/>
 	</resources>
 
-	<source uri="target/sandbox/update.xml"/>
+	<source uri="../../../sandbox/update.xml"/>
 </product>

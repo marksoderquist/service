@@ -16,7 +16,6 @@ import com.parallelsymmetry.escape.service.ServiceUpdateManager.CheckOption;
 import com.parallelsymmetry.escape.service.ServiceUpdateManager.FoundOption;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.XmlUtil;
-import com.parallelsymmetry.escape.utility.log.Log;
 
 public class ServiceUpdateManagerTest extends BaseTestCase {
 
@@ -117,7 +116,7 @@ public class ServiceUpdateManagerTest extends BaseTestCase {
 
 		// Create the update card and modify the timestamp.
 		assertTrue( FileUtil.copy( SOURCE_PRODUCT_CARD, TARGET_UPDATE_CARD ) );
-		updatePackDescriptorTimestamp( TARGET_UPDATE_CARD );
+		fixProductCardData( TARGET_UPDATE_CARD );
 
 		// Ensure there are posted updates.
 		assertEquals( 1, updateManager.getPostedUpdates().size() );
@@ -127,7 +126,7 @@ public class ServiceUpdateManagerTest extends BaseTestCase {
 		stageUpdate();
 
 		File stageFolder = new File( service.getProgramDataFolder(), "stage" );
-		File updateFile = new File( stageFolder, service.getCard().getKey() + ".pak" );
+		File updateFile = new File( stageFolder, service.getCard().getProductKey() + ".pak" );
 
 		// Cleanup from previous run.
 		FileUtil.delete( stageFolder );
@@ -169,22 +168,33 @@ public class ServiceUpdateManagerTest extends BaseTestCase {
 
 		// Create the update card and modify the timestamp.
 		assertTrue( FileUtil.copy( SOURCE_PRODUCT_CARD, TARGET_UPDATE_CARD ) );
-		updatePackDescriptorTimestamp( TARGET_UPDATE_CARD );
+		fixProductCardData( TARGET_UPDATE_CARD );
 	}
 
-	private void updatePackDescriptorTimestamp( File descriptor ) throws Exception {
+	private void fixProductCardData( File descriptor ) throws Exception {
 		// Update the timestamp in the descriptor file.
 		if( descriptor.exists() ) {
 			Document programDescriptor = XmlUtil.loadXmlDocument( descriptor );
 			XPath xpath = XPathFactory.newInstance().newXPath();
-			Node node = (Node)xpath.evaluate( ProductCard.TIMESTAMP_PATH, programDescriptor, XPathConstants.NODE );
 
-			if( node != null ) {
-				long timestamp = Long.parseLong( node.getTextContent() );
-				Log.write( Log.WARN, "Parsed timestamp: " + timestamp );
-				node.setTextContent( String.valueOf( timestamp + TIMESTAMP_OFFSET ) );
-				XmlUtil.save( programDescriptor, descriptor );
-			}
+			// Change the timestamp to a time in the future.
+			Node timestampNode = (Node)xpath.evaluate( ProductCard.TIMESTAMP_PATH, programDescriptor, XPathConstants.NODE );
+			long timestamp = Long.parseLong( timestampNode.getTextContent() );
+			timestampNode.setTextContent( String.valueOf( timestamp + TIMESTAMP_OFFSET ) );
+
+			// Fix the icon URI.
+			Node iconUriNode = (Node)xpath.evaluate( ProductCard.ICON_PATH, programDescriptor, XPathConstants.NODE );
+			iconUriNode.setTextContent( "icon.png" );
+
+			// Fix the pack URI.
+			Node packUriNode = (Node)xpath.evaluate( ProductCard.RESOURCES_PATH + "/pack/@uri", programDescriptor, XPathConstants.NODE );
+			packUriNode.setTextContent( "update.jar" );
+
+			// Fix the source URI.
+			Node sourceUriNode = (Node)xpath.evaluate( ProductCard.SOURCE_URI_PATH, programDescriptor, XPathConstants.NODE );
+			sourceUriNode.setTextContent( "update.xml" );
+
+			XmlUtil.save( programDescriptor, descriptor );
 		}
 
 	}

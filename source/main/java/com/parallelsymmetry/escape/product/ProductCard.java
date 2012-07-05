@@ -9,10 +9,11 @@ import java.util.Date;
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.Release;
+import com.parallelsymmetry.escape.utility.UriUtil;
 import com.parallelsymmetry.escape.utility.log.Log;
 
 public class ProductCard {
-	
+
 	public static final String PRODUCT_PATH = "/product";
 
 	public static final String GROUP_PATH = PRODUCT_PATH + "/group";
@@ -38,7 +39,7 @@ public class ProductCard {
 	public static final String COPYRIGHT_NOTICE_PATH = PRODUCT_PATH + "/copyright/notice";
 
 	public static final String LICENSE_SUMMARY_PATH = PRODUCT_PATH + "/license/summary";
-	
+
 	public static final String RESOURCES_PATH = PRODUCT_PATH + "/resources";
 
 	public static final String SOURCE_URI_PATH = PRODUCT_PATH + "/source/@uri";
@@ -73,14 +74,23 @@ public class ProductCard {
 
 	private File folder;
 
+	private String productKey;
+
+	private String releaseKey;
+
+	@Deprecated
 	public ProductCard( Descriptor descriptor ) throws ProductCardException {
-		update( descriptor );
+		update( descriptor, null );
 	}
 
-	public ProductCard update( Descriptor descriptor ) throws ProductCardException {
+	public ProductCard( Descriptor descriptor, URI base ) throws ProductCardException {
+		update( descriptor, base );
+	}
+
+	public ProductCard update( Descriptor descriptor, URI base ) throws ProductCardException {
 		if( descriptor == null ) throw new ProductCardException( "Descriptor cannot be null." );
 		this.descriptor = descriptor;
-	
+
 		String group = descriptor.getValue( GROUP_PATH );
 		String artifact = descriptor.getValue( ARTIFACT_PATH );
 		String version = descriptor.getValue( VERSION_PATH );
@@ -94,7 +104,7 @@ public class ProductCard {
 		String notice = descriptor.getValue( COPYRIGHT_NOTICE_PATH );
 		String licenseSummary = descriptor.getValue( LICENSE_SUMMARY_PATH );
 		String sourceUri = descriptor.getValue( SOURCE_URI_PATH );
-	
+
 		// Determine the release date.
 		Date releaseDate = null;
 		try {
@@ -102,7 +112,7 @@ public class ProductCard {
 		} catch( Throwable throwable ) {
 			// Leave the date null.
 		}
-	
+
 		// Determine the program inception year.
 		int inceptionYear = 0;
 		try {
@@ -110,35 +120,47 @@ public class ProductCard {
 		} catch( NumberFormatException exception ) {
 			// Leave the inception year zero.
 		}
-	
+
 		if( group == null ) throw new ProductCardException( "Product group cannot be null." );
 		if( artifact == null ) throw new ProductCardException( "Product artifact cannot be null." );
 		this.group = group;
 		this.artifact = artifact;
 		this.release = new Release( version, releaseDate );
-	
+
+		this.productKey = group + ":" + artifact;
+		this.releaseKey = productKey + ":" + release.toString();
+
 		try {
-			if( iconUri != null ) this.iconUri = new URI( iconUri );
+			if( iconUri != null ) this.iconUri = UriUtil.resolve( base, new URI( iconUri ) );
 		} catch( URISyntaxException exception ) {
 			Log.write( exception );
 		}
-	
+
 		if( name != null ) this.name = name;
 		if( provider != null ) this.provider = provider;
 		if( inceptionYear != 0 ) this.inceptionYear = inceptionYear;
 		if( productSummary != null ) this.summary = productSummary;
-	
+
 		this.copyrightHolder = holder == null ? provider : holder;
 		if( notice != null ) this.copyrightNotice = notice;
-	
+
 		if( licenseSummary != null ) this.licenseSummary = licenseSummary;
-	
+
 		try {
-			if( sourceUri != null ) this.sourceUri = new URI( sourceUri );
+			if( sourceUri == null ) {
+				this.sourceUri = base;
+			} else {
+				URI uri = new URI( sourceUri );
+				if( uri.isAbsolute() ) {
+					this.sourceUri = uri;
+				} else {
+					this.sourceUri = UriUtil.resolve( base, uri );
+				}
+			}
 		} catch( URISyntaxException exception ) {
 			Log.write( exception );
 		}
-	
+
 		return this;
 	}
 
@@ -146,8 +168,12 @@ public class ProductCard {
 		return descriptor;
 	}
 
-	public String getKey() {
-		return group + "." + artifact;
+	public String getProductKey() {
+		return productKey;
+	}
+
+	public String getReleaseKey() {
+		return releaseKey;
 	}
 
 	public String getGroup() {
@@ -266,7 +292,7 @@ public class ProductCard {
 
 	@Override
 	public String toString() {
-		return getKey();
+		return getProductKey();
 	}
 
 	@Override

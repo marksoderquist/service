@@ -113,7 +113,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 	public boolean isInstalled( ProductCard card ) {
 		return getInstalledPacks().contains( card );
 	}
-	
+
 	public boolean isReleaseInstalled( ProductCard card ) {
 		return false;
 	}
@@ -128,11 +128,11 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 	}
 
 	public void addInstalledPack( ProductCard card ) {
-		installedPacks.put( card.getKey(), card );
+		installedPacks.put( card.getProductKey(), card );
 	}
 
 	public void removeInstalledPack( ProductCard card ) {
-		installedPacks.remove( card.getKey() );
+		installedPacks.remove( card.getProductKey() );
 	}
 
 	/**
@@ -223,7 +223,8 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 		for( ProductCard oldPack : oldPacks ) {
 			Future<Descriptor> future = futures.get( oldPack );
 			if( future == null ) continue;
-			ProductCard newPack = new ProductCard( future.get() );
+			Descriptor descriptor = future.get();
+			ProductCard newPack = new ProductCard( descriptor, descriptor.getSource() );
 
 			// Handle the development command line flag.
 			boolean development = service.getParameters().isSet( ServiceFlag.DEVELOPMENT );
@@ -232,8 +233,8 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 			}
 
 			// Validate the pack key.
-			if( !oldPack.getKey().equals( newPack.getKey() ) ) {
-				Log.write( Log.WARN, "Pack mismatch: ", oldPack.getKey(), " != ", newPack.getKey() );
+			if( !oldPack.getProductKey().equals( newPack.getProductKey() ) ) {
+				Log.write( Log.WARN, "Pack mismatch: ", oldPack.getProductKey(), " != ", newPack.getProductKey() );
 				continue;
 			}
 
@@ -314,7 +315,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 
 		// Create an update for each pack.
 		for( ProductCard card : cards ) {
-			ProductCard installedPack = installedPacks.get( card.getKey() );
+			ProductCard installedPack = installedPacks.get( card.getProductKey() );
 
 			File targetFolder = installedPack.getTargetFolder();
 			boolean targetFolderValid = targetFolder != null && targetFolder.exists();
@@ -325,7 +326,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 				continue;
 			}
 
-			File update = new File( stageFolder, card.getKey() + ".pak" );
+			File update = new File( stageFolder, card.getProductKey() + ".pak" );
 			createUpdatePack( productResources.get( card ), update );
 			updates.add( new StagedUpdate( update, targetFolder ) );
 			Log.write( Log.TRACE, "Update staged: " + update );
@@ -522,7 +523,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 		Map<String, ProductCard> packs = new ConcurrentHashMap<String, ProductCard>();
 
 		// Add the service pack.
-		packs.put( service.getCard().getKey(), service.getCard() );
+		packs.put( service.getCard().getProductKey(), service.getCard() );
 
 		// Add the installed packs.
 		packs.putAll( installedPacks );

@@ -17,6 +17,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.security.InvalidParameterException;
 import java.util.List;
 import java.util.Locale;
@@ -139,18 +140,12 @@ public abstract class Service extends Agent implements Product {
 
 		if( descriptor == null ) {
 			try {
-				InputStream input = getClass().getResourceAsStream( DEFAULT_DESCRIPTOR_PATH );
-				if( input != null ) Log.write( Log.DEBUG, "Application descriptor found: " + DEFAULT_DESCRIPTOR_PATH );
-				descriptor = new Descriptor( input );
+				URL url = getClass().getResource( DEFAULT_DESCRIPTOR_PATH );
+				if( url != null ) Log.write( Log.DEBUG, "Application descriptor found: " + DEFAULT_DESCRIPTOR_PATH );
+				describe( new Descriptor( url ), url.toURI() );
 			} catch( Exception exception ) {
 				Log.write( exception );
 			}
-		}
-
-		try {
-			describe( descriptor );
-		} catch( ProductCardException exception ) {
-			Log.write( exception );
 		}
 
 		// Create the settings object.
@@ -393,11 +388,11 @@ public abstract class Service extends Agent implements Product {
 
 	protected abstract void stopService( Parameters parameters ) throws Exception;
 
-	private final synchronized void describe( Descriptor descriptor ) throws ProductCardException {
+	private final synchronized void describe( Descriptor descriptor, URI base ) throws ProductCardException {
 		if( this.descriptor != null ) return;
 		this.descriptor = descriptor;
 
-		card = new ProductCard( descriptor );
+		card = new ProductCard( descriptor, base );
 
 		// Determine the program name.
 		if( name == null ) setName( card.getName() );
@@ -583,7 +578,7 @@ public abstract class Service extends Agent implements Product {
 			card.setArtifact( DEVELOPMENT_PREFIX + card.getArtifact() );
 		}
 
-		Log.write( Log.TRACE, "Pack: ", card.getKey() );
+		Log.write( Log.TRACE, "Pack: ", card.getProductKey() );
 	}
 
 	private final void configureSettings( Parameters parameters ) {

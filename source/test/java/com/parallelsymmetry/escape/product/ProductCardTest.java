@@ -1,7 +1,7 @@
 package com.parallelsymmetry.escape.product;
 
-import java.io.InputStream;
-import java.net.URI;
+import java.io.File;
+import java.net.URL;
 
 import org.junit.Before;
 
@@ -12,6 +12,8 @@ import com.parallelsymmetry.escape.utility.Version;
 
 public class ProductCardTest extends BaseTestCase {
 
+	private URL url;
+
 	private Descriptor descriptor;
 
 	private ProductCard card;
@@ -20,14 +22,14 @@ public class ProductCardTest extends BaseTestCase {
 	@Before
 	public void setUp() {
 		try {
-			InputStream input = getClass().getResourceAsStream( "/META-INF/program.xml" );
-			descriptor = new Descriptor( input );
-			card = new ProductCard( descriptor );
+			url = getClass().getResource( "/META-INF/program.xml" );
+			descriptor = new Descriptor( url );
+			card = new ProductCard( descriptor, url.toURI() );
 		} catch( Exception exception ) {
 			fail( exception.getMessage() );
 		}
 	}
-	
+
 	public void testAssertDescriptorPaths() {
 		assertEquals( "/product", ProductCard.PRODUCT_PATH );
 		assertEquals( "/product/group", ProductCard.GROUP_PATH );
@@ -35,7 +37,7 @@ public class ProductCardTest extends BaseTestCase {
 	}
 
 	public void testGetKey() throws Exception {
-		assertEquals( "com.parallelsymmetry.escape.service.mock", card.getKey() );
+		assertEquals( "com.parallelsymmetry.escape.service:mock", card.getProductKey() );
 	}
 
 	public void testGetGroup() throws Exception {
@@ -51,7 +53,7 @@ public class ProductCardTest extends BaseTestCase {
 	}
 
 	public void testGetIcon() throws Exception {
-		assertEquals( URI.create( "target/sandbox/icon.png" ), card.getIconUri() );
+		assertEquals( new File( "target/sandbox/icon.png" ).toURI(), card.getIconUri() );
 	}
 
 	public void testGetName() throws Exception {
@@ -82,13 +84,13 @@ public class ProductCardTest extends BaseTestCase {
 		assertEquals( "Mock Service comes with ABSOLUTELY NO WARRANTY. This is open software, and you are welcome to redistribute it under certain conditions.", card.getLicenseSummary() );
 	}
 
-	public void testGetUpdateUri() throws Exception {
-		assertEquals( "target/sandbox/update.xml", card.getSourceUri().toString() );
+	public void testGetSourceUri() throws Exception {
+		assertEquals( new File( "target/sandbox/update.xml" ).toURI(), card.getSourceUri() );
 	}
 
 	public void testEquals() throws Exception {
-		ProductCard card1 = new ProductCard( descriptor );
-		ProductCard card2 = new ProductCard( descriptor );
+		ProductCard card1 = new ProductCard( descriptor, url.toURI() );
+		ProductCard card2 = new ProductCard( descriptor, url.toURI() );
 		assertTrue( card1.equals( card2 ) );
 
 		card1.setRelease( new Release( new Version( "1" ) ) );
@@ -103,10 +105,10 @@ public class ProductCardTest extends BaseTestCase {
 	}
 
 	public void testHashCode() throws Exception {
-		ProductCard card1 = new ProductCard( descriptor );
-		ProductCard card2 = new ProductCard( descriptor );
+		ProductCard card1 = new ProductCard( descriptor, url.toURI() );
+		ProductCard card2 = new ProductCard( descriptor, url.toURI() );
 		assertTrue( card1.hashCode() == card2.hashCode() );
-		
+
 		card1.setRelease( new Release( new Version( "1" ) ) );
 		card2.setRelease( new Release( new Version( "2" ) ) );
 		assertTrue( card1.hashCode() == card2.hashCode() );
