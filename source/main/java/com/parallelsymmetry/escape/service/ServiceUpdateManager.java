@@ -326,7 +326,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 				continue;
 			}
 
-			File update = new File( stageFolder, card.getProductKey() + ".pak" );
+			File update = new File( stageFolder, getStagedUpdateFileName( card ) );
 			createUpdatePack( productResources.get( card ), update );
 			updates.add( new StagedUpdate( update, targetFolder ) );
 			Log.write( Log.TRACE, "Update staged: " + update );
@@ -334,6 +334,10 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 		saveSettings( settings );
 
 		return true;
+	}
+
+	public String getStagedUpdateFileName( ProductCard card ) {
+		return card.getGroup() + "." + card.getArtifact() + ".pak";
 	}
 
 	public boolean areUpdatesStaged() {

@@ -126,7 +126,7 @@ public class ServiceUpdateManagerTest extends BaseTestCase {
 		stageUpdate();
 
 		File stageFolder = new File( service.getProgramDataFolder(), "stage" );
-		File updateFile = new File( stageFolder, service.getCard().getProductKey() + ".pak" );
+		File updateFile = new File( stageFolder, updateManager.getStagedUpdateFileName( service.getCard() ) );
 
 		// Cleanup from previous run.
 		FileUtil.delete( stageFolder );
