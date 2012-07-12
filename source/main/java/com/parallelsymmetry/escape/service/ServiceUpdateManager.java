@@ -73,8 +73,10 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 
 	private static final String APPLY = "apply";
 
-	private static final String UPDATES = "updates";
+	private static final String UPDATE_FOLDER_NAME = "updates";
 
+	private static final String UPDATES_SETTINGS_PATH = "updates";
+	
 	private static final String UPDATER_JAR_NAME = "updater.jar";
 
 	private Service service;
@@ -283,7 +285,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 	 */
 	public boolean stageSelectedUpdates( Set<ProductCard> cards ) throws Exception {
 		File programDataFolder = service.getProgramDataFolder();
-		File stageFolder = new File( programDataFolder, "stage" );
+		File stageFolder = new File( programDataFolder, UPDATE_FOLDER_NAME );
 		stageFolder.mkdirs();
 
 		Log.write( Log.TRACE, "Number of packs to stage for update: " + cards.size() );
@@ -484,7 +486,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 		this.checkOption = CheckOption.valueOf( settings.get( CHECK, CheckOption.DISABLED.name() ) );
 		this.foundOption = FoundOption.valueOf( settings.get( FOUND, FoundOption.STAGE.name() ) );
 		this.applyOption = ApplyOption.valueOf( settings.get( APPLY, ApplyOption.RESTART.name() ) );
-		this.updates = settings.getSet( UPDATES, new HashSet<StagedUpdate>() );
+		this.updates = settings.getSet( UPDATES_SETTINGS_PATH, new HashSet<StagedUpdate>() );
 	}
 
 	@Override
@@ -494,7 +496,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 		settings.put( CHECK, checkOption.name() );
 		settings.put( FOUND, foundOption.name() );
 		settings.put( APPLY, applyOption.name() );
-		settings.putSet( UPDATES, updates );
+		settings.putSet( UPDATES_SETTINGS_PATH, updates );
 		settings.flush();
 	}
 
