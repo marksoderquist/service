@@ -67,7 +67,7 @@ public abstract class Service extends Agent implements Product {
 
 	private static final String TASK_MANAGER_SETTINGS_PATH = MANAGER_SETTINGS_ROOT + "/task";
 
-	private static final String DEFAULT_DESCRIPTOR_PATH = "/META-INF/program.xml";
+	private static final String DEFAULT_DESCRIPTOR_PATH = "/META-INF/product.xml";
 
 	private static final String DEFAULT_SETTINGS_PATH = "/META-INF/settings.xml";
 
@@ -100,8 +100,7 @@ public abstract class Service extends Agent implements Product {
 	protected ServiceUpdateManager updateManager;
 
 	/**
-	 * Construct the service with the default descriptor path of
-	 * &quot;/META-INF/program.xml&quot;.
+	 * Construct the service with the default descriptor path.
 	 */
 	public Service() {
 		this( null, null );
@@ -109,7 +108,7 @@ public abstract class Service extends Agent implements Product {
 
 	/**
 	 * Construct the service with the specified name and the default descriptor
-	 * path of &quot;/META-INF/program.xml&quot;.
+	 * path.
 	 * 
 	 * @param name
 	 */
@@ -129,7 +128,7 @@ public abstract class Service extends Agent implements Product {
 
 	/**
 	 * Construct the service with the specified name and descriptor. The
-	 * descriptor must conform to the Escape service descriptor specification.
+	 * descriptor must conform to the product descriptor specification.
 	 * 
 	 * @param name
 	 * @param descriptor
@@ -394,7 +393,7 @@ public abstract class Service extends Agent implements Product {
 		if( this.descriptor != null ) return;
 		this.descriptor = descriptor;
 
-		card = new ProductCard( descriptor, base );
+		card = new ProductCard( base, descriptor );
 
 		// Determine the program name.
 		if( name == null ) setName( card.getName() );

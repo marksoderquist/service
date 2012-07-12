@@ -67,13 +67,13 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 		VERIFY, SKIP, RESTART
 	}
 
+	static final String UPDATE_FOLDER_NAME = "updates";
+
 	private static final String CHECK = "check";
 
 	private static final String FOUND = "found";
 
 	private static final String APPLY = "apply";
-
-	private static final String UPDATE_FOLDER_NAME = "updates";
 
 	private static final String UPDATES_SETTINGS_PATH = "updates";
 	
@@ -226,7 +226,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 			Future<Descriptor> future = futures.get( oldPack );
 			if( future == null ) continue;
 			Descriptor descriptor = future.get();
-			ProductCard newPack = new ProductCard( descriptor, descriptor.getSource() );
+			ProductCard newPack = new ProductCard( descriptor.getSource(), descriptor );
 
 			// Handle the development command line flag.
 			boolean development = service.getParameters().isSet( ServiceFlag.DEVELOPMENT );

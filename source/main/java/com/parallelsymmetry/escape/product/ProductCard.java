@@ -32,11 +32,15 @@ public class ProductCard {
 
 	public static final String INCEPTION_YEAR_PATH = PRODUCT_PATH + "/inception";
 
-	public static final String PRODUCT_SUMMARY_PATH = PRODUCT_PATH + "/summary";
+	public static final String SUMMARY_PATH = PRODUCT_PATH + "/summary";
+
+	public static final String DESCRIPTION_PATH = PRODUCT_PATH + "/description";
 
 	public static final String COPYRIGHT_HOLDER_PATH = PRODUCT_PATH + "/copyright/holder";
 
 	public static final String COPYRIGHT_NOTICE_PATH = PRODUCT_PATH + "/copyright/notice";
+
+	public static final String LICENSE_URI_PATH = PRODUCT_PATH + "/license/@uri";
 
 	public static final String LICENSE_SUMMARY_PATH = PRODUCT_PATH + "/license/summary";
 
@@ -56,17 +60,21 @@ public class ProductCard {
 
 	private URI iconUri;
 
-	private String name = "Unknown";
+	private String name;
 
-	private String provider = "Unknown";
+	private String provider;
 
-	private int inceptionYear = DateUtil.getCurrentYear();
+	private int inceptionYear;
 
-	private String summary = "No summary.";
+	private String summary;
 
-	private String copyrightHolder = "Unknown";
+	private String description;
 
-	private String copyrightNotice = "All rights reserved.";
+	private String copyrightHolder;
+
+	private String copyrightNotice;
+	
+	private URI licenseUri;
 
 	private String licenseSummary;
 
@@ -78,16 +86,11 @@ public class ProductCard {
 
 	private String releaseKey;
 
-	@Deprecated
-	public ProductCard( Descriptor descriptor ) throws ProductCardException {
-		update( descriptor, null );
+	public ProductCard( URI base, Descriptor descriptor ) throws ProductCardException {
+		update( base, descriptor );
 	}
 
-	public ProductCard( Descriptor descriptor, URI base ) throws ProductCardException {
-		update( descriptor, base );
-	}
-
-	public ProductCard update( Descriptor descriptor, URI base ) throws ProductCardException {
+	public ProductCard update( URI base, Descriptor descriptor ) throws ProductCardException {
 		if( descriptor == null ) throw new ProductCardException( "Descriptor cannot be null." );
 		this.descriptor = descriptor;
 
@@ -99,9 +102,11 @@ public class ProductCard {
 		String name = descriptor.getValue( NAME_PATH );
 		String provider = descriptor.getValue( PROVIDER_PATH );
 		String inception = descriptor.getValue( INCEPTION_YEAR_PATH );
-		String productSummary = descriptor.getValue( PRODUCT_SUMMARY_PATH );
+		String summary = descriptor.getValue( SUMMARY_PATH );
+		String description = descriptor.getValue( DESCRIPTION_PATH);
 		String holder = descriptor.getValue( COPYRIGHT_HOLDER_PATH );
 		String notice = descriptor.getValue( COPYRIGHT_NOTICE_PATH );
+		String licenseUri = descriptor.getValue( LICENSE_URI_PATH );
 		String licenseSummary = descriptor.getValue( LICENSE_SUMMARY_PATH );
 		String sourceUri = descriptor.getValue( SOURCE_URI_PATH );
 
@@ -114,7 +119,7 @@ public class ProductCard {
 		}
 
 		// Determine the program inception year.
-		int inceptionYear = 0;
+		int inceptionYear = DateUtil.getCurrentYear();
 		try {
 			inceptionYear = Integer.parseInt( inception );
 		} catch( NumberFormatException exception ) {
@@ -136,14 +141,21 @@ public class ProductCard {
 			Log.write( exception );
 		}
 
-		if( name != null ) this.name = name;
-		if( provider != null ) this.provider = provider;
-		if( inceptionYear != 0 ) this.inceptionYear = inceptionYear;
-		if( productSummary != null ) this.summary = productSummary;
+		this.name = name == null ? artifact : name;
+		this.provider = provider == null ? group : provider;
+		this.inceptionYear = inceptionYear;
+		
+		if( summary != null ) this.summary = summary;
+		this.description = description;
 
 		this.copyrightHolder = holder == null ? provider : holder;
 		if( notice != null ) this.copyrightNotice = notice;
 
+		try {
+			if( licenseUri != null ) this.licenseUri = UriUtil.resolve( base, new URI( licenseUri ) );
+		} catch( URISyntaxException exception ) {
+			Log.write( exception );
+		}
 		if( licenseSummary != null ) this.licenseSummary = licenseSummary;
 
 		try {
@@ -242,6 +254,14 @@ public class ProductCard {
 		this.summary = summary;
 	}
 
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription( String description ) {
+		this.description = description;
+	}
+
 	public String getCopyright() {
 		int currentYear = DateUtil.getCurrentYear();
 		int inceptionYear = getInceptionYear();
@@ -264,6 +284,14 @@ public class ProductCard {
 
 	public String getCopyrightNotice() {
 		return copyrightNotice;
+	}
+
+	public URI getLicenseUri() {
+		return licenseUri;
+	}
+
+	public void setLicenseUri( URI uri ) {
+		this.licenseUri = uri;
 	}
 
 	public String getLicenseSummary() {

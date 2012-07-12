@@ -31,11 +31,11 @@ public class ServiceUpdateManagerTest extends BaseTestCase {
 
 	protected static final String UPDATE_CARD_NAME = "update.xml";
 
-	private static final File SOURCE_PRODUCT_CARD = new File( SOURCE, "test/resources/META-INF/program.xml" );
+	private static final File SOURCE_PRODUCT_CARD = new File( SOURCE, "test/resources/META-INF/product.xml" );
 
 	private static final File SOURCE_PRODUCT_PACK = new File( SOURCE, "test/update.jar" );
 
-	private static final File TARGET_SERVICE_CARD = new File( TARGET, "test/java/META-INF/program.xml" );
+	private static final File TARGET_SERVICE_CARD = new File( TARGET, "test/java/META-INF/product.xml" );
 
 	private static final File TARGET_UPDATE_PACK = new File( SANDBOX, UPDATE_PACK_NAME );
 
@@ -125,7 +125,7 @@ public class ServiceUpdateManagerTest extends BaseTestCase {
 	public void testStagePostedUpdates() throws Exception {
 		stageUpdate();
 
-		File stageFolder = new File( service.getProgramDataFolder(), "stage" );
+		File stageFolder = new File( service.getProgramDataFolder(), ServiceUpdateManager.UPDATE_FOLDER_NAME );
 		File updateFile = new File( stageFolder, updateManager.getStagedUpdateFileName( service.getCard() ) );
 
 		// Cleanup from previous run.
@@ -151,11 +151,11 @@ public class ServiceUpdateManagerTest extends BaseTestCase {
 		} finally {
 			// Disable the update manager.
 			manager.setCheckOption( ServiceUpdateManager.CheckOption.DISABLED );
-		}
 
-		// Shutdown the service.
-		service.call( ServiceFlag.STOP );
-		service.waitForShutdown( TIMEOUT, TIMEUNIT );
+			// Shutdown the service.
+			service.call( ServiceFlag.STOP );
+			service.waitForShutdown( TIMEOUT, TIMEUNIT );
+		}
 		assertFalse( service.isRunning() );
 	}
 
