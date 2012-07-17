@@ -73,7 +73,7 @@ public class ProductCard {
 	private String copyrightHolder;
 
 	private String copyrightNotice;
-	
+
 	private URI licenseUri;
 
 	private String licenseSummary;
@@ -85,6 +85,14 @@ public class ProductCard {
 	private String productKey;
 
 	private String releaseKey;
+
+	private boolean enabled;
+
+	private boolean installed;
+
+	private boolean updatable;
+
+	private boolean removable;
 
 	public ProductCard( URI base, Descriptor descriptor ) throws ProductCardException {
 		update( base, descriptor );
@@ -103,7 +111,7 @@ public class ProductCard {
 		String provider = descriptor.getValue( PROVIDER_PATH );
 		String inception = descriptor.getValue( INCEPTION_YEAR_PATH );
 		String summary = descriptor.getValue( SUMMARY_PATH );
-		String description = descriptor.getValue( DESCRIPTION_PATH);
+		String description = descriptor.getValue( DESCRIPTION_PATH );
 		String holder = descriptor.getValue( COPYRIGHT_HOLDER_PATH );
 		String notice = descriptor.getValue( COPYRIGHT_NOTICE_PATH );
 		String licenseUri = descriptor.getValue( LICENSE_URI_PATH );
@@ -144,7 +152,7 @@ public class ProductCard {
 		this.name = name == null ? artifact : name;
 		this.provider = provider == null ? group : provider;
 		this.inceptionYear = inceptionYear;
-		
+
 		if( summary != null ) this.summary = summary;
 		this.description = description;
 
@@ -316,6 +324,38 @@ public class ProductCard {
 
 	public void setTargetFolder( File folder ) {
 		this.folder = folder;
+	}
+
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled( boolean enabled ) {
+		this.enabled = enabled;
+	}
+
+	public boolean isInstalled() {
+		return installed;
+	}
+
+	public void setInstalled( boolean installed ) {
+		this.installed = installed;
+	}
+
+	public boolean isRemovable() {
+		return removable;
+	}
+
+	public void setRemovable( boolean removable ) {
+		this.removable = removable;
+	}
+
+	public boolean isUpdatable() {
+		return updatable;
+	}
+
+	public void setUpdatable( boolean updatable ) {
+		this.updatable = updatable;
 	}
 
 	@Override
