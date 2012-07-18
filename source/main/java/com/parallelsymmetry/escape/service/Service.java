@@ -97,7 +97,7 @@ public abstract class Service extends Agent implements Product {
 
 	private TaskManager taskManager;
 
-	protected ServiceUpdateManager updateManager;
+	protected ServiceProductManager updateManager;
 
 	/**
 	 * Construct the service with the default descriptor path.
@@ -160,7 +160,7 @@ public abstract class Service extends Agent implements Product {
 
 		peerServer = new PeerServer( this );
 		taskManager = new TaskManager();
-		updateManager = new ServiceUpdateManager( this );
+		updateManager = new ServiceProductManager( this );
 	}
 
 	/**
@@ -210,7 +210,7 @@ public abstract class Service extends Agent implements Product {
 		return taskManager;
 	}
 
-	public ServiceUpdateManager getUpdateManager() {
+	public ServiceProductManager getProductManager() {
 		return updateManager;
 	}
 
@@ -325,7 +325,7 @@ public abstract class Service extends Agent implements Product {
 		startService( parameters );
 		Log.write( getName() + " started." );
 
-		if( updateManager.getCheckOption() == ServiceUpdateManager.CheckOption.STARTUP ) updateManager.checkForUpdates();
+		if( updateManager.getCheckOption() == ServiceProductManager.CheckOption.STARTUP ) updateManager.checkForUpdates();
 	}
 
 	/**
@@ -468,7 +468,7 @@ public abstract class Service extends Agent implements Product {
 			}
 
 			// The logic is somewhat complex, the nested if statements help clarify it.
-			if( updateManager.getCheckOption() != ServiceUpdateManager.CheckOption.DISABLED ) {
+			if( updateManager.getCheckOption() != ServiceProductManager.CheckOption.DISABLED ) {
 				if( ( parameters.isSet( ServiceFlag.UPDATE ) & parameters.isTrue( ServiceFlag.UPDATE ) ) | ( !parameters.isSet( ServiceFlag.UPDATE ) & !peer ) ) {
 					if( update() && !parameters.isSet( ServiceFlag.DEVELOPMENT ) ) {
 						// The program should be allowed, but not forced, to exit at this point.

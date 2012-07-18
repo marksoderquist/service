@@ -11,9 +11,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import com.parallelsymmetry.escape.product.ProductCard;
-import com.parallelsymmetry.escape.service.ServiceUpdateManager.ApplyOption;
-import com.parallelsymmetry.escape.service.ServiceUpdateManager.CheckOption;
-import com.parallelsymmetry.escape.service.ServiceUpdateManager.FoundOption;
+import com.parallelsymmetry.escape.service.ServiceProductManager.ApplyOption;
+import com.parallelsymmetry.escape.service.ServiceProductManager.CheckOption;
+import com.parallelsymmetry.escape.service.ServiceProductManager.FoundOption;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.XmlUtil;
 
@@ -45,17 +45,17 @@ public class ServiceUpdateManagerTest extends BaseTestCase {
 
 	private MockService service;
 
-	private ServiceUpdateManager updateManager;
+	private ServiceProductManager updateManager;
 
 	@Override
 	public void setUp() {
 		super.setUp();
 		service = new MockService();
-		updateManager = service.getUpdateManager();
+		updateManager = service.getProductManager();
 	}
 
 	public void testGetInstalledPacks() {
-		assertEquals( service.getCard(), updateManager.getInstalledPacks().iterator().next() );
+		assertEquals( service.getCard(), updateManager.getProducts().iterator().next() );
 	}
 
 	public void testGetUpdaterPath() {
@@ -125,7 +125,7 @@ public class ServiceUpdateManagerTest extends BaseTestCase {
 	public void testStagePostedUpdates() throws Exception {
 		stageUpdate();
 
-		File stageFolder = new File( service.getProgramDataFolder(), ServiceUpdateManager.UPDATE_FOLDER_NAME );
+		File stageFolder = new File( service.getProgramDataFolder(), ServiceProductManager.UPDATE_FOLDER_NAME );
 		File updateFile = new File( stageFolder, updateManager.getStagedUpdateFileName( service.getCard() ) );
 
 		// Cleanup from previous run.
@@ -142,15 +142,15 @@ public class ServiceUpdateManagerTest extends BaseTestCase {
 		service.waitForStartup( TIMEOUT, TIMEUNIT );
 		assertTrue( service.isRunning() );
 
-		ServiceUpdateManager manager = service.getUpdateManager();
+		ServiceProductManager manager = service.getProductManager();
 		try {
 			// Enable the update manager temporarily.
-			manager.setCheckOption( ServiceUpdateManager.CheckOption.STARTUP );
+			manager.setCheckOption( ServiceProductManager.CheckOption.STARTUP );
 			manager.stagePostedUpdates();
 			assertTrue( updateFile.exists() );
 		} finally {
 			// Disable the update manager.
-			manager.setCheckOption( ServiceUpdateManager.CheckOption.DISABLED );
+			manager.setCheckOption( ServiceProductManager.CheckOption.DISABLED );
 
 			// Shutdown the service.
 			service.call( ServiceFlag.STOP );

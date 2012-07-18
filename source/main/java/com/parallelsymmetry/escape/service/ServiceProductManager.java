@@ -53,7 +53,10 @@ import com.parallelsymmetry.escape.utility.setting.Settings;
  * 
  * @author SoderquistMV
  */
-public class ServiceUpdateManager extends Agent implements Persistent {
+
+// NEXT Extract a ProductManager class?
+// NEXT Change the name to ServiceProductManager.
+public class ServiceProductManager extends Agent implements Persistent {
 
 	public enum CheckOption {
 		DISABLED, MANUAL, STARTUP, INTERVAL, SCHEDULE
@@ -76,7 +79,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 	private static final String APPLY = "apply";
 
 	private static final String UPDATES_SETTINGS_PATH = "updates";
-	
+
 	private static final String UPDATER_JAR_NAME = "updater.jar";
 
 	private Service service;
@@ -93,15 +96,21 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 
 	private Set<StagedUpdate> updates;
 
-	private Map<String, ProductCard> installedPacks;
+	private Map<String, ProductCard> products;
+
+	private Map<String, ProductState> productStates;
 
 	private Timer timer;
 
-	public ServiceUpdateManager( Service service ) {
+	public ServiceProductManager( Service service ) {
 		this.service = service;
 		updates = new CopyOnWriteArraySet<StagedUpdate>();
-		installedPacks = new ConcurrentHashMap<String, ProductCard>();
+		products = new ConcurrentHashMap<String, ProductCard>();
+		productStates = new ConcurrentHashMap<String, ProductState>();
 		updater = new File( service.getHomeFolder(), UPDATER_JAR_NAME );
+
+		// Add service as first product.
+		addProduct( service.getCard(), true, false, true );
 
 		// Default options.
 		checkOption = CheckOption.DISABLED;
@@ -111,30 +120,57 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 		service.getSettings().addSettingListener( "/update", new SettingChangeHandler() );
 	}
 
-	// FIXME This method is technically incorrect. It gets products registered for updates, not installed products.
+	public Set<ProductCard> getProducts() {
+		return new HashSet<ProductCard>( products.values() );
+	}
+
+	public void addProduct( ProductCard card, boolean updatable, boolean removable, boolean enabled ) {
+		products.put( card.getProductKey(), card );
+		productStates.put( card.getProductKey(), new ProductState( updatable, removable, enabled ) );
+	}
+
+	public void removeProduct( ProductCard card ) {
+		products.remove( card.getProductKey() );
+		productStates.remove( card.getProductKey() );
+	}
+
 	public boolean isInstalled( ProductCard card ) {
-		return getInstalledPacks().contains( card );
+		return products.get( card.getProductKey() ) != null;
 	}
 
 	public boolean isReleaseInstalled( ProductCard card ) {
-		return false;
+		ProductCard internal = products.get( card.getProductKey() );
+		return internal != null && internal.getRelease().equals( card.getRelease() );
 	}
 
-	public Set<ProductCard> getInstalledPacks() {
-		Set<ProductCard> cards = new HashSet<ProductCard>();
-
-		cards.add( service.getCard() );
-		cards.addAll( installedPacks.values() );
-
-		return cards;
+	public boolean isUpdatable( ProductCard card ) {
+		ProductState state = productStates.get( card.getProductKey() );
+		return state != null && state.updatable;
 	}
 
-	public void addInstalledPack( ProductCard card ) {
-		installedPacks.put( card.getProductKey(), card );
+	public void setUpdatable( ProductCard card, boolean updatable ) {
+		ProductState state = productStates.get( card.getProductKey() );
+		if( state != null ) state.updatable = updatable;
 	}
 
-	public void removeInstalledPack( ProductCard card ) {
-		installedPacks.remove( card.getProductKey() );
+	public boolean isRemovable( ProductCard card ) {
+		ProductState state = productStates.get( card.getProductKey() );
+		return state != null && state.removable;
+	}
+
+	public void setRemovable( ProductCard card, boolean removable ) {
+		ProductState state = productStates.get( card.getProductKey() );
+		if( state != null ) state.removable = removable;
+	}
+
+	public boolean isEnabled( ProductCard card ) {
+		ProductState state = productStates.get( card.getProductKey() );
+		return state != null && state.enabled;
+	}
+
+	public void setEnabled( ProductCard card, boolean enabled ) {
+		ProductState state = productStates.get( card.getProductKey() );
+		if( state != null ) state.enabled = enabled;
 	}
 
 	/**
@@ -185,7 +221,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 	public void checkForUpdates() {
 		try {
 			Log.write( Log.TRACE, "Checking for updates..." );
-			if( service.getUpdateManager().stagePostedUpdates() ) {
+			if( service.getProductManager().stagePostedUpdates() ) {
 				Log.write( Log.TRACE, "Updates staged, restarting..." );
 				service.serviceRestart();
 			}
@@ -207,7 +243,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 
 		Log.write( Log.TRACE, "Checking for updates..." );
 
-		Set<ProductCard> oldPacks = getInstalledPacks();
+		Set<ProductCard> oldPacks = getProducts();
 
 		Map<ProductCard, Future<Descriptor>> futures = new HashMap<ProductCard, Future<Descriptor>>();
 		for( ProductCard oldPack : oldPacks ) {
@@ -532,7 +568,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 		packs.put( service.getCard().getProductKey(), service.getCard() );
 
 		// Add the installed packs.
-		packs.putAll( installedPacks );
+		packs.putAll( products );
 
 		return packs;
 	}
@@ -629,6 +665,22 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 
 	}
 
+	private final class ProductState {
+
+		public boolean updatable;
+
+		public boolean removable;
+
+		public boolean enabled;
+
+		public ProductState( boolean updatable, boolean removable, boolean enabled ) {
+			this.updatable = updatable;
+			this.removable = removable;
+			this.enabled = enabled;
+		}
+
+	}
+
 	private final class UpdateCheckTask extends TimerTask {
 
 		private Service service;
@@ -639,7 +691,7 @@ public class ServiceUpdateManager extends Agent implements Persistent {
 
 		@Override
 		public void run() {
-			service.getUpdateManager().checkForUpdates();
+			service.getProductManager().checkForUpdates();
 		}
 
 	}

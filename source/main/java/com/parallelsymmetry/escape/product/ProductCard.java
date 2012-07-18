@@ -192,6 +192,7 @@ public class ProductCard {
 		return productKey;
 	}
 
+	// TODO If not used, remove.
 	public String getReleaseKey() {
 		return releaseKey;
 	}
