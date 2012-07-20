@@ -68,6 +68,8 @@ public class ServiceProductManager extends Agent implements Persistent {
 		VERIFY, SKIP, RESTART
 	}
 
+	static final String PRODUCT_MANAGER_SETTINGS_PATH = "/manager/product";
+
 	static final String UPDATE_FOLDER_NAME = "updates";
 
 	private static final String CHECK = "check";
@@ -76,9 +78,13 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 	private static final String APPLY = "apply";
 
-	private static final String UPDATES_SETTINGS_PATH = "updates";
-
 	private static final String UPDATER_JAR_NAME = "updater.jar";
+
+	private static final String UPDATES_SETTINGS_PATH = PRODUCT_MANAGER_SETTINGS_PATH + "/updates";
+
+	private static final String PRODUCT_SETTINGS_PATH = "/products";
+
+	private static final String PRODUCT_ENABLED_KEY = "enabled";
 
 	private Service service;
 
@@ -108,23 +114,23 @@ public class ServiceProductManager extends Agent implements Persistent {
 		updater = new File( service.getHomeFolder(), UPDATER_JAR_NAME );
 
 		// Add service as first product.
-		addProduct( service.getCard(), true, false, true );
+		addProduct( service.getCard(), true, false );
 
 		// Default options.
 		checkOption = CheckOption.DISABLED;
 		foundOption = FoundOption.STAGE;
 		applyOption = ApplyOption.RESTART;
 
-		service.getSettings().addSettingListener( "/update", new SettingChangeHandler() );
+		service.getSettings().addSettingListener( PRODUCT_MANAGER_SETTINGS_PATH, new SettingChangeHandler() );
 	}
 
 	public Set<ProductCard> getProducts() {
 		return new HashSet<ProductCard>( products.values() );
 	}
 
-	public void addProduct( ProductCard card, boolean updatable, boolean removable, boolean enabled ) {
+	public void addProduct( ProductCard card, boolean updatable, boolean removable ) {
 		products.put( card.getProductKey(), card );
-		productStates.put( card.getProductKey(), new ProductState( updatable, removable, enabled ) );
+		productStates.put( card.getProductKey(), new ProductState( updatable, removable ) );
 	}
 
 	public void removeProduct( ProductCard card ) {
@@ -162,13 +168,17 @@ public class ServiceProductManager extends Agent implements Persistent {
 	}
 
 	public boolean isEnabled( ProductCard card ) {
-		ProductState state = productStates.get( card.getProductKey() );
-		return state != null && state.enabled;
+		return getProductSettings( card ).getBoolean( PRODUCT_ENABLED_KEY, true );
 	}
 
 	public void setEnabled( ProductCard card, boolean enabled ) {
-		ProductState state = productStates.get( card.getProductKey() );
-		if( state != null ) state.enabled = enabled;
+		Settings settings = getProductSettings( card );
+
+		Log.write( enabled + " -> " + isEnabled( card ) );
+		settings.putBoolean( PRODUCT_ENABLED_KEY, enabled );
+		settings.sync();
+		Log.write( settings.nodeExists( PRODUCT_SETTINGS_PATH + "/" + card.getProductKey() ) );
+		Log.write( enabled + " == " + isEnabled( card ) );
 	}
 
 	/**
@@ -513,6 +523,10 @@ public class ServiceProductManager extends Agent implements Persistent {
 		return true;
 	}
 
+	public Settings getProductSettings( ProductCard card ) {
+		return service.getSettings().getNode( PRODUCT_SETTINGS_PATH + "/" + "test" );
+	}
+
 	@Override
 	public void loadSettings( Settings settings ) {
 		this.settings = settings;
@@ -669,12 +683,9 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 		public boolean removable;
 
-		public boolean enabled;
-
-		public ProductState( boolean updatable, boolean removable, boolean enabled ) {
+		public ProductState( boolean updatable, boolean removable ) {
 			this.updatable = updatable;
 			this.removable = removable;
-			this.enabled = enabled;
 		}
 
 	}
