@@ -157,6 +157,9 @@ public abstract class Service extends Agent implements Product {
 		} catch( Exception exception ) {
 			Log.write( exception );
 		}
+		String preferencesPath = "/" + card.getGroup().replace( '.', '/' ) + "/" + card.getArtifact();
+		Preferences preferences = Preferences.userRoot().node( preferencesPath );
+		if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
 
 		peerServer = new PeerServer( this );
 		taskManager = new TaskManager();
@@ -584,11 +587,7 @@ public abstract class Service extends Agent implements Product {
 
 	private final void configureSettings( Parameters parameters ) {
 		try {
-			String preferencesPath = "/" + card.getGroup().replace( '.', '/' ) + "/" + card.getArtifact();
-			Preferences preferences = Preferences.userRoot().node( preferencesPath );
-
 			settings.addProvider( new ParametersSettingProvider( parameters ) );
-			if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
 			if( parameters.isTrue( ServiceFlag.SETTINGS_RESET ) ) {
 				Log.write( Log.WARN, "Resetting the program settings..." );
 				settings.reset();

@@ -181,16 +181,15 @@ public class ServiceProductManagerTest extends BaseTestCase {
 		Descriptor descriptor = new Descriptor( url );
 		ProductCard card = new ProductCard( url.toURI(), descriptor );
 
-		// NEXT Fix this broken test.
-//		Log.setLevel( Log.INFO );
-//		manager.addProduct( card, false, false );
-//		assertTrue( manager.isEnabled( card ) );
-//
-//		manager.setEnabled( card, false );
-//		assertFalse( manager.isEnabled( card ) );
-//
-//		manager.setEnabled( card, true );
-//		assertTrue( manager.isEnabled( card ) );
+		Log.setLevel( Log.INFO );
+		manager.addProduct( card, false, false );
+		assertTrue( manager.isEnabled( card ) );
+
+		manager.setEnabled( card, false );
+		assertFalse( manager.isEnabled( card ) );
+
+		manager.setEnabled( card, true );
+		assertTrue( manager.isEnabled( card ) );
 	}
 
 	@Test
