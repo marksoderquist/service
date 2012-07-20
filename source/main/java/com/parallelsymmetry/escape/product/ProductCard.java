@@ -86,13 +86,13 @@ public class ProductCard {
 
 	private String releaseKey;
 
-	private boolean enabled;
-
-	private boolean installed;
-
-	private boolean updatable;
-
-	private boolean removable;
+//	private boolean enabled;
+//
+//	private boolean installed;
+//
+//	private boolean updatable;
+//
+//	private boolean removable;
 
 	public ProductCard( URI base, Descriptor descriptor ) throws ProductCardException {
 		update( base, descriptor );
@@ -327,37 +327,37 @@ public class ProductCard {
 		this.folder = folder;
 	}
 
-	public boolean isEnabled() {
-		return enabled;
-	}
-
-	public void setEnabled( boolean enabled ) {
-		this.enabled = enabled;
-	}
-
-	public boolean isInstalled() {
-		return installed;
-	}
-
-	public void setInstalled( boolean installed ) {
-		this.installed = installed;
-	}
-
-	public boolean isRemovable() {
-		return removable;
-	}
-
-	public void setRemovable( boolean removable ) {
-		this.removable = removable;
-	}
-
-	public boolean isUpdatable() {
-		return updatable;
-	}
-
-	public void setUpdatable( boolean updatable ) {
-		this.updatable = updatable;
-	}
+//	public boolean isEnabled() {
+//		return enabled;
+//	}
+//
+//	public void setEnabled( boolean enabled ) {
+//		this.enabled = enabled;
+//	}
+//
+//	public boolean isInstalled() {
+//		return installed;
+//	}
+//
+//	public void setInstalled( boolean installed ) {
+//		this.installed = installed;
+//	}
+//
+//	public boolean isRemovable() {
+//		return removable;
+//	}
+//
+//	public void setRemovable( boolean removable ) {
+//		this.removable = removable;
+//	}
+//
+//	public boolean isUpdatable() {
+//		return updatable;
+//	}
+//
+//	public void setUpdatable( boolean updatable ) {
+//		this.updatable = updatable;
+//	}
 
 	@Override
 	public String toString() {

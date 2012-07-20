@@ -1,12 +1,15 @@
 package com.parallelsymmetry.escape.service;
 
 import java.io.File;
+import java.net.URL;
 import java.util.concurrent.ExecutionException;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
+import org.junit.Before;
+import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -14,10 +17,11 @@ import com.parallelsymmetry.escape.product.ProductCard;
 import com.parallelsymmetry.escape.service.ServiceProductManager.ApplyOption;
 import com.parallelsymmetry.escape.service.ServiceProductManager.CheckOption;
 import com.parallelsymmetry.escape.service.ServiceProductManager.FoundOption;
+import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.XmlUtil;
 
-public class ServiceUpdateManagerTest extends BaseTestCase {
+public class ServiceProductManagerTest extends BaseTestCase {
 
 	protected static final File SOURCE = new File( "source" );
 
@@ -43,72 +47,84 @@ public class ServiceUpdateManagerTest extends BaseTestCase {
 
 	private static final int TIMESTAMP_OFFSET = 61174;
 
+	private static final String TEST_PRODUCT = "/META-INF/product.test.xml";
+
 	private MockService service;
 
-	private ServiceProductManager updateManager;
+	private ServiceProductManager manager;
 
 	@Override
 	public void setUp() {
 		super.setUp();
 		service = new MockService();
-		updateManager = service.getProductManager();
+		manager = service.getProductManager();
 	}
 
+	@Test
 	public void testGetInstalledPacks() {
-		assertEquals( service.getCard(), updateManager.getProducts().iterator().next() );
+		assertEquals( service.getCard(), manager.getProducts().iterator().next() );
 	}
 
+	@Test
 	public void testGetUpdaterPath() {
-		assertEquals( new File( service.getHomeFolder(), "updater.jar" ), updateManager.getUpdaterPath() );
+		assertEquals( new File( service.getHomeFolder(), "updater.jar" ), manager.getUpdaterPath() );
 	}
 
+	@Test
 	public void testSetUpdaterPath() {
 		String updater = "testupdater.jar";
-		updateManager.setUpdaterPath( new File( service.getHomeFolder(), updater ) );
-		assertEquals( new File( service.getHomeFolder(), updater ), updateManager.getUpdaterPath() );
+		manager.setUpdaterPath( new File( service.getHomeFolder(), updater ) );
+		assertEquals( new File( service.getHomeFolder(), updater ), manager.getUpdaterPath() );
 	}
 
+	@Test
 	public void testGetCheckOption() {
-		assertEquals( CheckOption.DISABLED, updateManager.getCheckOption() );
+		assertEquals( CheckOption.DISABLED, manager.getCheckOption() );
 	}
 
+	@Test
 	public void testSetCheckOption() {
-		updateManager.setCheckOption( CheckOption.MANUAL );
-		assertEquals( CheckOption.MANUAL, updateManager.getCheckOption() );
+		manager.setCheckOption( CheckOption.MANUAL );
+		assertEquals( CheckOption.MANUAL, manager.getCheckOption() );
 	}
 
+	@Test
 	public void testGetFoundOption() {
-		assertEquals( FoundOption.STAGE, updateManager.getFoundOption() );
+		assertEquals( FoundOption.STAGE, manager.getFoundOption() );
 	}
 
+	@Test
 	public void testSetFoundOption() {
-		updateManager.setFoundOption( FoundOption.SELECT );
-		assertEquals( FoundOption.SELECT, updateManager.getFoundOption() );
+		manager.setFoundOption( FoundOption.SELECT );
+		assertEquals( FoundOption.SELECT, manager.getFoundOption() );
 	}
 
+	@Test
 	public void testGetApplyOption() {
-		assertEquals( ApplyOption.RESTART, updateManager.getApplyOption() );
+		assertEquals( ApplyOption.RESTART, manager.getApplyOption() );
 	}
 
+	@Test
 	public void testSetApplyOption() {
-		updateManager.setApplyOption( ApplyOption.VERIFY );
-		assertEquals( ApplyOption.VERIFY, updateManager.getApplyOption() );
+		manager.setApplyOption( ApplyOption.VERIFY );
+		assertEquals( ApplyOption.VERIFY, manager.getApplyOption() );
 	}
 
+	@Test
 	public void testGetPostedUpdates() throws Exception {
 		// Initialize the product card before starting the service.
 		assertTrue( FileUtil.copy( SOURCE_PRODUCT_CARD, TARGET_SERVICE_CARD ) );
 
 		// Start the service set the update manager for manual checks.
 		service.getTaskManager().start();
-		updateManager.setCheckOption( CheckOption.MANUAL );
+		manager.setCheckOption( CheckOption.MANUAL );
 
 		// Remove the old update card if it exists.
 		FileUtil.delete( TARGET_UPDATE_CARD );
 
 		// Ensure there are no posted updates.
 		try {
-			updateManager.getPostedUpdates().size();
+			manager.getPostedUpdates().size();
 			fail( "UpdateManager should throw an exception when the pack descriptor cannot be found." );
 		} catch( ExecutionException exception ) {
 			// Intentionally ignore exception.
@@ -119,14 +135,15 @@ public class ServiceUpdateManagerTest extends BaseTestCase {
 		fixProductCardData( TARGET_UPDATE_CARD );
 
 		// Ensure there are posted updates.
-		assertEquals( 1, updateManager.getPostedUpdates().size() );
+		assertEquals( 1, manager.getPostedUpdates().size() );
 	}
 
+	@Test
 	public void testStagePostedUpdates() throws Exception {
 		stageUpdate();
 
 		File stageFolder = new File( service.getProgramDataFolder(), ServiceProductManager.UPDATE_FOLDER_NAME );
-		File updateFile = new File( stageFolder, updateManager.getStagedUpdateFileName( service.getCard() ) );
+		File updateFile = new File( stageFolder, manager.getStagedUpdateFileName( service.getCard() ) );
 
 		// Cleanup from previous run.
 		FileUtil.delete( stageFolder );
@@ -142,7 +159,6 @@ public class ServiceUpdateManagerTest extends BaseTestCase {
 		service.waitForStartup( TIMEOUT, TIMEUNIT );
 		assertTrue( service.isRunning() );
 
-		ServiceProductManager manager = service.getProductManager();
 		try {
 			// Enable the update manager temporarily.
 			manager.setCheckOption( ServiceProductManager.CheckOption.STARTUP );
@@ -157,6 +173,69 @@ public class ServiceUpdateManagerTest extends BaseTestCase {
 			service.waitForShutdown( TIMEOUT, TIMEUNIT );
 		}
 		assertFalse( service.isRunning() );
+	}
+
+	@Test
+	public void testProductEnabled() throws Exception {
+		URL url = getClass().getResource( TEST_PRODUCT );
+		Descriptor descriptor = new Descriptor( url );
+		ProductCard card = new ProductCard( url.toURI(), descriptor );
+
+		manager.addProduct( card, false, false, false );
+		assertFalse( manager.isEnabled( card ) );
+
+		manager.setEnabled( card, true );
+		assertTrue( manager.isEnabled( card ) );
+
+		manager.setEnabled( card, false );
+		assertFalse( manager.isEnabled( card ) );
+	}
+
+	@Test
+	public void testProductUpdatable() throws Exception {
+		URL url = getClass().getResource( TEST_PRODUCT );
+		Descriptor descriptor = new Descriptor( url );
+		ProductCard card = new ProductCard( url.toURI(), descriptor );
+
+		manager.addProduct( card, false, false, false );
+		assertFalse( manager.isUpdatable( card ) );
+
+		manager.setUpdatable( card, true );
+		assertTrue( manager.isUpdatable( card ) );
+
+		manager.setUpdatable( card, false );
+		assertFalse( manager.isUpdatable( card ) );
+	}
+
+	@Test
+	public void testProductRemovable() throws Exception {
+		URL url = getClass().getResource( TEST_PRODUCT );
+		Descriptor descriptor = new Descriptor( url );
+		ProductCard card = new ProductCard( url.toURI(), descriptor );
+
+		manager.addProduct( card, false, false, false );
+		assertFalse( manager.isRemovable( card ) );
+
+		manager.setRemovable( card, true );
+		assertTrue( manager.isRemovable( card ) );
+
+		manager.setRemovable( card, false );
+		assertFalse( manager.isRemovable( card ) );
+	}
+
+	@Test
+	public void testProductInstalled() throws Exception {
+		URL url = getClass().getResource( TEST_PRODUCT );
+		Descriptor descriptor = new Descriptor( url );
+		
+		ProductCard card = new ProductCard( url.toURI(), descriptor );
+		assertFalse( manager.isInstalled( card ) );
+
+		manager.addProduct( card, false, false, false );
+		assertTrue( manager.isInstalled( card ) );
+
+		manager.removeProduct( card );
+		assertFalse( manager.isInstalled( card ) );
 	}
 
 	private void stageUpdate() throws Exception {

@@ -54,8 +54,6 @@ import com.parallelsymmetry.escape.utility.setting.Settings;
  * @author SoderquistMV
  */
 
-// NEXT Extract a ProductManager class?
-// NEXT Change the name to ServiceProductManager.
 public class ServiceProductManager extends Agent implements Persistent {
 
 	public enum CheckOption {
