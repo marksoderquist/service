@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <product version="1">
-	<group>com.parallelsymmetry.escape.service</group>
+	<group>com.parallelsymmetry.escape-test</group>
 	<artifact>mock-product</artifact>
 	<version>1.0.0-a-00</version>
 	<timestamp>114215340000</timestamp>

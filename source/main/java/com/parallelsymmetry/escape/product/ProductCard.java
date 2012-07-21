@@ -140,9 +140,6 @@ public class ProductCard {
 		this.artifact = artifact;
 		this.release = new Release( version, releaseDate );
 
-		this.productKey = group + ":" + artifact;
-		this.releaseKey = productKey + ":" + release.toString();
-
 		try {
 			if( iconUri != null ) this.iconUri = UriUtil.resolve( base, new URI( iconUri ) );
 		} catch( URISyntaxException exception ) {
@@ -180,6 +177,8 @@ public class ProductCard {
 		} catch( URISyntaxException exception ) {
 			Log.write( exception );
 		}
+		
+		updateKeys();
 
 		return this;
 	}
@@ -203,6 +202,7 @@ public class ProductCard {
 
 	public void setGroup( String group ) {
 		this.group = group;
+		updateKeys();
 	}
 
 	public String getArtifact() {
@@ -211,6 +211,7 @@ public class ProductCard {
 
 	public void setArtifact( String artifact ) {
 		this.artifact = artifact;
+		updateKeys();
 	}
 
 	public Release getRelease() {
@@ -219,6 +220,7 @@ public class ProductCard {
 
 	public void setRelease( Release release ) {
 		this.release = release;
+		updateKeys();
 	}
 
 	public URI getIconUri() {
@@ -374,6 +376,11 @@ public class ProductCard {
 	@Override
 	public int hashCode() {
 		return this.group.hashCode() ^ this.artifact.hashCode();
+	}
+	
+	private void updateKeys() {
+		this.productKey = group + ":" + artifact;
+		this.releaseKey = productKey + ":" + release.toString();
 	}
 
 }

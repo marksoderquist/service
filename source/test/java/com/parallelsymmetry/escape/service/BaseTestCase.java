@@ -13,8 +13,8 @@ public abstract class BaseTestCase extends TestCase {
 	protected static final TimeUnit TIMEUNIT = TimeUnit.SECONDS;
 
 	@Override
-	public void setUp() {
-		Log.setLevel( Log.NONE );
+	public void setUp() throws Exception {
+		Log.setLevel( Log.TRACE );
 	}
 
 }

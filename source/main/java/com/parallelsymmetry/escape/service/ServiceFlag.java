@@ -6,7 +6,7 @@ public interface ServiceFlag extends CommonFlag {
 
 	public static final String ARTIFACT = "-artifact";
 	
-	public static final String DEVELOPMENT = "-development";
+	public static final String PREFIX = "-prefix";
 	
 	public static final String RESTART = "-restart";
 

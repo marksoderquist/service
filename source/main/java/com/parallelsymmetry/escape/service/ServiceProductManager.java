@@ -68,9 +68,11 @@ public class ServiceProductManager extends Agent implements Persistent {
 		VERIFY, SKIP, RESTART
 	}
 
-	static final String PRODUCT_MANAGER_SETTINGS_PATH = "/manager/product";
+	static final String PRODUCT_MANAGER_SETTINGS_PATH = "manager/product";
 
 	static final String UPDATE_FOLDER_NAME = "updates";
+
+	static final String UPDATER_JAR_NAME = "updater.jar";
 
 	private static final String CHECK = "check";
 
@@ -78,11 +80,9 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 	private static final String APPLY = "apply";
 
-	private static final String UPDATER_JAR_NAME = "updater.jar";
-
 	private static final String UPDATES_SETTINGS_PATH = PRODUCT_MANAGER_SETTINGS_PATH + "/updates";
 
-	private static final String PRODUCT_SETTINGS_PATH = "/products";
+	private static final String PRODUCT_SETTINGS_PATH = "products";
 
 	private static final String PRODUCT_ENABLED_KEY = "enabled";
 
@@ -111,7 +111,6 @@ public class ServiceProductManager extends Agent implements Persistent {
 		updates = new CopyOnWriteArraySet<StagedUpdate>();
 		products = new ConcurrentHashMap<String, ProductCard>();
 		productStates = new ConcurrentHashMap<String, ProductState>();
-		updater = new File( service.getHomeFolder(), UPDATER_JAR_NAME );
 
 		// Add service as first product.
 		addProduct( service.getCard(), true, false );
@@ -172,13 +171,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 	}
 
 	public void setEnabled( ProductCard card, boolean enabled ) {
-		Settings settings = getProductSettings( card );
-
-		Log.write( enabled + " -> " + isEnabled( card ) );
-		settings.putBoolean( PRODUCT_ENABLED_KEY, enabled );
-		settings.sync();
-		Log.write( settings.nodeExists( PRODUCT_SETTINGS_PATH + "/" + card.getProductKey() ) );
-		Log.write( enabled + " == " + isEnabled( card ) );
+		getProductSettings( card ).putBoolean( PRODUCT_ENABLED_KEY, enabled );
 	}
 
 	/**
@@ -272,11 +265,11 @@ public class ServiceProductManager extends Agent implements Persistent {
 			Descriptor descriptor = future.get();
 			ProductCard newPack = new ProductCard( descriptor.getSource(), descriptor );
 
-			// Handle the development command line flag.
-			boolean development = service.getParameters().isSet( ServiceFlag.DEVELOPMENT );
-			if( development && oldPack.getArtifact().equals( Service.DEVELOPMENT_PREFIX + newPack.getArtifact() ) ) {
-				newPack.setArtifact( Service.DEVELOPMENT_PREFIX + newPack.getArtifact() );
-			}
+			// Handle the prefix command line flag.
+//			boolean development = service.getParameters().isSet( ServiceFlag.PREFIX );
+//			if( development && oldPack.getArtifact().equals( Service.DEVL_PREFIX + newPack.getArtifact() ) ) {
+//				newPack.setArtifact( Service.DEVL_PREFIX + newPack.getArtifact() );
+//			}
 
 			// Validate the pack key.
 			if( !oldPack.getProductKey().equals( newPack.getProductKey() ) ) {
@@ -422,7 +415,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 	public boolean applyStagedUpdates() throws Exception {
 		if( !isEnabled() || updates.size() == 0 ) return false;
 
-		if( service.getParameters().isSet( ServiceFlag.DEVELOPMENT ) ) {
+		if( service.getParameters().isSet( ServiceFlag.PREFIX ) ) {
 			Log.write( Log.TRACE, "Running in development. Updates cannot be applied and will be cleaned up." );
 
 			for( StagedUpdate update : updates ) {

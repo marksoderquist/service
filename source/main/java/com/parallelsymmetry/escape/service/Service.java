@@ -61,7 +61,9 @@ public abstract class Service extends Agent implements Product {
 
 	public static final String LOCALE = "locale";
 
-	public static final String DEVELOPMENT_PREFIX = "#";
+	public static final String DEVL_PREFIX = "#";
+
+	public static final String TEST_PREFIX = "$";
 
 	private static final String PEER_LOGGER_NAME = "peer";
 
@@ -157,9 +159,6 @@ public abstract class Service extends Agent implements Product {
 		} catch( Exception exception ) {
 			Log.write( exception );
 		}
-		String preferencesPath = "/" + card.getGroup().replace( '.', '/' ) + "/" + card.getArtifact();
-		Preferences preferences = Preferences.userRoot().node( preferencesPath );
-		if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
 
 		peerServer = new PeerServer( this );
 		taskManager = new TaskManager();
@@ -473,7 +472,7 @@ public abstract class Service extends Agent implements Product {
 			// The logic is somewhat complex, the nested if statements help clarify it.
 			if( updateManager.getCheckOption() != ServiceProductManager.CheckOption.DISABLED ) {
 				if( ( parameters.isSet( ServiceFlag.UPDATE ) & parameters.isTrue( ServiceFlag.UPDATE ) ) | ( !parameters.isSet( ServiceFlag.UPDATE ) & !peer ) ) {
-					if( update() && !parameters.isSet( ServiceFlag.DEVELOPMENT ) ) {
+					if( update() && !parameters.isSet( ServiceFlag.PREFIX ) ) {
 						// The program should be allowed, but not forced, to exit at this point.
 						Log.write( "Program exiting to apply updates." );
 						return;
@@ -552,7 +551,7 @@ public abstract class Service extends Agent implements Product {
 			}
 
 			// Check the development flag.
-			if( home == null && parameters.isSet( ServiceFlag.DEVELOPMENT ) ) {
+			if( home == null && parameters.isSet( ServiceFlag.PREFIX ) ) {
 				home = new File( System.getProperty( "user.dir" ), "target/install" );
 				home.mkdirs();
 			}
@@ -573,27 +572,35 @@ public abstract class Service extends Agent implements Product {
 
 	private final void configureArtifact( Parameters parameters ) {
 		// Set the artifact name if specified.
-		if( parameters.isSet( ServiceFlag.ARTIFACT ) ) {
-			card.setArtifact( parameters.get( ServiceFlag.ARTIFACT ) );
-		}
-
-		// Update the artifact if the development flag is set.
-		if( parameters.isTrue( ServiceFlag.DEVELOPMENT ) && !card.getArtifact().startsWith( DEVELOPMENT_PREFIX ) ) {
-			card.setArtifact( DEVELOPMENT_PREFIX + card.getArtifact() );
-		}
-
-		Log.write( Log.TRACE, "Pack: ", card.getProductKey() );
+		if( parameters.isSet( ServiceFlag.ARTIFACT ) ) card.setArtifact( parameters.get( ServiceFlag.ARTIFACT ) );
+		Log.write( Log.TRACE, "Card: ", card.getProductKey() );
 	}
 
 	private final void configureSettings( Parameters parameters ) {
+		// Add the parameters settings provider.
 		try {
 			settings.addProvider( new ParametersSettingProvider( parameters ) );
-			if( parameters.isTrue( ServiceFlag.SETTINGS_RESET ) ) {
-				Log.write( Log.WARN, "Resetting the program settings..." );
-				settings.reset();
-			}
 		} catch( Exception exception ) {
 			Log.write( exception );
+		}
+
+		// Add the preferences settings provider.
+		String prefix = "";
+		if( parameters.isSet( ServiceFlag.PREFIX ) ) {
+			if( ServiceFlagValue.TEST == parameters.get( ServiceFlag.PREFIX ) && !card.getArtifact().startsWith( TEST_PREFIX ) ) {
+				prefix = TEST_PREFIX;
+			} else if( ServiceFlagValue.DEVL == parameters.get( ServiceFlag.PREFIX ) && !card.getArtifact().startsWith( DEVL_PREFIX ) ) {
+				prefix = DEVL_PREFIX;
+			}
+		}
+		String preferencesPath = "/" + card.getGroup().replace( '.', '/' ) + "/" + prefix + card.getArtifact();
+		Preferences preferences = Preferences.userRoot().node( preferencesPath );
+		if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
+
+		// Reset the settings specified on the command line.
+		if( parameters.isTrue( ServiceFlag.SETTINGS_RESET ) ) {
+			Log.write( Log.WARN, "Resetting the program settings..." );
+			settings.reset();
 		}
 
 		settings.addSettingListener( "/network", new NetworkSettingsChangeHandler( this ) );
@@ -608,6 +615,7 @@ public abstract class Service extends Agent implements Product {
 		ProxySelector.setDefault( new ServiceProxySelector( this ) );
 
 		updateManager.loadSettings( settings.getNode( "update" ) );
+		updateManager.setUpdaterPath( new File( getHomeFolder(), ServiceProductManager.UPDATER_JAR_NAME ) );
 	}
 
 	private final void configureNetworkSettings() {

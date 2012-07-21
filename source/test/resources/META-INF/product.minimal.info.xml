@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
 <product>
-	<group>com.parallelsymmetry.escape.service</group>
+	<group>com.parallelsymmetry.escape-test</group>
 	<artifact>mock</artifact>
 </product>

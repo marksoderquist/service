@@ -24,7 +24,7 @@ public class ServiceTest extends BaseTestCase {
 	private MockService service;
 
 	@Override
-	public void setUp() {
+	public void setUp() throws Exception {
 		super.setUp();
 		service = new MockService();
 		service.call( ServiceFlag.SETTINGS_RESET, ServiceFlag.STOP );
@@ -32,7 +32,7 @@ public class ServiceTest extends BaseTestCase {
 	}
 
 	public void testBeforeCall() throws Exception {
-		assertEquals( "com.parallelsymmetry.escape.service", service.getCard().getGroup() );
+		assertEquals( "com.parallelsymmetry.escape-test", service.getCard().getGroup() );
 		assertEquals( "mock", service.getCard().getArtifact() );
 		assertEquals( "1.0.0-a-00  1973-08-14 22:29:00", service.getCard().getRelease().toString() );
 		assertEquals( "(C) 1973-" + DateUtil.getCurrentYear() + " Parallel Symmetry", service.getCard().getCopyright() );

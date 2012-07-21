@@ -21,7 +21,7 @@ import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.XmlUtil;
 import com.parallelsymmetry.escape.utility.log.Log;
 
-public class ServiceProductManagerTest extends BaseTestCase {
+public class ServiceProductManagerTest extends BaseServiceTest {
 
 	protected static final File SOURCE = new File( "source" );
 
@@ -49,14 +49,11 @@ public class ServiceProductManagerTest extends BaseTestCase {
 
 	private static final String TEST_PRODUCT = "/META-INF/product.test.xml";
 
-	private MockService service;
-
 	private ServiceProductManager manager;
 
 	@Override
-	public void setUp() {
+	public void setUp() throws Exception {
 		super.setUp();
-		service = new MockService();
 		manager = service.getProductManager();
 	}
 
@@ -66,8 +63,8 @@ public class ServiceProductManagerTest extends BaseTestCase {
 	}
 
 	@Test
-	public void testGetUpdaterPath() {
-		assertEquals( new File( service.getHomeFolder(), "updater.jar" ), manager.getUpdaterPath() );
+	public void testGetUpdaterPath() throws Exception {
+		assertEquals( new File( service.getHomeFolder(), "updater.jar" ).getCanonicalPath(), manager.getUpdaterPath().getCanonicalPath() );
 	}
 
 	@Test
@@ -149,30 +146,15 @@ public class ServiceProductManagerTest extends BaseTestCase {
 		FileUtil.delete( stageFolder );
 		assertFalse( stageFolder.exists() );
 
-		// Reset the preferences but don't start the program.
-		service.call( ServiceFlag.SETTINGS_RESET, ServiceFlag.STOP );
-		service.waitForShutdown( TIMEOUT, TIMEUNIT );
-		assertFalse( service.isRunning() );
-
-		// Start the service.
-		service.call();
-		service.waitForStartup( TIMEOUT, TIMEUNIT );
-		assertTrue( service.isRunning() );
-
 		try {
 			// Enable the update manager temporarily.
 			manager.setCheckOption( ServiceProductManager.CheckOption.STARTUP );
 			manager.stagePostedUpdates();
-			assertTrue( updateFile.exists() );
+			assertTrue( updateFile.toString(), updateFile.exists() );
 		} finally {
 			// Disable the update manager.
 			manager.setCheckOption( ServiceProductManager.CheckOption.DISABLED );
-
-			// Shutdown the service.
-			service.call( ServiceFlag.STOP );
-			service.waitForShutdown( TIMEOUT, TIMEUNIT );
 		}
-		assertFalse( service.isRunning() );
 	}
 
 	@Test
