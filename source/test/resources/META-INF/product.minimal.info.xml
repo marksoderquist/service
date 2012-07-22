@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
 <product>
-	<group>com.parallelsymmetry.escape-test</group>
-	<artifact>mock</artifact>
+	<group>com.parallelsymmetry</group>
+	<artifact>$mock</artifact>
 </product>
