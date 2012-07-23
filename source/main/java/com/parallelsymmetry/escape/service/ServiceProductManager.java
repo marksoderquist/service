@@ -266,10 +266,10 @@ public class ServiceProductManager extends Agent implements Persistent {
 			ProductCard newPack = new ProductCard( descriptor.getSource(), descriptor );
 
 			// Handle the prefix command line flag.
-//			boolean development = service.getParameters().isSet( ServiceFlag.PREFIX );
-//			if( development && oldPack.getArtifact().equals( Service.DEVL_PREFIX + newPack.getArtifact() ) ) {
-//				newPack.setArtifact( Service.DEVL_PREFIX + newPack.getArtifact() );
-//			}
+			//			boolean development = service.getParameters().isSet( ServiceFlag.PREFIX );
+			//			if( development && oldPack.getArtifact().equals( Service.DEVL_PREFIX + newPack.getArtifact() ) ) {
+			//				newPack.setArtifact( Service.DEVL_PREFIX + newPack.getArtifact() );
+			//			}
 
 			// Validate the pack key.
 			if( !oldPack.getProductKey().equals( newPack.getProductKey() ) ) {
@@ -312,6 +312,30 @@ public class ServiceProductManager extends Agent implements Persistent {
 		return stageSelectedUpdates( cards );
 	}
 
+	public void installProducts( Set<ProductCard> cards ) throws Exception {
+		Log.write( Log.TRACE, "Number of products to install: " + cards.size() );
+
+		// Download the product resources.
+		Map<ProductCard, Set<ProductResource>> productResources = downloadProductResources( cards );
+
+		// Install the products.
+		for( ProductCard card : cards ) {
+			File targetFolder = getProductInstallFolder( card );
+			
+			Log.write( Log.TRACE, "Install product to: " + targetFolder );
+			Set<ProductResource> resources = productResources.get( card );
+			
+			// Install all the resource files to the install folder.
+			copyProductResources( resources, targetFolder );
+		}
+	}
+	
+	public File getProductInstallFolder( ProductCard card ) {
+		File programDataFolder = service.getProgramDataFolder();
+		File installFolder = new File( programDataFolder, Service.PRODUCT_INSTALL_FOLDER_NAME );
+		return new File( installFolder, card.getGroup() + "." + card.getArtifact() );
+	}
+
 	/**
 	 * Attempt to stage the product packs described by the specified product
 	 * cards.
@@ -328,31 +352,11 @@ public class ServiceProductManager extends Agent implements Persistent {
 		Log.write( Log.TRACE, "Number of packs to stage for update: " + cards.size() );
 		Log.write( Log.DEBUG, "Pack stage folder: " + stageFolder );
 
-		// Determine all the resources to download.
-		Map<ProductCard, Set<ProductResource>> productResources = new HashMap<ProductCard, Set<ProductResource>>();
-		for( ProductCard card : cards ) {
-			Set<ProductResource> resources = new PackProvider( card, service.getTaskManager() ).getResources();
+		// Download the product resources.
+		Map<ProductCard, Set<ProductResource>> productResources = downloadProductResources( cards );
 
-			for( ProductResource resource : resources ) {
-				URI uri = getResolvedUpdateUri( resource.getUri() );
-				Log.write( Log.DEBUG, "Resource source: " + uri );
-				resource.setFuture( service.getTaskManager().submit( new DownloadTask( uri ) ) );
-			}
-
-			productResources.put( card, resources );
-		}
-
-		// Download all resources.
-		for( ProductCard card : cards ) {
-			for( ProductResource resource : productResources.get( card ) ) {
-				resource.waitFor();
-				Log.write( Log.DEBUG, "Resource target: " + resource.getLocalFile() );
-			}
-		}
-
+		// Create an update for each product.
 		Map<String, ProductCard> installedPacks = getInstalledPackMap();
-
-		// Create an update for each pack.
 		for( ProductCard card : cards ) {
 			ProductCard installedPack = installedPacks.get( card.getProductKey() );
 
@@ -586,28 +590,32 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 	private void createUpdatePack( Set<ProductResource> resources, File update ) throws IOException {
 		File updateFolder = FileUtil.createTempFolder( "update", "folder" );
+		
+		copyProductResources( resources, updateFolder );
 
+		FileUtil.deleteOnExit( updateFolder );
+
+		FileUtil.zip( updateFolder, update );
+	}
+	
+	private void copyProductResources(Set<ProductResource> resources, File folder ) throws IOException {
 		for( ProductResource resource : resources ) {
 			switch( resource.getType() ) {
 				case FILE: {
 					// Just copy the file.
 					String path = resource.getUri().getPath();
 					String name = path.substring( path.lastIndexOf( "/" ) + 1 );
-					File target = new File( updateFolder, name );
+					File target = new File( folder, name );
 					FileUtil.copy( resource.getLocalFile(), target );
 					break;
 				}
 				case PACK: {
 					// Unpack the file.
-					FileUtil.unzip( resource.getLocalFile(), updateFolder );
+					FileUtil.unzip( resource.getLocalFile(), folder );
 					break;
 				}
 			}
 		}
-
-		FileUtil.deleteOnExit( updateFolder );
-
-		FileUtil.zip( updateFolder, update );
 	}
 
 	private void scheduleCheckUpdateTask( UpdateCheckTask task ) {
@@ -621,6 +629,32 @@ public class ServiceProductManager extends Agent implements Persistent {
 				break;
 			}
 		}
+	}
+
+	private Map<ProductCard, Set<ProductResource>> downloadProductResources( Set<ProductCard> cards ) throws Exception {
+		// Determine all the resources to download.
+		Map<ProductCard, Set<ProductResource>> productResources = new HashMap<ProductCard, Set<ProductResource>>();
+		for( ProductCard card : cards ) {
+			Set<ProductResource> resources = new PackProvider( card, service.getTaskManager() ).getResources();
+
+			for( ProductResource resource : resources ) {
+				URI uri = getResolvedUpdateUri( resource.getUri() );
+				Log.write( Log.DEBUG, "Resource source: " + uri );
+				resource.setFuture( service.getTaskManager().submit( new DownloadTask( uri ) ) );
+			}
+
+			productResources.put( card, resources );
+		}
+
+		// Download all resources.
+		for( ProductCard card : cards ) {
+			for( ProductResource resource : productResources.get( card ) ) {
+				resource.waitFor();
+				Log.write( Log.DEBUG, "Resource target: " + resource.getLocalFile() );
+			}
+		}
+
+		return productResources;
 	}
 
 	/**

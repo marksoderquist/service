@@ -14,7 +14,7 @@ public abstract class BaseTestCase extends TestCase {
 
 	@Override
 	public void setUp() throws Exception {
-		Log.setLevel( Log.TRACE );
+		Log.setLevel( Log.NONE );
 	}
 
 }

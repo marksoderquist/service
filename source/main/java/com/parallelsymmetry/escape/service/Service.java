@@ -57,6 +57,8 @@ import com.parallelsymmetry.escape.utility.task.TaskManager;
 
 public abstract class Service extends Agent implements Product {
 
+	public static final String PRODUCT_INSTALL_FOLDER_NAME = "products";
+
 	public static final String MANAGER_SETTINGS_ROOT = "/manager";
 
 	public static final String LOCALE = "locale";
