@@ -65,7 +65,7 @@ public abstract class Service extends Agent implements Product {
 
 	public static final String DEVL_PREFIX = "#";
 
-	public static final String TEST_PREFIX = "$";
+	public static final String TEST_PREFIX = "#";
 
 	private static final String PEER_LOGGER_NAME = "peer";
 

@@ -33,7 +33,7 @@ public class ServiceTest extends BaseTestCase {
 
 	public void testBeforeCall() throws Exception {
 		assertEquals( "com.parallelsymmetry", service.getCard().getGroup() );
-		assertEquals( "$mock", service.getCard().getArtifact() );
+		assertEquals( Service.TEST_PREFIX + "mock", service.getCard().getArtifact() );
 		assertEquals( "1.0.0-a-00  1973-08-14 22:29:00", service.getCard().getRelease().toString() );
 		assertEquals( "(C) 1973-" + DateUtil.getCurrentYear() + " Parallel Symmetry", service.getCard().getCopyright() );
 		assertEquals( "All rights reserved.", service.getCard().getCopyrightNotice() );
