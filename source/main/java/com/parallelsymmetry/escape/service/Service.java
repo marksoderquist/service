@@ -421,7 +421,7 @@ public abstract class Service extends Agent implements Product {
 			// Initialize logging.
 			Log.config( parameters );
 			
-			// NEXT Fix log file name collision when two instances run.
+			// TODO Fix log file name collision when two instances run.
 //			if( !parameters.isSet( LogFlag.LOG_FILE ) ) {
 //				try {
 //					File folder = getProgramDataFolder();
@@ -429,7 +429,7 @@ public abstract class Service extends Agent implements Product {
 //					folder.mkdirs();
 //
 //					FileHandler handler = new FileHandler( pattern, parameters.isTrue( LogFlag.LOG_FILE_APPEND ) );
-//					handler.setLevel( Log.INFO );
+//					handler.setLevel( Log.getLevel() );
 //					if( parameters.isSet( LogFlag.LOG_FILE_LEVEL ) ) handler.setLevel( Log.parseLevel( parameters.get( LogFlag.LOG_FILE_LEVEL ) ) );
 //					handler.setFormatter( new DefaultFormatter() );
 //					Log.addHandler( handler );
