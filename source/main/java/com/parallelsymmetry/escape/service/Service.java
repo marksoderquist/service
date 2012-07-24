@@ -430,7 +430,7 @@ public abstract class Service extends Agent implements Product {
 					handler.setLevel( Log.INFO );
 					if( parameters.isSet( LogFlag.LOG_FILE_LEVEL ) ) handler.setLevel( Log.parseLevel( parameters.get( LogFlag.LOG_FILE_LEVEL ) ) );
 					handler.setFormatter( new DefaultFormatter() );
-					Log.addHandler( handler );
+					//Log.addHandler( handler );
 				} catch( IOException exception ) {
 					Log.write( exception );
 				}
