@@ -420,6 +420,8 @@ public abstract class Service extends Agent implements Product {
 		try {
 			// Initialize logging.
 			Log.config( parameters );
+			
+			// NEXT Fix log file name collision when two instances run.
 //			if( !parameters.isSet( LogFlag.LOG_FILE ) ) {
 //				try {
 //					File folder = getProgramDataFolder();
