@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -43,9 +42,7 @@ import com.parallelsymmetry.escape.utility.TextUtil;
 import com.parallelsymmetry.escape.utility.agent.Agent;
 import com.parallelsymmetry.escape.utility.agent.ServerAgent;
 import com.parallelsymmetry.escape.utility.agent.Worker;
-import com.parallelsymmetry.escape.utility.log.DefaultFormatter;
 import com.parallelsymmetry.escape.utility.log.Log;
-import com.parallelsymmetry.escape.utility.log.LogFlag;
 import com.parallelsymmetry.escape.utility.setting.DescriptorSettingProvider;
 import com.parallelsymmetry.escape.utility.setting.ParametersSettingProvider;
 import com.parallelsymmetry.escape.utility.setting.PreferencesSettingProvider;
@@ -65,7 +62,7 @@ public abstract class Service extends Agent implements Product {
 
 	public static final String DEVL_PREFIX = "#";
 
-	public static final String TEST_PREFIX = "#";
+	public static final String TEST_PREFIX = "$";
 
 	private static final String PEER_LOGGER_NAME = "peer";
 
@@ -420,23 +417,23 @@ public abstract class Service extends Agent implements Product {
 		try {
 			// Initialize logging.
 			Log.config( parameters );
-			
+
 			// TODO Fix log file name collision when two instances run.
-//			if( !parameters.isSet( LogFlag.LOG_FILE ) ) {
-//				try {
-//					File folder = getProgramDataFolder();
-//					String pattern = new File( folder, "program.log" ).getCanonicalPath().replace( '\\', '/' );
-//					folder.mkdirs();
-//
-//					FileHandler handler = new FileHandler( pattern, parameters.isTrue( LogFlag.LOG_FILE_APPEND ) );
-//					handler.setLevel( Log.getLevel() );
-//					if( parameters.isSet( LogFlag.LOG_FILE_LEVEL ) ) handler.setLevel( Log.parseLevel( parameters.get( LogFlag.LOG_FILE_LEVEL ) ) );
-//					handler.setFormatter( new DefaultFormatter() );
-//					Log.addHandler( handler );
-//				} catch( IOException exception ) {
-//					Log.write( exception );
-//				}
-//			}
+			//			if( !parameters.isSet( LogFlag.LOG_FILE ) ) {
+			//				try {
+			//					File folder = getProgramDataFolder();
+			//					String pattern = new File( folder, "program.log" ).getCanonicalPath().replace( '\\', '/' );
+			//					folder.mkdirs();
+			//
+			//					FileHandler handler = new FileHandler( pattern, parameters.isTrue( LogFlag.LOG_FILE_APPEND ) );
+			//					handler.setLevel( Log.getLevel() );
+			//					if( parameters.isSet( LogFlag.LOG_FILE_LEVEL ) ) handler.setLevel( Log.parseLevel( parameters.get( LogFlag.LOG_FILE_LEVEL ) ) );
+			//					handler.setFormatter( new DefaultFormatter() );
+			//					Log.addHandler( handler );
+			//				} catch( IOException exception ) {
+			//					Log.write( exception );
+			//				}
+			//			}
 
 			// Set the locale.
 			if( parameters.isSet( LOCALE ) ) setLocale( parameters );
@@ -476,7 +473,7 @@ public abstract class Service extends Agent implements Product {
 			// The logic is somewhat complex, the nested if statements help clarify it.
 			if( updateManager.getCheckOption() != ServiceProductManager.CheckOption.DISABLED ) {
 				if( ( parameters.isSet( ServiceFlag.UPDATE ) & parameters.isTrue( ServiceFlag.UPDATE ) ) | ( !parameters.isSet( ServiceFlag.UPDATE ) & !peer ) ) {
-					if( update() && !parameters.isSet( ServiceFlag.PREFIX ) ) {
+					if( update() && !parameters.isSet( ServiceFlag.DEVMODE ) ) {
 						// The program should be allowed, but not forced, to exit at this point.
 						Log.write( "Program exiting to apply updates." );
 						return;
@@ -555,7 +552,7 @@ public abstract class Service extends Agent implements Product {
 			}
 
 			// Check the development flag.
-			if( home == null && parameters.isSet( ServiceFlag.PREFIX ) ) {
+			if( home == null && parameters.isSet( ServiceFlag.DEVMODE ) ) {
 				home = new File( System.getProperty( "user.dir" ), "target/install" );
 				home.mkdirs();
 			}
@@ -590,16 +587,17 @@ public abstract class Service extends Agent implements Product {
 
 		// Add the preferences settings provider.
 		String prefix = "";
-		if( parameters.isSet( ServiceFlag.PREFIX ) ) {
-			if( ServiceFlagValue.TEST == parameters.get( ServiceFlag.PREFIX ) && !card.getArtifact().startsWith( TEST_PREFIX ) ) {
+		if( parameters.isSet( ServiceFlag.DEVMODE ) ) {
+			if( ServiceFlagValue.TEST.equals( parameters.get( ServiceFlag.DEVMODE ) ) && !card.getArtifact().startsWith( TEST_PREFIX ) ) {
 				prefix = TEST_PREFIX;
-			} else if( ServiceFlagValue.DEVL == parameters.get( ServiceFlag.PREFIX ) && !card.getArtifact().startsWith( DEVL_PREFIX ) ) {
+			} else if( ServiceFlagValue.DEVL.equals( parameters.get( ServiceFlag.DEVMODE ) ) && !card.getArtifact().startsWith( DEVL_PREFIX ) ) {
 				prefix = DEVL_PREFIX;
 			}
 		}
 		String preferencesPath = "/" + card.getGroup().replace( '.', '/' ) + "/" + prefix + card.getArtifact();
 		Preferences preferences = Preferences.userRoot().node( preferencesPath );
 		if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
+		Log.write( Log.DEBUG, "Preferences path: " + preferencesPath );
 
 		// Reset the settings specified on the command line.
 		if( parameters.isTrue( ServiceFlag.SETTINGS_RESET ) ) {

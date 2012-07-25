@@ -266,7 +266,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 			ProductCard newPack = new ProductCard( descriptor.getSource(), descriptor );
 
 			// Handle the prefix command line flag.
-			//			boolean development = service.getParameters().isSet( ServiceFlag.PREFIX );
+			//			boolean development = service.getParameters().isSet( ServiceFlag.DEVMODE );
 			//			if( development && oldPack.getArtifact().equals( Service.DEVL_PREFIX + newPack.getArtifact() ) ) {
 			//				newPack.setArtifact( Service.DEVL_PREFIX + newPack.getArtifact() );
 			//			}
@@ -419,7 +419,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 	public boolean applyStagedUpdates() throws Exception {
 		if( !isEnabled() || updates.size() == 0 ) return false;
 
-		if( service.getParameters().isSet( ServiceFlag.PREFIX ) ) {
+		if( service.getParameters().isSet( ServiceFlag.DEVMODE ) ) {
 			Log.write( Log.TRACE, "Running in development. Updates cannot be applied and will be cleaned up." );
 
 			for( StagedUpdate update : updates ) {

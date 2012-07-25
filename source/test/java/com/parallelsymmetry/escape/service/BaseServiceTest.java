@@ -8,14 +8,14 @@ public abstract class BaseServiceTest extends BaseTestCase {
 	public void setUp() throws Exception {
 		super.setUp();
 		service = new MockService();
-		service.call( new String[] { ServiceFlag.PREFIX, ServiceFlagValue.TEST, ServiceFlag.SETTINGS_RESET } );
+		service.call( new String[] { ServiceFlag.DEVMODE, ServiceFlagValue.TEST, ServiceFlag.SETTINGS_RESET } );
 		service.waitForStartup();
 		assertTrue( service.isRunning() );
 	}
 
 	@Override
 	public void tearDown() throws Exception {
-		service.call( new String[] { ServiceFlag.PREFIX, ServiceFlagValue.TEST, ServiceFlag.STOP } );
+		service.call( new String[] { ServiceFlag.DEVMODE, ServiceFlagValue.TEST, ServiceFlag.STOP } );
 		service.waitForShutdown();
 		assertFalse( service.isRunning() );
 	}
