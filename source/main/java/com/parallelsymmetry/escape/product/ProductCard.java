@@ -84,16 +84,6 @@ public class ProductCard {
 
 	private String productKey;
 
-	private String releaseKey;
-
-//	private boolean enabled;
-//
-//	private boolean installed;
-//
-//	private boolean updatable;
-//
-//	private boolean removable;
-
 	public ProductCard( URI base, Descriptor descriptor ) throws ProductCardException {
 		update( base, descriptor );
 	}
@@ -177,8 +167,8 @@ public class ProductCard {
 		} catch( URISyntaxException exception ) {
 			Log.write( exception );
 		}
-		
-		updateKeys();
+
+		updateKey();
 
 		return this;
 	}
@@ -191,18 +181,13 @@ public class ProductCard {
 		return productKey;
 	}
 
-	// TODO If not used, remove.
-	public String getReleaseKey() {
-		return releaseKey;
-	}
-
 	public String getGroup() {
 		return group;
 	}
 
 	public void setGroup( String group ) {
 		this.group = group;
-		updateKeys();
+		updateKey();
 	}
 
 	public String getArtifact() {
@@ -211,7 +196,7 @@ public class ProductCard {
 
 	public void setArtifact( String artifact ) {
 		this.artifact = artifact;
-		updateKeys();
+		updateKey();
 	}
 
 	public Release getRelease() {
@@ -220,7 +205,7 @@ public class ProductCard {
 
 	public void setRelease( Release release ) {
 		this.release = release;
-		updateKeys();
+		updateKey();
 	}
 
 	public URI getIconUri() {
@@ -329,38 +314,6 @@ public class ProductCard {
 		this.folder = folder;
 	}
 
-//	public boolean isEnabled() {
-//		return enabled;
-//	}
-//
-//	public void setEnabled( boolean enabled ) {
-//		this.enabled = enabled;
-//	}
-//
-//	public boolean isInstalled() {
-//		return installed;
-//	}
-//
-//	public void setInstalled( boolean installed ) {
-//		this.installed = installed;
-//	}
-//
-//	public boolean isRemovable() {
-//		return removable;
-//	}
-//
-//	public void setRemovable( boolean removable ) {
-//		this.removable = removable;
-//	}
-//
-//	public boolean isUpdatable() {
-//		return updatable;
-//	}
-//
-//	public void setUpdatable( boolean updatable ) {
-//		this.updatable = updatable;
-//	}
-
 	@Override
 	public String toString() {
 		return getProductKey();
@@ -377,10 +330,15 @@ public class ProductCard {
 	public int hashCode() {
 		return this.group.hashCode() ^ this.artifact.hashCode();
 	}
-	
-	private void updateKeys() {
-		this.productKey = group + ":" + artifact;
-		this.releaseKey = productKey + ":" + release.toString();
+
+	private void updateKey() {
+		/*
+		 * The use of '.' as the separator is the most benign of the characters
+		 * tested. Changing the separator to a different character will most likely
+		 * result in invalid file paths, setting paths, and other undesired side
+		 * effects.
+		 */
+		this.productKey = group + "." + artifact;
 	}
 
 }

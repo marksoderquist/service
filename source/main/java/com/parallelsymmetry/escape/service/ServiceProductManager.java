@@ -102,10 +102,6 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 	private static final String PRODUCT_ENABLED_KEY = "enabled";
 
-	private static final String MODULE_PREFERENCES_PATH = "products";
-
-	private static final String MODULE_ENABLED_KEY = "enabled";
-
 	private Service service;
 
 	private Set<ProductCatalog> catalogs;
@@ -136,6 +132,8 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 	private Timer timer;
 
+	private Set<ProductManagerListener> listeners;
+
 	public ServiceProductManager( Service service ) {
 		this.service = service;
 		catalogs = new CopyOnWriteArraySet<ProductCatalog>();
@@ -144,9 +142,10 @@ public class ServiceProductManager extends Agent implements Persistent {
 		updates = new CopyOnWriteArraySet<StagedUpdate>();
 		products = new ConcurrentHashMap<String, ProductCard>();
 		productStates = new ConcurrentHashMap<String, ProductState>();
+		listeners = new CopyOnWriteArraySet<ProductManagerListener>();
 
 		// Add service as first product.
-		addProduct( service.getCard(), true, false );
+		addProduct( service.getCard(), true, false, true );
 
 		// Default options.
 		checkOption = CheckOption.DISABLED;
@@ -187,9 +186,10 @@ public class ServiceProductManager extends Agent implements Persistent {
 		return new HashSet<ProductCard>( products.values() );
 	}
 
-	public void addProduct( ProductCard card, boolean updatable, boolean removable ) {
+	public void addProduct( ProductCard card, boolean updatable, boolean removable, boolean enabled ) {
 		products.put( card.getProductKey(), card );
 		productStates.put( card.getProductKey(), new ProductState( updatable, removable ) );
+		setEnabled( card, enabled );
 	}
 
 	public void removeProduct( ProductCard card ) {
@@ -213,7 +213,10 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 	public void setUpdatable( ProductCard card, boolean updatable ) {
 		ProductState state = productStates.get( card.getProductKey() );
-		if( state != null ) state.updatable = updatable;
+		if( state == null ) return;
+
+		state.updatable = updatable;
+		fireProductManagerEvent( new ProductManagerEvent( this, ProductManagerEvent.Type.PRODUCT_CHANGED, card ) );
 	}
 
 	public boolean isRemovable( ProductCard card ) {
@@ -223,15 +226,19 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 	public void setRemovable( ProductCard card, boolean removable ) {
 		ProductState state = productStates.get( card.getProductKey() );
-		if( state != null ) state.removable = removable;
+		if( state == null ) return;
+
+		state.removable = removable;
+		fireProductManagerEvent( new ProductManagerEvent( this, ProductManagerEvent.Type.PRODUCT_CHANGED, card ) );
 	}
 
 	public boolean isEnabled( ProductCard card ) {
-		return getProductSettings( card ).getBoolean( PRODUCT_ENABLED_KEY, true );
+		return getProductSettings( card ).getBoolean( PRODUCT_ENABLED_KEY, false );
 	}
 
 	public void setEnabled( ProductCard card, boolean enabled ) {
 		getProductSettings( card ).putBoolean( PRODUCT_ENABLED_KEY, enabled );
+		fireProductManagerEvent( new ProductManagerEvent( this, enabled ? ProductManagerEvent.Type.PRODUCT_ENABLED : ProductManagerEvent.Type.PRODUCT_DISABLED, card ) );
 	}
 
 	/**
@@ -596,7 +603,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 	}
 
 	public Settings getProductSettings( ProductCard card ) {
-		return service.getSettings().getNode( PRODUCT_SETTINGS_PATH + "/" + "test" );
+		return service.getSettings().getNode( PRODUCT_SETTINGS_PATH + "/" + card.getProductKey() );
 	}
 
 	public void loadModules( File[] folders ) throws Exception {
@@ -685,6 +692,14 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 		return clazz;
 	}
+	
+	public void addProductManagerListener( ProductManagerListener listener ) {
+		listeners.add( listener );
+	}
+
+	public void removeProductManagerListener( ProductManagerListener listener ) {
+		listeners.remove( listener );
+	}
 
 	@Override
 	public void loadSettings( Settings settings ) {
@@ -708,7 +723,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 		settings.put( FOUND, foundOption.name() );
 		settings.put( APPLY, applyOption.name() );
 		settings.putSet( UPDATES_SETTINGS_PATH, updates );
-		
+
 		settings.flush();
 	}
 
@@ -794,12 +809,24 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 	private void scheduleCheckUpdateTask( UpdateCheckTask task ) {
 		switch( checkOption ) {
+			case MANUAL: {
+				break;
+			}
+			case STARTUP: {
+				break;
+			}
 			case INTERVAL: {
 				// TODO Schedule the task by interval.
 				break;
 			}
 			case SCHEDULE: {
 				// TODO Schedule the task by schedule.
+				break;
+			}
+			case DISABLED: {
+				break;
+			}
+			default: {
 				break;
 			}
 		}
@@ -930,13 +957,15 @@ public class ServiceProductManager extends Agent implements Persistent {
 		if( enabled ) loaders.add( module.getClass().getClassLoader() );
 
 		// Notify the program the module is installed.
-		addProduct( card, updatable, removable );
+		addProduct( card, updatable, removable, enabled );
 
 		Log.write( Log.TRACE, "Module registered: " + card.getArtifact() + " (" + module.getClass().getName() + ")" );
 	}
 
-	private Settings getModuleSettings( String key ) {
-		return service.getSettings().getNode( MODULE_PREFERENCES_PATH + "/" + key );
+	private void fireProductManagerEvent( ProductManagerEvent event ) {
+		for( ProductManagerListener listener : listeners ) {
+			listener.eventOccurred( event );
+		}
 	}
 
 	private static final class ModuleClassLoader extends URLClassLoader {
@@ -956,24 +985,24 @@ public class ServiceProductManager extends Agent implements Persistent {
 		 * parent class loader first then delegate to the module class loader if the
 		 * class could not be found.
 		 */
-		@Override
-		public Class<?> loadClass( final String name ) throws ClassNotFoundException {
-			Class<?> type = null;
-
-			if( type == null ) {
-				try {
-					type = parent.loadClass( name );
-				} catch( Throwable error ) {
-					// Intentionally ignore exception.
-				}
-			}
-
-			if( type == null ) type = super.loadClass( name );
-
-			if( type != null ) resolveClass( type );
-
-			return type;
-		}
+//		@Override
+//		public Class<?> loadClass( final String name ) throws ClassNotFoundException {
+//			Class<?> type = null;
+//
+//			if( type == null ) {
+//				try {
+//					type = parent.loadClass( name );
+//				} catch( Throwable error ) {
+//					// Intentionally ignore exception.
+//				}
+//			}
+//
+//			if( type == null ) type = super.loadClass( name );
+//
+//			if( type != null ) resolveClass( type );
+//
+//			return type;
+//		}
 
 		/**
 		 * Used to find native library files used with modules. This allows a module

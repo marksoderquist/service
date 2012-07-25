@@ -2,6 +2,9 @@ package com.parallelsymmetry.escape.service;
 
 import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 
 import javax.xml.xpath.XPath;
@@ -19,7 +22,6 @@ import com.parallelsymmetry.escape.service.ServiceProductManager.FoundOption;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.XmlUtil;
-import com.parallelsymmetry.escape.utility.log.Log;
 
 public class ServiceProductManagerTest extends BaseServiceTest {
 
@@ -162,16 +164,31 @@ public class ServiceProductManagerTest extends BaseServiceTest {
 		URL url = getClass().getResource( TEST_PRODUCT );
 		Descriptor descriptor = new Descriptor( url );
 		ProductCard card = new ProductCard( url.toURI(), descriptor );
+		
+		ProductManagerWatcher watcher = new ProductManagerWatcher();
+		manager.addProductManagerListener( watcher );
+		assertEquals( 0, watcher.getEvents().size() );
 
-		Log.setLevel( Log.INFO );
-		manager.addProduct( card, false, false );
+		// Check the behavior before adding the product.
+		manager.setEnabled( card, true );
 		assertTrue( manager.isEnabled( card ) );
+		assertEquals( 1, watcher.getEvents().size() );
+		assertEquals( ProductManagerEvent.Type.PRODUCT_ENABLED, watcher.getEvents().get(0).getType() );
 
-		manager.setEnabled( card, false );
+		manager.addProduct( card, false, false, false );
 		assertFalse( manager.isEnabled( card ) );
+		assertEquals( 2, watcher.getEvents().size() );
+		assertEquals( ProductManagerEvent.Type.PRODUCT_DISABLED, watcher.getEvents().get(1).getType() );
 
 		manager.setEnabled( card, true );
 		assertTrue( manager.isEnabled( card ) );
+		assertEquals( 3, watcher.getEvents().size() );
+		assertEquals( ProductManagerEvent.Type.PRODUCT_ENABLED, watcher.getEvents().get(2).getType() );
+
+		manager.setEnabled( card, false );
+		assertFalse( manager.isEnabled( card ) );
+		assertEquals( 4, watcher.getEvents().size() );
+		assertEquals( ProductManagerEvent.Type.PRODUCT_DISABLED, watcher.getEvents().get(3).getType() );
 	}
 
 	@Test
@@ -180,7 +197,11 @@ public class ServiceProductManagerTest extends BaseServiceTest {
 		Descriptor descriptor = new Descriptor( url );
 		ProductCard card = new ProductCard( url.toURI(), descriptor );
 
-		manager.addProduct( card, false, false );
+		// Check the behavior before adding the product.
+		manager.setUpdatable( card, true );
+		assertFalse( manager.isUpdatable( card ) );
+
+		manager.addProduct( card, false, false, false );
 		assertFalse( manager.isUpdatable( card ) );
 
 		manager.setUpdatable( card, true );
@@ -196,7 +217,7 @@ public class ServiceProductManagerTest extends BaseServiceTest {
 		Descriptor descriptor = new Descriptor( url );
 		ProductCard card = new ProductCard( url.toURI(), descriptor );
 
-		manager.addProduct( card, false, false );
+		manager.addProduct( card, false, false, false );
 		assertFalse( manager.isRemovable( card ) );
 
 		manager.setRemovable( card, true );
@@ -210,11 +231,11 @@ public class ServiceProductManagerTest extends BaseServiceTest {
 	public void testProductInstalled() throws Exception {
 		URL url = getClass().getResource( TEST_PRODUCT );
 		Descriptor descriptor = new Descriptor( url );
-		
+
 		ProductCard card = new ProductCard( url.toURI(), descriptor );
 		assertFalse( manager.isInstalled( card ) );
 
-		manager.addProduct( card, false, false );
+		manager.addProduct( card, false, false, false );
 		assertTrue( manager.isInstalled( card ) );
 
 		manager.removeProduct( card );
@@ -257,6 +278,29 @@ public class ServiceProductManagerTest extends BaseServiceTest {
 			sourceUriNode.setTextContent( "update.xml" );
 
 			XmlUtil.save( programDescriptor, descriptor );
+		}
+
+	}
+
+	private class ProductManagerWatcher implements ProductManagerListener {
+
+		private List<ProductManagerEvent> events;
+
+		public ProductManagerWatcher() {
+			reset();
+		}
+
+		public void reset() {
+			events = new CopyOnWriteArrayList<ProductManagerEvent>();
+		}
+
+		@Override
+		public void eventOccurred( ProductManagerEvent event ) {
+			events.add( event );
+		}
+		
+		public List<ProductManagerEvent> getEvents() {
+			return new ArrayList<ProductManagerEvent>( events );
 		}
 
 	}
