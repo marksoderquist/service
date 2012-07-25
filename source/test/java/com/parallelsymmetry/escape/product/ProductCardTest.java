@@ -24,7 +24,7 @@ public class ProductCardTest extends BaseTestCase {
 	}
 
 	public void testGetKey() throws Exception {
-		assertEquals( "com.parallelsymmetry.$mock", loadCard( MOCK_SERVICE ).getProductKey() );
+		assertEquals( "com.parallelsymmetry.mock", loadCard( MOCK_SERVICE ).getProductKey() );
 	}
 
 	public void testGetGroup() throws Exception {
@@ -34,21 +34,21 @@ public class ProductCardTest extends BaseTestCase {
 	public void testSetGroup() throws Exception {
 		ProductCard card = loadCard( MOCK_SERVICE );
 		assertEquals( "com.parallelsymmetry", card.getGroup() );
-		assertEquals( "com.parallelsymmetry.$mock", card.getProductKey() );
+		assertEquals( "com.parallelsymmetry.mock", card.getProductKey() );
 
 		card.setGroup( "com.parallelsymmetry.test" );
 		assertEquals( "com.parallelsymmetry.test", card.getGroup() );
-		assertEquals( "com.parallelsymmetry.test.$mock", card.getProductKey() );
+		assertEquals( "com.parallelsymmetry.test.mock", card.getProductKey() );
 	}
 
 	public void testGetArtifact() throws Exception {
-		assertEquals( "$mock", loadCard( MOCK_SERVICE ).getArtifact() );
+		assertEquals( "mock", loadCard( MOCK_SERVICE ).getArtifact() );
 	}
 
 	public void testSetArtifact() throws Exception {
 		ProductCard card = loadCard( MOCK_SERVICE );
 		assertEquals( "com.parallelsymmetry", card.getGroup() );
-		assertEquals( "com.parallelsymmetry.$mock", card.getProductKey() );
+		assertEquals( "com.parallelsymmetry.mock", card.getProductKey() );
 
 		card.setArtifact( "test-mock" );
 		assertEquals( "com.parallelsymmetry", card.getGroup() );
@@ -62,11 +62,11 @@ public class ProductCardTest extends BaseTestCase {
 	public void testSetRelease() throws Exception {
 		ProductCard card = loadCard( MOCK_SERVICE );
 		assertEquals( "com.parallelsymmetry", card.getGroup() );
-		assertEquals( "com.parallelsymmetry.$mock", card.getProductKey() );
+		assertEquals( "com.parallelsymmetry.mock", card.getProductKey() );
 
 		card.setRelease( new Release( new Version( "1.0.0-a-01" ), new Date( 114215340000L ) ) );
 		assertEquals( "com.parallelsymmetry", card.getGroup() );
-		assertEquals( "com.parallelsymmetry.$mock", card.getProductKey() );
+		assertEquals( "com.parallelsymmetry.mock", card.getProductKey() );
 	}
 
 	public void testGetIcon() throws Exception {
@@ -156,13 +156,13 @@ public class ProductCardTest extends BaseTestCase {
 
 		// Check the required information.
 		assertEquals( "com.parallelsymmetry", card.getGroup() );
-		assertEquals( "$mock", card.getArtifact() );
+		assertEquals( "mock", card.getArtifact() );
 		assertEquals( new Release( new Version() ), card.getRelease() );
 
 		// Check the human oriented information.
 		assertEquals( null, card.getIconUri() );
 		assertEquals( "com.parallelsymmetry", card.getProvider() );
-		assertEquals( "$mock", card.getName() );
+		assertEquals( "mock", card.getName() );
 		assertEquals( null, card.getSummary() );
 		assertEquals( null, card.getDescription() );
 

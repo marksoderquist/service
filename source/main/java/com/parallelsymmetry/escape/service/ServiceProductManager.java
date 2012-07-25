@@ -413,8 +413,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 	}
 
 	public File getProductInstallFolder( ProductCard card ) {
-		File programDataFolder = service.getProgramDataFolder();
-		File installFolder = new File( programDataFolder, Service.PRODUCT_INSTALL_FOLDER_NAME );
+		File installFolder = new File( service.getProgramDataFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
 		return new File( installFolder, card.getGroup() + "." + card.getArtifact() );
 	}
 
@@ -427,8 +426,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 	 * @throws Exception
 	 */
 	public boolean stageSelectedUpdates( Set<ProductCard> cards ) throws Exception {
-		File programDataFolder = service.getProgramDataFolder();
-		File stageFolder = new File( programDataFolder, UPDATE_FOLDER_NAME );
+		File stageFolder = new File( service.getProgramDataFolder(), UPDATE_FOLDER_NAME );
 		stageFolder.mkdirs();
 
 		Log.write( Log.TRACE, "Number of packs to stage for update: " + cards.size() );

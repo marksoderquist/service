@@ -2,7 +2,7 @@
 
 <product version="1">
 	<group>com.parallelsymmetry</group>
-	<artifact>#mock-product</artifact>
+	<artifact>mock-product</artifact>
 	<version>1.0.0-a-00</version>
 	<timestamp>114215340000</timestamp>
 

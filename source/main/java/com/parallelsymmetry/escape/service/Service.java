@@ -80,6 +80,8 @@ public abstract class Service extends Agent implements Product {
 	private Thread shutdownHook = new ShutdownHook( this );
 
 	private Parameters parameters = Parameters.create();
+	
+	private String devModePrefix = "";
 
 	private Settings settings;
 
@@ -217,7 +219,7 @@ public abstract class Service extends Agent implements Product {
 	}
 
 	public File getProgramDataFolder() {
-		return OperatingSystem.getUserProgramDataFolder( card.getArtifact(), getName() );
+		return OperatingSystem.getUserProgramDataFolder( devModePrefix + card.getArtifact(), devModePrefix + getName() );
 	}
 
 	public void printHelp( String topic ) {
@@ -532,6 +534,14 @@ public abstract class Service extends Agent implements Product {
 	private final void configureOnce( Parameters parameters ) {
 		if( isRunning() ) return;
 
+		if( parameters.isSet( ServiceFlag.DEVMODE ) ) {
+			if( ServiceFlagValue.TEST.equals( parameters.get( ServiceFlag.DEVMODE ) ) && !card.getArtifact().startsWith( TEST_PREFIX ) ) {
+				devModePrefix = TEST_PREFIX;
+			} else if( ServiceFlagValue.DEVL.equals( parameters.get( ServiceFlag.DEVMODE ) ) && !card.getArtifact().startsWith( DEVL_PREFIX ) ) {
+				devModePrefix = DEVL_PREFIX;
+			}
+		}
+
 		configureHome( parameters );
 
 		configureArtifact( parameters );
@@ -551,9 +561,9 @@ public abstract class Service extends Agent implements Product {
 	 */
 	private final void configureHome( Parameters parameters ) {
 		try {
-			// If -home was specified on the command line use it.
-			if( home == null && parameters.get( "home" ) != null ) {
-				home = new File( parameters.get( "home" ) ).getCanonicalFile();
+			// If the HOME flag was specified on the command line use it.
+			if( home == null && parameters.get( ServiceFlag.HOME ) != null ) {
+				home = new File( parameters.get( ServiceFlag.HOME ) ).getCanonicalFile();
 			}
 
 			// Check the code source.
@@ -601,15 +611,7 @@ public abstract class Service extends Agent implements Product {
 		}
 
 		// Add the preferences settings provider.
-		String prefix = "";
-		if( parameters.isSet( ServiceFlag.DEVMODE ) ) {
-			if( ServiceFlagValue.TEST.equals( parameters.get( ServiceFlag.DEVMODE ) ) && !card.getArtifact().startsWith( TEST_PREFIX ) ) {
-				prefix = TEST_PREFIX;
-			} else if( ServiceFlagValue.DEVL.equals( parameters.get( ServiceFlag.DEVMODE ) ) && !card.getArtifact().startsWith( DEVL_PREFIX ) ) {
-				prefix = DEVL_PREFIX;
-			}
-		}
-		String preferencesPath = "/" + card.getGroup().replace( '.', '/' ) + "/" + prefix + card.getArtifact();
+		String preferencesPath = "/" + card.getGroup().replace( '.', '/' ) + "/" + devModePrefix + card.getArtifact();
 		Preferences preferences = Preferences.userRoot().node( preferencesPath );
 		if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
 		Log.write( Log.DEBUG, "Preferences path: " + preferencesPath );
@@ -683,7 +685,10 @@ public abstract class Service extends Agent implements Product {
 			try {
 				socket = new Socket( host, port );
 				peer = socket.getInetAddress().getHostAddress() + ":" + socket.getPort();
+				
+				// NEXT Fix the following line. I breaks a test.
 				if( parameters.size() == 0 ) Log.write( getName() + " already running." );
+				
 				Log.write( Log.TRACE, "Connected to peer: " + peer );
 				ObjectOutputStream output = new ObjectOutputStream( socket.getOutputStream() );
 				output.writeObject( parameters.getCommands() );

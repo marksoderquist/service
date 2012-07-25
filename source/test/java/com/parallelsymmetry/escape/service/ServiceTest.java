@@ -27,32 +27,32 @@ public class ServiceTest extends BaseTestCase {
 	public void setUp() throws Exception {
 		super.setUp();
 		service = new MockService();
-		service.call( ServiceFlag.SETTINGS_RESET, ServiceFlag.STOP );
+		service.call( ServiceFlag.DEVMODE, ServiceFlagValue.TEST, ServiceFlag.SETTINGS_RESET, ServiceFlag.STOP );
 		service.getProductManager().setCheckOption( ServiceProductManager.CheckOption.DISABLED );
 	}
 
 	public void testBeforeCall() throws Exception {
 		assertEquals( "com.parallelsymmetry", service.getCard().getGroup() );
-		assertEquals( "$mock", service.getCard().getArtifact() );
+		assertEquals( "mock", service.getCard().getArtifact() );
 		assertEquals( "1.0.0-a-00  1973-08-14 22:29:00", service.getCard().getRelease().toString() );
 		assertEquals( "(C) 1973-" + DateUtil.getCurrentYear() + " Parallel Symmetry", service.getCard().getCopyright() );
 		assertEquals( "All rights reserved.", service.getCard().getCopyrightNotice() );
 	}
 
 	public void testCall() throws Exception {
-		service.call();
+		service.call( ServiceFlag.DEVMODE, ServiceFlagValue.TEST );
 		service.waitForStartup( TIMEOUT, TIMEUNIT );
 		assertTrue( service.isRunning() );
 
 		assertEquals( MOCK_RELEASE, service.getCard().getRelease().toHumanString() );
 
-		service.call( ServiceFlag.STOP );
+		service.call( ServiceFlag.DEVMODE, ServiceFlagValue.TEST, ServiceFlag.STOP );
 		service.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertFalse( service.isRunning() );
 	}
 
 	public void testCommandLineOutput() throws Exception {
-		LineParser parser = new LineParser( getCommandLineOutput( service, Log.INFO, true ) );
+		LineParser parser = new LineParser( getCommandLineOutput( service, Log.INFO, true, ServiceFlag.DEVMODE, ServiceFlagValue.TEST ) );
 
 		assertCommandLineHeader( parser );
 
@@ -65,7 +65,7 @@ public class ServiceTest extends BaseTestCase {
 	}
 
 	public void testHelpCommandLineOutput() throws Exception {
-		LineParser parser = new LineParser( getCommandLineOutput( service, Log.INFO, true, "-help" ) );
+		LineParser parser = new LineParser( getCommandLineOutput( service, Log.INFO, true, ServiceFlag.DEVMODE, ServiceFlagValue.TEST, ServiceFlag.HELP ) );
 
 		assertCommandLineHeader( parser );
 
@@ -91,7 +91,7 @@ public class ServiceTest extends BaseTestCase {
 	}
 
 	public void testStatusCommandLineOutput() throws Exception {
-		LineParser parser = new LineParser( getCommandLineOutput( service, Log.INFO, true, "-status" ) );
+		LineParser parser = new LineParser( getCommandLineOutput( service, Log.INFO, true, ServiceFlag.DEVMODE, ServiceFlagValue.TEST, ServiceFlag.STATUS ) );
 
 		assertCommandLineHeader( parser );
 
@@ -107,7 +107,7 @@ public class ServiceTest extends BaseTestCase {
 		LineParser parser = null;
 
 		try {
-			parser = new LineParser( getCommandLineOutput( service, Log.INFO, true ) );
+			parser = new LineParser( getCommandLineOutput( service, Log.INFO, true, ServiceFlag.DEVMODE, ServiceFlagValue.TEST ) );
 		} finally {
 			System.setProperty( "java.runtime.version", version );
 		}
@@ -243,14 +243,18 @@ public class ServiceTest extends BaseTestCase {
 		String name1 = "Mock Service 1";
 		MockService service1 = new MockService( name1 );
 		service1.getProductManager().setCheckOption( ServiceProductManager.CheckOption.DISABLED );
-		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false, "" ) );
+		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false, ServiceFlag.DEVMODE, ServiceFlagValue.TEST ) );
+		System.out.println( parser1.getRemaining() );
 		assertCommandLineHeader( name1, parser1 );
 		assertTrue( "Service should be running and is not.", service1.isRunning() );
 
 		String name2 = "Mock Service 2";
 		MockService service2 = new MockService( name2 );
 		service2.getProductManager().setCheckOption( ServiceProductManager.CheckOption.DISABLED );
-		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.INFO, false ) );
+		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.DEBUG, false, ServiceFlag.DEVMODE, ServiceFlagValue.TEST ) );
+		
+		System.out.println( parser2.getRemaining() );
+		
 		service2.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertCommandLineHeader( name2, parser2 );
 
@@ -273,7 +277,7 @@ public class ServiceTest extends BaseTestCase {
 		String name1 = "Mock Service 1";
 		MockService service1 = new MockService( name1 );
 		service1.getProductManager().setCheckOption( ServiceProductManager.CheckOption.DISABLED );
-		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false, "-status", "-log.level", "none" ) );
+		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false, ServiceFlag.DEVMODE, ServiceFlagValue.TEST, ServiceFlag.STATUS, "-log.level", "none" ) );
 		assertCommandLineHeader( name1, parser1 );
 
 		assertEquals( "[I] " + name1 + " status: STOPPED", parser1.next() );
@@ -289,7 +293,7 @@ public class ServiceTest extends BaseTestCase {
 		String name2 = "Mock Service 2";
 		MockService service2 = new MockService( name2 );
 		service2.getProductManager().setCheckOption( ServiceProductManager.CheckOption.DISABLED );
-		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.INFO, false, "-status", "-log.level", "none" ) );
+		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.INFO, false, ServiceFlag.DEVMODE, ServiceFlagValue.TEST, ServiceFlag.STATUS, "-log.level", "none" ) );
 		service2.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertCommandLineHeader( name2, parser2 );
 
@@ -330,7 +334,7 @@ public class ServiceTest extends BaseTestCase {
 			service.waitForStartup( TIMEOUT, TIMEUNIT );
 
 			if( stop && service.isRunning() ) {
-				service.call( new String[] { ServiceFlag.STOP } );
+				service.call( new String[] { ServiceFlag.DEVMODE, ServiceFlagValue.TEST, ServiceFlag.STOP } );
 				service.waitForShutdown( TIMEOUT, TIMEUNIT );
 				assertFalse( service.isRunning() );
 			}
