@@ -4,7 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.lang.reflect.Constructor;
 import java.net.URI;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,9 +19,13 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
+import com.parallelsymmetry.escape.product.Module;
 import com.parallelsymmetry.escape.product.PackProvider;
 import com.parallelsymmetry.escape.product.ProductCard;
+import com.parallelsymmetry.escape.product.ProductCatalog;
 import com.parallelsymmetry.escape.product.ProductResource;
 import com.parallelsymmetry.escape.service.task.DescriptorDownloadTask;
 import com.parallelsymmetry.escape.service.task.DownloadTask;
@@ -68,6 +76,14 @@ public class ServiceProductManager extends Agent implements Persistent {
 		VERIFY, SKIP, RESTART
 	}
 
+	public static final String DEFAULT_CATALOG_FILE_NAME = "catalog.xml";
+
+	public static final String DEFAULT_PRODUCT_FILE_NAME = "product.xml";
+
+	public static final String PRODUCT_DESCRIPTOR_PATH = "/META-INF/" + DEFAULT_PRODUCT_FILE_NAME;
+
+	public static final String MODULE_RESOURCE_CLASS_NAME_XPATH = ProductCard.PRODUCT_PATH + "/resources/module/@class";
+
 	static final String PRODUCT_MANAGER_SETTINGS_PATH = "manager/product";
 
 	static final String UPDATE_FOLDER_NAME = "updates";
@@ -86,7 +102,21 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 	private static final String PRODUCT_ENABLED_KEY = "enabled";
 
+	private static final String MODULE_PREFERENCES_PATH = "products";
+
+	private static final String MODULE_ENABLED_KEY = "enabled";
+
 	private Service service;
+
+	private Set<ProductCatalog> catalogs;
+
+	private Map<String, Module> modules;
+
+	private Set<ClassLoader> loaders;
+
+	private File homeModuleFolder;
+
+	private File userModuleFolder;
 
 	private CheckOption checkOption;
 
@@ -108,6 +138,9 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 	public ServiceProductManager( Service service ) {
 		this.service = service;
+		catalogs = new CopyOnWriteArraySet<ProductCatalog>();
+		modules = new ConcurrentHashMap<String, Module>();
+		loaders = new CopyOnWriteArraySet<ClassLoader>();
 		updates = new CopyOnWriteArraySet<StagedUpdate>();
 		products = new ConcurrentHashMap<String, ProductCard>();
 		productStates = new ConcurrentHashMap<String, ProductState>();
@@ -121,6 +154,33 @@ public class ServiceProductManager extends Agent implements Persistent {
 		applyOption = ApplyOption.RESTART;
 
 		service.getSettings().addSettingListener( PRODUCT_MANAGER_SETTINGS_PATH, new SettingChangeHandler() );
+	}
+
+	public int getCatalogCount() {
+		return catalogs.size();
+	}
+
+	public void addCatalog( ProductCatalog source ) {
+		catalogs.add( source );
+		saveSettings( settings );
+	}
+
+	public void removeCatalog( ProductCatalog source ) {
+		catalogs.remove( source );
+		saveSettings( settings );
+	}
+
+	public void setCatalogEnabled( ProductCatalog catalog, boolean enabled ) {
+		catalog.setEnabled( enabled );
+		saveSettings( settings );
+	}
+
+	public Set<ProductCatalog> getCatalogs() {
+		return new HashSet<ProductCatalog>( catalogs );
+	}
+
+	public Set<Module> getModules() {
+		return new HashSet<Module>( modules.values() );
 	}
 
 	public Set<ProductCard> getProducts() {
@@ -320,16 +380,31 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 		// Install the products.
 		for( ProductCard card : cards ) {
-			File targetFolder = getProductInstallFolder( card );
-			
-			Log.write( Log.TRACE, "Install product to: " + targetFolder );
+			File installFolder = getProductInstallFolder( card );
+
+			Log.write( Log.TRACE, "Install product to: " + installFolder );
 			Set<ProductResource> resources = productResources.get( card );
-			
+
 			// Install all the resource files to the install folder.
-			copyProductResources( resources, targetFolder );
+			copyProductResources( resources, installFolder );
 		}
 	}
-	
+
+	public void removeProducts( Set<ProductCard> cards ) throws Exception {
+		Log.write( Log.TRACE, "Number of products to remove: " + cards.size() );
+
+		// Remove the products.
+		for( ProductCard card : cards ) {
+			File installFolder = getProductInstallFolder( card );
+
+			Log.write( Log.TRACE, "Remove product from: " + installFolder );
+
+			// Remove all the resource files from the install folder.
+			// FIXME The product install folder cannot be delete while the classloader is active.
+			FileUtil.delete( installFolder );
+		}
+	}
+
 	public File getProductInstallFolder( ProductCard card ) {
 		File programDataFolder = service.getProgramDataFolder();
 		File installFolder = new File( programDataFolder, Service.PRODUCT_INSTALL_FOLDER_NAME );
@@ -524,9 +599,98 @@ public class ServiceProductManager extends Agent implements Persistent {
 		return service.getSettings().getNode( PRODUCT_SETTINGS_PATH + "/" + "test" );
 	}
 
+	public void loadModules( File[] folders ) throws Exception {
+		String moduleDescriptorPath = PRODUCT_DESCRIPTOR_PATH.startsWith( "/" ) ? PRODUCT_DESCRIPTOR_PATH.substring( 1 ) : PRODUCT_DESCRIPTOR_PATH;
+
+		ClassLoader parent = getClass().getClassLoader();
+
+		// Look for modules on the classpath.
+		URL url = null;
+		URI uri = null;
+		Enumeration<URL> urls = parent.getResources( moduleDescriptorPath );
+		while( urls.hasMoreElements() ) {
+			url = urls.nextElement();
+			uri = url.toURI().resolve( ".." );
+			Log.write( Log.DEBUG, "Searching for module on class path: " + url );
+			loadClasspathModule( new Descriptor( url.openStream() ), uri, parent );
+		}
+
+		// Look for modules in the specified folders.
+		for( File folder : folders ) {
+			if( !folder.exists() ) continue;
+			if( !folder.isDirectory() ) continue;
+
+			// Look for simple modules.
+			File[] jars = folder.listFiles( FileUtil.JAR_FILE_FILTER );
+			for( File jar : jars ) {
+				Log.write( Log.DEBUG, "Searching for simple module: " + jar.toURI() );
+
+				JarFile jarfile = new JarFile( jar );
+				JarEntry entry = jarfile.getJarEntry( moduleDescriptorPath );
+				Descriptor descriptor = entry == null ? null : new Descriptor( jarfile.getInputStream( entry ) );
+				jarfile.close();
+				if( descriptor == null ) continue;
+				loadSimpleModule( descriptor, jar.toURI(), parent );
+			}
+
+			// Look for complex modules.
+			File[] moduleFolders = folder.listFiles( FileUtil.FOLDER_FILTER );
+			for( File moduleFolder : moduleFolders ) {
+				Log.write( Log.DEBUG, "Searching for complex module: " + moduleFolder.toURI() );
+
+				jars = moduleFolder.listFiles( FileUtil.JAR_FILE_FILTER );
+				for( File jar : jars ) {
+					try {
+						// Find the module descriptor.
+						JarFile jarfile = new JarFile( jar );
+						JarEntry entry = jarfile.getJarEntry( moduleDescriptorPath );
+						Descriptor descriptor = entry == null ? null : new Descriptor( jarfile.getInputStream( entry ) );
+						jarfile.close();
+						if( descriptor == null ) continue;
+
+						loadComplexModule( descriptor, moduleFolder.toURI(), parent );
+					} catch( Throwable throwable ) {
+						Log.write( throwable, jar );
+					}
+				}
+			}
+		}
+
+	}
+
+	public Class<?> getClassForName( String name ) throws ClassNotFoundException {
+		Class<?> clazz = null;
+
+		try {
+			clazz = Class.forName( name );
+		} catch( ClassNotFoundException exception ) {
+			// Intentionally ignore exception.
+		}
+
+		// FIXME There is potential for class name/version conflicts with this implementation.
+		if( clazz == null ) {
+			for( ClassLoader loader : loaders ) {
+				try {
+					clazz = Class.forName( name, true, loader );
+				} catch( NoClassDefFoundError error ) {
+					// Intentionally ignore exception.
+				} catch( ClassNotFoundException exception ) {
+					// Intentionally ignore exception.
+				}
+				if( clazz != null ) break;
+			}
+		}
+
+		if( clazz == null ) throw new ClassNotFoundException( name );
+
+		return clazz;
+	}
+
 	@Override
 	public void loadSettings( Settings settings ) {
 		this.settings = settings;
+
+		this.catalogs = settings.getSet( "catalogs", this.catalogs );
 
 		this.checkOption = CheckOption.valueOf( settings.get( CHECK, CheckOption.DISABLED.name() ) );
 		this.foundOption = FoundOption.valueOf( settings.get( FOUND, FoundOption.STAGE.name() ) );
@@ -538,10 +702,13 @@ public class ServiceProductManager extends Agent implements Persistent {
 	public void saveSettings( Settings settings ) {
 		if( settings == null ) return;
 
+		settings.putSet( "catalogs", catalogs );
+
 		settings.put( CHECK, checkOption.name() );
 		settings.put( FOUND, foundOption.name() );
 		settings.put( APPLY, applyOption.name() );
 		settings.putSet( UPDATES_SETTINGS_PATH, updates );
+		
 		settings.flush();
 	}
 
@@ -551,6 +718,13 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 		timer = new Timer();
 		scheduleCheckUpdateTask( new UpdateCheckTask( service ) );
+
+		// Define the product folders.
+		homeModuleFolder = new File( service.getHomeFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
+		userModuleFolder = new File( service.getProgramDataFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
+
+		// Load products.
+		loadModules( new File[] { homeModuleFolder, userModuleFolder } );
 	}
 
 	@Override
@@ -590,15 +764,15 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 	private void createUpdatePack( Set<ProductResource> resources, File update ) throws IOException {
 		File updateFolder = FileUtil.createTempFolder( "update", "folder" );
-		
+
 		copyProductResources( resources, updateFolder );
 
 		FileUtil.deleteOnExit( updateFolder );
 
 		FileUtil.zip( updateFolder, update );
 	}
-	
-	private void copyProductResources(Set<ProductResource> resources, File folder ) throws IOException {
+
+	private void copyProductResources( Set<ProductResource> resources, File folder ) throws IOException {
 		for( ProductResource resource : resources ) {
 			switch( resource.getType() ) {
 				case FILE: {
@@ -655,6 +829,163 @@ public class ServiceProductManager extends Agent implements Persistent {
 		}
 
 		return productResources;
+	}
+
+	/**
+	 * A classpath module is found on the classpath.
+	 * 
+	 * @param descriptor
+	 * @param codebase
+	 * @param parent
+	 * @return
+	 * @throws Exception
+	 */
+	private Module loadClasspathModule( Descriptor descriptor, URI codebase, ClassLoader parent ) throws Exception {
+		ClassLoader loader = new ModuleClassLoader( codebase, new URL[0], parent );
+		Module module = loadModule( descriptor, codebase, loader, false, false );
+		return module;
+	}
+
+	/**
+	 * A simple module is entirely contained inside a jar file.
+	 * 
+	 * @param descriptor
+	 * @param jarUri
+	 * @param parent
+	 * @return
+	 * @throws Exception
+	 */
+	private Module loadSimpleModule( Descriptor descriptor, URI jarUri, ClassLoader parent ) throws Exception {
+		URI codebase = jarUri.resolve( ".." );
+
+		// Get the jar file.
+		File jarfile = new File( jarUri );
+
+		// Create the class loader.
+		ClassLoader loader = new ModuleClassLoader( codebase, new URL[] { jarfile.toURI().toURL() }, parent );
+		return loadModule( descriptor, codebase, loader, true, true );
+	}
+
+	/**
+	 * A complex module, the most common, is entirely contained in a folder.
+	 * 
+	 * @param descriptor
+	 * @param moduleFolderUri
+	 * @param parent
+	 * @return
+	 * @throws Exception
+	 */
+	private Module loadComplexModule( Descriptor descriptor, URI moduleFolderUri, ClassLoader parent ) throws Exception {
+		// Get the folder to load from.
+		File folder = new File( moduleFolderUri );
+
+		// Find all the jars.
+		Set<URL> urls = new HashSet<URL>();
+		File[] files = folder.listFiles( FileUtil.JAR_FILE_FILTER );
+		for( File file : files ) {
+			urls.add( file.toURI().toURL() );
+		}
+
+		// Create the class loader.
+		ClassLoader loader = new ModuleClassLoader( moduleFolderUri, urls.toArray( new URL[urls.size()] ), parent );
+		return loadModule( descriptor, moduleFolderUri, loader, true, true );
+	}
+
+	private Module loadModule( Descriptor descriptor, URI codebase, ClassLoader loader, boolean updatable, boolean removable ) throws Exception {
+		ProductCard card = new ProductCard( codebase, descriptor );
+
+		// Validate class name.
+		String className = descriptor.getValue( MODULE_RESOURCE_CLASS_NAME_XPATH );
+		if( className == null ) return null;
+
+		// Check if module is already loaded.
+		Module module = modules.get( card.getProductKey() );
+		if( module != null ) return module;
+
+		// Load the module.
+		try {
+			Class<?> moduleClass = loader.loadClass( className );
+			Constructor<?> constructor = moduleClass.getConstructor( ProductCard.class );
+			module = (Module)constructor.newInstance( card );
+			registerModule( module, codebase, updatable, removable );
+		} catch( Throwable throwable ) {
+			Log.write( Log.WARN, "Could not load module: " + card.getArtifact() + " (" + className + ")" );
+			Log.write( Log.TRACE, throwable );
+			return null;
+		}
+
+		return module;
+	}
+
+	private void registerModule( Module module, URI codebase, boolean updatable, boolean removable ) {
+		ProductCard card = module.getCard();
+
+		boolean enabled = isEnabled( module.getCard() );
+
+		// Set some module attributes.
+		module.setCodebase( codebase );
+
+		// Add the module and loader to the collections.
+		modules.put( card.getProductKey(), module );
+		if( enabled ) loaders.add( module.getClass().getClassLoader() );
+
+		// Notify the program the module is installed.
+		addProduct( card, updatable, removable );
+
+		Log.write( Log.TRACE, "Module registered: " + card.getArtifact() + " (" + module.getClass().getName() + ")" );
+	}
+
+	private Settings getModuleSettings( String key ) {
+		return service.getSettings().getNode( MODULE_PREFERENCES_PATH + "/" + key );
+	}
+
+	private static final class ModuleClassLoader extends URLClassLoader {
+
+		private URI codebase;
+
+		private ClassLoader parent;
+
+		public ModuleClassLoader( URI codebase, URL[] urls, ClassLoader parent ) {
+			super( urls, null );
+			this.codebase = codebase;
+			this.parent = parent;
+		}
+
+		/**
+		 * Change the default class loader behavior to load module classes from the
+		 * parent class loader first then delegate to the module class loader if the
+		 * class could not be found.
+		 */
+		@Override
+		public Class<?> loadClass( final String name ) throws ClassNotFoundException {
+			Class<?> type = null;
+
+			if( type == null ) {
+				try {
+					type = parent.loadClass( name );
+				} catch( Throwable error ) {
+					// Intentionally ignore exception.
+				}
+			}
+
+			if( type == null ) type = super.loadClass( name );
+
+			if( type != null ) resolveClass( type );
+
+			return type;
+		}
+
+		/**
+		 * Used to find native library files used with modules. This allows a module
+		 * to package needed native libraries in the module and be loaded at
+		 * runtime.
+		 */
+		@Override
+		protected String findLibrary( String libname ) {
+			File file = new File( codebase.resolve( System.mapLibraryName( libname ) ) );
+			return file.exists() ? file.toString() : null;
+		}
+
 	}
 
 	/**

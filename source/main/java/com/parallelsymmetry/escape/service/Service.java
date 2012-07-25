@@ -32,6 +32,7 @@ import javax.swing.Icon;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
+import com.parallelsymmetry.escape.product.Module;
 import com.parallelsymmetry.escape.product.Product;
 import com.parallelsymmetry.escape.product.ProductCard;
 import com.parallelsymmetry.escape.product.ProductCardException;
@@ -98,7 +99,7 @@ public abstract class Service extends Agent implements Product {
 
 	private TaskManager taskManager;
 
-	protected ServiceProductManager updateManager;
+	protected ServiceProductManager productManager;
 
 	/**
 	 * Construct the service with the default descriptor path.
@@ -161,7 +162,7 @@ public abstract class Service extends Agent implements Product {
 
 		peerServer = new PeerServer( this );
 		taskManager = new TaskManager();
-		updateManager = new ServiceProductManager( this );
+		productManager = new ServiceProductManager( this );
 	}
 
 	/**
@@ -212,7 +213,7 @@ public abstract class Service extends Agent implements Product {
 	}
 
 	public ServiceProductManager getProductManager() {
-		return updateManager;
+		return productManager;
 	}
 
 	public File getProgramDataFolder() {
@@ -320,13 +321,20 @@ public abstract class Service extends Agent implements Product {
 		taskManager.loadSettings( settings.getNode( TASK_MANAGER_SETTINGS_PATH ) );
 		taskManager.startAndWait();
 
-		// Start the update manager.
-		updateManager.startAndWait();
+		// Start the product manager.
+		productManager.startAndWait();
+
+		// Register the modules.
+		registerAllModules();
 
 		startService( parameters );
+
+		// Allocate the modules.
+		createAllModules();
+
 		Log.write( getName() + " started." );
 
-		if( updateManager.getCheckOption() == ServiceProductManager.CheckOption.STARTUP ) updateManager.checkForUpdates();
+		if( productManager.getCheckOption() == ServiceProductManager.CheckOption.STARTUP ) productManager.checkForUpdates();
 	}
 
 	/**
@@ -336,9 +344,16 @@ public abstract class Service extends Agent implements Product {
 	protected final void stopAgent() throws Exception {
 		Log.write( Log.DEBUG, getName() + " stopping..." );
 		if( socket != null ) socket.close();
+
+		// Deallocate the modules.
+		destroyAllModules();
+
 		stopService( parameters );
 
-		updateManager.stopAndWait();
+		// Unregister modules.
+		unregisterAllModules();
+
+		productManager.stopAndWait();
 
 		taskManager.stopAndWait();
 		taskManager.saveSettings( settings.getNode( TASK_MANAGER_SETTINGS_PATH ) );
@@ -471,7 +486,7 @@ public abstract class Service extends Agent implements Product {
 			}
 
 			// The logic is somewhat complex, the nested if statements help clarify it.
-			if( updateManager.getCheckOption() != ServiceProductManager.CheckOption.DISABLED ) {
+			if( productManager.getCheckOption() != ServiceProductManager.CheckOption.DISABLED ) {
 				if( ( parameters.isSet( ServiceFlag.UPDATE ) & parameters.isTrue( ServiceFlag.UPDATE ) ) | ( !parameters.isSet( ServiceFlag.UPDATE ) & !peer ) ) {
 					if( update() && !parameters.isSet( ServiceFlag.DEVMODE ) ) {
 						// The program should be allowed, but not forced, to exit at this point.
@@ -616,8 +631,8 @@ public abstract class Service extends Agent implements Product {
 		Authenticator.setDefault( new ServiceProxyAuthenticator( this ) );
 		ProxySelector.setDefault( new ServiceProxySelector( this ) );
 
-		updateManager.loadSettings( settings.getNode( "update" ) );
-		updateManager.setUpdaterPath( new File( getHomeFolder(), ServiceProductManager.UPDATER_JAR_NAME ) );
+		productManager.loadSettings( settings.getNode( "update" ) );
+		productManager.setUpdaterPath( new File( getHomeFolder(), ServiceProductManager.UPDATER_JAR_NAME ) );
 	}
 
 	private final void configureNetworkSettings() {
@@ -731,11 +746,11 @@ public abstract class Service extends Agent implements Product {
 		Log.write( Log.DEBUG, "Checking for staged updates..." );
 
 		// If updates are staged, apply them.
-		if( updateManager.areUpdatesStaged() ) {
+		if( productManager.areUpdatesStaged() ) {
 			Log.write( "Staged updates detected." );
 			boolean result = false;
 			try {
-				result = updateManager.applyStagedUpdates();
+				result = productManager.applyStagedUpdates();
 			} catch( Exception exception ) {
 				Log.write( exception );
 			}
@@ -743,6 +758,62 @@ public abstract class Service extends Agent implements Product {
 		} else {
 			Log.write( Log.TRACE, "No staged updates detected." );
 			return false;
+		}
+	}
+
+	/**
+	 * Register the modules. This allows the modules to set any values that may be
+	 * needed while the workareas are being generated.
+	 */
+	private void registerAllModules() {
+		for( Module module : productManager.getModules() ) {
+			try {
+				if( getProductManager().isEnabled( module.getCard() ) ) module.register();
+			} catch( Throwable throwable ) {
+				Log.write( throwable );
+			}
+		}
+	}
+
+	/**
+	 * Create the modules. At this point a module may start referring to other
+	 * registered modules.
+	 */
+	private void createAllModules() {
+		for( Module module : productManager.getModules() ) {
+			try {
+				if( getProductManager().isEnabled( module.getCard() ) ) module.create();
+			} catch( Throwable throwable ) {
+				Log.write( throwable );
+			}
+		}
+	}
+
+	/**
+	 * Destroy the module. At this point a module may still refer to the
+	 * application frame, workareas, and other registered modules.
+	 */
+	private void destroyAllModules() {
+		for( Module module : productManager.getModules() ) {
+			try {
+				if( getProductManager().isEnabled( module.getCard() ) ) module.destroy();
+			} catch( Throwable throwable ) {
+				Log.write( throwable );
+			}
+		}
+	}
+
+	/**
+	 * Unregister the modules. This allows the modules to clean up any resources
+	 * that may have been allocated during program operation.
+	 */
+	private void unregisterAllModules() {
+		for( Module module : productManager.getModules() ) {
+			try {
+				if( getProductManager().isEnabled( module.getCard() ) ) module.unregister();
+			} catch( Throwable throwable ) {
+				Log.write( throwable );
+			}
 		}
 	}
 
