@@ -490,7 +490,7 @@ public abstract class Service extends Agent implements Product {
 			// The logic is somewhat complex, the nested if statements help clarify it.
 			if( productManager.getCheckOption() != ServiceProductManager.CheckOption.DISABLED ) {
 				if( ( parameters.isSet( ServiceFlag.UPDATE ) & parameters.isTrue( ServiceFlag.UPDATE ) ) | ( !parameters.isSet( ServiceFlag.UPDATE ) & !peer ) ) {
-					if( update() && !parameters.isSet( ServiceFlag.DEVMODE ) ) {
+					if( update() ) {
 						// The program should be allowed, but not forced, to exit at this point.
 						Log.write( "Program exiting to apply updates." );
 						return;
@@ -686,10 +686,9 @@ public abstract class Service extends Agent implements Product {
 				socket = new Socket( host, port );
 				peer = socket.getInetAddress().getHostAddress() + ":" + socket.getPort();
 				
-				// NEXT Fix the following line. I breaks a test.
-				if( parameters.size() == 0 ) Log.write( getName() + " already running." );
-				
+				Log.write( getName() + " already running." );
 				Log.write( Log.TRACE, "Connected to peer: " + peer );
+				
 				ObjectOutputStream output = new ObjectOutputStream( socket.getOutputStream() );
 				output.writeObject( parameters.getCommands() );
 				output.flush();

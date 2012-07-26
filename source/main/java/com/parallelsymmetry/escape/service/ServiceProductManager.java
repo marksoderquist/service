@@ -309,10 +309,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 		Set<ProductCard> newPacks = new HashSet<ProductCard>();
 		if( !isEnabled() ) return newPacks;
 
-		Log.write( Log.TRACE, "Checking for updates..." );
-
 		Set<ProductCard> oldPacks = getProducts();
-
 		Map<ProductCard, Future<Descriptor>> futures = new HashMap<ProductCard, Future<Descriptor>>();
 		for( ProductCard oldPack : oldPacks ) {
 			URI uri = getResolvedUpdateUri( oldPack.getSourceUri() );
@@ -331,12 +328,6 @@ public class ServiceProductManager extends Agent implements Persistent {
 			if( future == null ) continue;
 			Descriptor descriptor = future.get();
 			ProductCard newPack = new ProductCard( descriptor.getSource(), descriptor );
-
-			// Handle the prefix command line flag.
-			//			boolean development = service.getParameters().isSet( ServiceFlag.DEVMODE );
-			//			if( development && oldPack.getArtifact().equals( Service.DEVL_PREFIX + newPack.getArtifact() ) ) {
-			//				newPack.setArtifact( Service.DEVL_PREFIX + newPack.getArtifact() );
-			//			}
 
 			// Validate the pack key.
 			if( !oldPack.getProductKey().equals( newPack.getProductKey() ) ) {
@@ -499,99 +490,91 @@ public class ServiceProductManager extends Agent implements Persistent {
 	public boolean applyStagedUpdates() throws Exception {
 		if( !isEnabled() || updates.size() == 0 ) return false;
 
-		if( service.getParameters().isSet( ServiceFlag.DEVMODE ) ) {
-			Log.write( Log.TRACE, "Running in development. Updates cannot be applied and will be cleaned up." );
+		Log.write( Log.DEBUG, "Starting update process..." );
+		// Copy the updater to a temporary location.
+		File updaterSource = updater;
+		File updaterTarget = new File( FileUtil.TEMP_FOLDER, service.getCard().getArtifact() + "-updater.jar" );
 
-			for( StagedUpdate update : updates ) {
-				update.getSource().delete();
-			}
-		} else {
-			Log.write( Log.DEBUG, "Starting update process..." );
-			// Copy the updater to a temporary location.
-			File updaterSource = updater;
-			File updaterTarget = new File( FileUtil.TEMP_FOLDER, service.getCard().getArtifact() + "-updater.jar" );
+		if( updaterSource == null || !updaterSource.exists() ) throw new RuntimeException( "Update library not found: " + updaterSource );
+		if( !FileUtil.copy( updaterSource, updaterTarget ) ) throw new RuntimeException( "Update library not staged: " + updaterTarget );
 
-			if( updaterSource == null || !updaterSource.exists() ) throw new RuntimeException( "Update library not found: " + updaterSource );
-			if( !FileUtil.copy( updaterSource, updaterTarget ) ) throw new RuntimeException( "Update library not staged: " + updaterTarget );
-
-			// Check if process elevation is necessary.
-			boolean elevate = false;
-			for( StagedUpdate update : updates ) {
-				elevate |= !FileUtil.isWritable( update.getTarget() );
-			}
-
-			// Start the updater in a new JVM.
-			ProcessBuilder builder = new ProcessBuilder();
-			builder.directory( updaterTarget.getParentFile() );
-
-			builder.command().add( OperatingSystem.getJavaExecutableName() );
-			builder.command().add( "-jar" );
-			builder.command().add( updaterTarget.toString() );
-
-			// If file logging is enabled append the update process to the log.
-			Parameters parameters = service.getParameters();
-			if( parameters.isSet( LogFlag.LOG_FILE ) ) {
-				builder.command().add( LogFlag.LOG_FILE );
-				builder.command().add( new File( parameters.get( LogFlag.LOG_FILE ) ).getAbsolutePath() );
-				if( parameters.isTrue( LogFlag.LOG_FILE_APPEND ) ) builder.command().add( LogFlag.LOG_FILE_APPEND );
-			}
-
-			// Add the updates.
-			builder.command().add( UpdaterFlag.UPDATE );
-			for( StagedUpdate update : updates ) {
-				builder.command().add( update.getSource().getAbsolutePath() );
-				builder.command().add( update.getTarget().getAbsolutePath() );
-			}
-
-			// Add the launch parameters.
-			builder.command().add( UpdaterFlag.LAUNCH );
-			builder.command().add( OperatingSystem.getJavaExecutableName() );
-
-			// Add the VM parameters to the commands.
-			RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
-			List<String> commands = runtimeBean.getInputArguments();
-			for( String command : commands ) {
-				if( command.startsWith( Parameters.SINGLE ) ) {
-					builder.command().add( "\\" + command );
-				} else {
-					builder.command().add( command );
-				}
-			}
-
-			// Add the classpath information.
-			List<URI> uris = JavaUtil.parseClasspath( runtimeBean.getClassPath() );
-			if( uris.size() == 1 && uris.get( 0 ).getPath().endsWith( ".jar" ) ) {
-				builder.command().add( "\\-jar" );
-			} else {
-				builder.command().add( "\\-cp" );
-			}
-			builder.command().add( runtimeBean.getClassPath() );
-
-			// Add the original command line parameters.
-			for( String command : service.getParameters().getCommands() ) {
-				if( command.startsWith( Parameters.SINGLE ) ) {
-					builder.command().add( "\\" + command );
-				} else {
-					builder.command().add( command );
-				}
-			}
-
-			builder.command().add( "\\" + ServiceFlag.UPDATE );
-			builder.command().add( "false" );
-
-			builder.command().add( UpdaterFlag.LAUNCH_HOME );
-			builder.command().add( System.getProperty( "user.dir" ) );
-
-			// Configure the builder with elevated privilege commands.
-			if( elevate ) OperatingSystem.elevateProcessBuilder( builder );
-
-			// Print the process commands.
-			Log.write( Log.DEBUG, "Launching: " + TextUtil.toString( builder.command(), " " ) );
-
-			// Start the process.
-			builder.start();
-			Log.write( Log.TRACE, "Update process started." );
+		// Check if process elevation is necessary.
+		boolean elevate = false;
+		for( StagedUpdate update : updates ) {
+			elevate |= !FileUtil.isWritable( update.getTarget() );
 		}
+
+		// Start the updater in a new JVM.
+		ProcessBuilder builder = new ProcessBuilder();
+		builder.directory( updaterTarget.getParentFile() );
+
+		builder.command().add( OperatingSystem.getJavaExecutableName() );
+		builder.command().add( "-jar" );
+		builder.command().add( updaterTarget.toString() );
+
+		// If file logging is enabled append the update process to the log.
+		Parameters parameters = service.getParameters();
+		if( parameters.isSet( LogFlag.LOG_FILE ) ) {
+			builder.command().add( LogFlag.LOG_FILE );
+			builder.command().add( new File( parameters.get( LogFlag.LOG_FILE ) ).getAbsolutePath() );
+			if( parameters.isTrue( LogFlag.LOG_FILE_APPEND ) ) builder.command().add( LogFlag.LOG_FILE_APPEND );
+		}
+
+		// Add the updates.
+		builder.command().add( UpdaterFlag.UPDATE );
+		for( StagedUpdate update : updates ) {
+			builder.command().add( update.getSource().getAbsolutePath() );
+			builder.command().add( update.getTarget().getAbsolutePath() );
+		}
+
+		// Add the launch parameters.
+		builder.command().add( UpdaterFlag.LAUNCH );
+		builder.command().add( OperatingSystem.getJavaExecutableName() );
+
+		// Add the VM parameters to the commands.
+		RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
+		List<String> commands = runtimeBean.getInputArguments();
+		for( String command : commands ) {
+			if( command.startsWith( Parameters.SINGLE ) ) {
+				builder.command().add( "\\" + command );
+			} else {
+				builder.command().add( command );
+			}
+		}
+
+		// Add the classpath information.
+		List<URI> uris = JavaUtil.parseClasspath( runtimeBean.getClassPath() );
+		if( uris.size() == 1 && uris.get( 0 ).getPath().endsWith( ".jar" ) ) {
+			builder.command().add( "\\-jar" );
+		} else {
+			builder.command().add( "\\-cp" );
+		}
+		builder.command().add( runtimeBean.getClassPath() );
+
+		// Add the original command line parameters.
+		for( String command : service.getParameters().getCommands() ) {
+			if( command.startsWith( Parameters.SINGLE ) ) {
+				builder.command().add( "\\" + command );
+			} else {
+				builder.command().add( command );
+			}
+		}
+
+		builder.command().add( "\\" + ServiceFlag.UPDATE );
+		builder.command().add( "false" );
+
+		builder.command().add( UpdaterFlag.LAUNCH_HOME );
+		builder.command().add( System.getProperty( "user.dir" ) );
+
+		// Configure the builder with elevated privilege commands.
+		if( elevate ) OperatingSystem.elevateProcessBuilder( builder );
+
+		// Print the process commands.
+		Log.write( Log.DEBUG, "Launching: " + TextUtil.toString( builder.command(), " " ) );
+
+		// Start the process.
+		builder.start();
+		Log.write( Log.TRACE, "Update process started." );
 
 		// Remove the updates settings.
 		updates.clear();
@@ -690,7 +673,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 		return clazz;
 	}
-	
+
 	public void addProductManagerListener( ProductManagerListener listener ) {
 		listeners.add( listener );
 	}
@@ -983,24 +966,24 @@ public class ServiceProductManager extends Agent implements Persistent {
 		 * parent class loader first then delegate to the module class loader if the
 		 * class could not be found.
 		 */
-//		@Override
-//		public Class<?> loadClass( final String name ) throws ClassNotFoundException {
-//			Class<?> type = null;
-//
-//			if( type == null ) {
-//				try {
-//					type = parent.loadClass( name );
-//				} catch( Throwable error ) {
-//					// Intentionally ignore exception.
-//				}
-//			}
-//
-//			if( type == null ) type = super.loadClass( name );
-//
-//			if( type != null ) resolveClass( type );
-//
-//			return type;
-//		}
+		@Override
+		public Class<?> loadClass( final String name ) throws ClassNotFoundException {
+			Class<?> type = null;
+
+			if( type == null ) {
+				try {
+					type = parent.loadClass( name );
+				} catch( Throwable error ) {
+					// Intentionally ignore exception.
+				}
+			}
+
+			if( type == null ) type = super.loadClass( name );
+
+			if( type != null ) resolveClass( type );
+
+			return type;
+		}
 
 		/**
 		 * Used to find native library files used with modules. This allows a module
