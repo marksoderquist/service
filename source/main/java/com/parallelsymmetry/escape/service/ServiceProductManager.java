@@ -27,6 +27,7 @@ import com.parallelsymmetry.escape.product.PackProvider;
 import com.parallelsymmetry.escape.product.ProductCard;
 import com.parallelsymmetry.escape.product.ProductCatalog;
 import com.parallelsymmetry.escape.product.ProductResource;
+import com.parallelsymmetry.escape.service.ProductManagerEvent.Type;
 import com.parallelsymmetry.escape.service.task.DescriptorDownloadTask;
 import com.parallelsymmetry.escape.service.task.DownloadTask;
 import com.parallelsymmetry.escape.updater.UpdaterFlag;
@@ -97,6 +98,8 @@ public class ServiceProductManager extends Agent implements Persistent {
 	private static final String APPLY = "apply";
 
 	private static final String UPDATES_SETTINGS_PATH = PRODUCT_MANAGER_SETTINGS_PATH + "/updates";
+
+	private static final String REMOVES_SETTINGS_PATH = PRODUCT_MANAGER_SETTINGS_PATH + "/removes";
 
 	private static final String PRODUCT_SETTINGS_PATH = "products";
 
@@ -216,7 +219,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 		if( state == null ) return;
 
 		state.updatable = updatable;
-		fireProductManagerEvent( new ProductManagerEvent( this, ProductManagerEvent.Type.PRODUCT_CHANGED, card ) );
+		fireProductManagerEvent( new ProductManagerEvent( this, Type.PRODUCT_CHANGED, card ) );
 	}
 
 	public boolean isRemovable( ProductCard card ) {
@@ -229,7 +232,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 		if( state == null ) return;
 
 		state.removable = removable;
-		fireProductManagerEvent( new ProductManagerEvent( this, ProductManagerEvent.Type.PRODUCT_CHANGED, card ) );
+		fireProductManagerEvent( new ProductManagerEvent( this, Type.PRODUCT_CHANGED, card ) );
 	}
 
 	public boolean isEnabled( ProductCard card ) {
@@ -238,7 +241,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 	public void setEnabled( ProductCard card, boolean enabled ) {
 		getProductSettings( card ).putBoolean( PRODUCT_ENABLED_KEY, enabled );
-		fireProductManagerEvent( new ProductManagerEvent( this, enabled ? ProductManagerEvent.Type.PRODUCT_ENABLED : ProductManagerEvent.Type.PRODUCT_DISABLED, card ) );
+		fireProductManagerEvent( new ProductManagerEvent( this, enabled ? Type.PRODUCT_ENABLED : Type.PRODUCT_DISABLED, card ) );
 	}
 
 	/**
@@ -385,6 +388,11 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 			// Install all the resource files to the install folder.
 			copyProductResources( resources, installFolder );
+
+			addProduct( card, true, true, true );
+			fireProductManagerEvent( new ProductManagerEvent( this, Type.PRODUCT_INSTALLED, card ) );
+			
+			// NEXT If a product is marked for removal, remove it from the list.
 		}
 	}
 
@@ -392,15 +400,22 @@ public class ServiceProductManager extends Agent implements Persistent {
 		Log.write( Log.TRACE, "Number of products to remove: " + cards.size() );
 
 		// Remove the products.
+		Set<InstalledProduct> removedProducts = new HashSet<InstalledProduct>();
 		for( ProductCard card : cards ) {
 			File installFolder = getProductInstallFolder( card );
 
 			Log.write( Log.TRACE, "Remove product from: " + installFolder );
 
 			// Remove all the resource files from the install folder.
-			// FIXME The product install folder cannot be delete while the classloader is active.
-			FileUtil.delete( installFolder );
+			removedProducts.add( new InstalledProduct( installFolder ) );
+
+			removeProduct( card );
+			fireProductManagerEvent( new ProductManagerEvent( this, Type.PRODUCT_REMOVED, card ) );
 		}
+
+		Set<InstalledProduct> products = service.getSettings().getSet( REMOVES_SETTINGS_PATH, new HashSet<InstalledProduct>() );
+		products.addAll( removedProducts );
+		service.getSettings().putSet( REMOVES_SETTINGS_PATH, products );
 	}
 
 	public File getProductInstallFolder( ProductCard card ) {
@@ -710,10 +725,10 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 	@Override
 	protected void startAgent() throws Exception {
-		if( !isEnabled() ) return;
+		cleanRemovedProducts();
 
 		timer = new Timer();
-		scheduleCheckUpdateTask( new UpdateCheckTask( service ) );
+		if( isEnabled() ) scheduleCheckUpdateTask( new UpdateCheckTask( service ) );
 
 		// Define the product folders.
 		homeModuleFolder = new File( service.getHomeFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
@@ -725,8 +740,6 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 	@Override
 	protected void stopAgent() throws Exception {
-		if( !isEnabled() ) return;
-
 		if( timer != null ) timer.cancel();
 	}
 
@@ -750,6 +763,15 @@ public class ServiceProductManager extends Agent implements Persistent {
 		packs.putAll( products );
 
 		return packs;
+	}
+
+	private void cleanRemovedProducts() {
+		// Check for products marked for removal and remove the files.
+		Set<InstalledProduct> products = service.getSettings().getSet( REMOVES_SETTINGS_PATH, new HashSet<InstalledProduct>() );
+		for( InstalledProduct product : products ) {
+			FileUtil.delete( product.getTarget() );
+		}
+		service.getSettings().removeNode( REMOVES_SETTINGS_PATH );
 	}
 
 	private URI getResolvedUpdateUri( URI uri ) {
@@ -1040,6 +1062,43 @@ public class ServiceProductManager extends Agent implements Persistent {
 		@Override
 		public void saveSettings( Settings settings ) {
 			settings.put( "source", source.getPath() );
+			settings.put( "target", target.getPath() );
+		}
+
+	}
+
+	/**
+	 * NOTE: This class is Persistent and changing the package will most likely
+	 * result in a ClassNotFoundException being thrown at runtime.
+	 * 
+	 * @author SoderquistMV
+	 */
+	private static final class InstalledProduct implements Persistent {
+
+		private File target;
+
+		/*
+		 * This constructor is used by the settings API via reflection.
+		 */
+		@SuppressWarnings( "unused" )
+		public InstalledProduct() {}
+
+		public InstalledProduct( File target ) {
+			this.target = target;
+		}
+
+		public File getTarget() {
+			return target;
+		}
+
+		@Override
+		public void loadSettings( Settings settings ) {
+			String targetPath = settings.get( "target", null );
+			target = targetPath == null ? null : new File( targetPath );
+		}
+
+		@Override
+		public void saveSettings( Settings settings ) {
 			settings.put( "target", target.getPath() );
 		}
 
