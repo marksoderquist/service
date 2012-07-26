@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+
+<product version="1">
+	<group>com.parallelsymmetry.escape.module</group>
+	<artifact>mock</artifact>
+	<version>3.2.1</version>
+	<timestamp>2011-09-01 11:27:54</timestamp>
+
+	<name>Mock Module</name>
+	<provider>Parallel Symmetry</provider>
+	<inception>2010</inception>
+
+	<copyright>
+		<notice>All rights reserved.</notice>
+	</copyright>
+
+	<license>
+		<summary>Escape Mock Module comes with ABSOLUTELY NO WARRANTY. This is open
+			software, and you are welcome to redistribute it under certain
+			conditions.
+		</summary>
+	</license>
+
+	<resources>
+		<java version="1.6"/>
+		<jar name="mock" href="mock.jar"/>
+		<module class="com.parallelsymmetry.escape.module.MockModule"/>
+	</resources>
+
+</product>
