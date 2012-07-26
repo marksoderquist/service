@@ -215,6 +215,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 	}
 
 	public void setUpdatable( ProductCard card, boolean updatable ) {
+		if( isUpdatable( card ) == updatable ) return;
 		ProductState state = productStates.get( card.getProductKey() );
 		if( state == null ) return;
 
@@ -228,6 +229,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 	}
 
 	public void setRemovable( ProductCard card, boolean removable ) {
+		if( isRemovable( card ) == removable ) return;
 		ProductState state = productStates.get( card.getProductKey() );
 		if( state == null ) return;
 
@@ -240,8 +242,42 @@ public class ServiceProductManager extends Agent implements Persistent {
 	}
 
 	public void setEnabled( ProductCard card, boolean enabled ) {
+		if( isEnabled( card ) == enabled ) return;
+
+		// NEXT Combine Product and Module classes?
+		Module module = modules.get( card.getProductKey() );
+		if( module != null ) {
+			if( enabled ) {
+				enableModule( module );
+			} else {
+				disableModule( module );
+			}
+		}
+
 		getProductSettings( card ).putBoolean( PRODUCT_ENABLED_KEY, enabled );
 		fireProductManagerEvent( new ProductManagerEvent( this, enabled ? Type.PRODUCT_ENABLED : Type.PRODUCT_DISABLED, card ) );
+	}
+
+	private void enableModule( Module module ) {
+		loaders.add( module.getClass().getClassLoader() );
+
+		try {
+			module.register();
+			module.create();
+		} catch( Throwable throwable ) {
+			Log.write( throwable );
+		}
+	}
+
+	private void disableModule( Module module ) {
+		try {
+			module.destroy();
+			module.unregister();
+		} catch( Throwable throwable ) {
+			Log.write( throwable );
+		}
+
+		loaders.remove( module.getClass().getClassLoader() );
 	}
 
 	/**
@@ -391,8 +427,11 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 			addProduct( card, true, true, true );
 			fireProductManagerEvent( new ProductManagerEvent( this, Type.PRODUCT_INSTALLED, card ) );
-			
-			// NEXT If a product is marked for removal, remove it from the list.
+
+			// If a product is marked for removal, remove it from the list.
+			Set<InstalledProduct> products = service.getSettings().getSet( REMOVES_SETTINGS_PATH, new HashSet<InstalledProduct>() );
+			products.remove( card );
+			service.getSettings().putSet( REMOVES_SETTINGS_PATH, products );
 		}
 	}
 
