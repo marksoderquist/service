@@ -1,8 +1,7 @@
-package com.parallelsymmetry.escape.service;
+package com.parallelsymmetry.escape.product;
 
 import java.util.EventObject;
 
-import com.parallelsymmetry.escape.product.ProductCard;
 
 public class ProductManagerEvent extends EventObject {
 
@@ -16,7 +15,7 @@ public class ProductManagerEvent extends EventObject {
 
 	private ProductCard card;
 
-	public ProductManagerEvent( ServiceProductManager manager, Type type, ProductCard card ) {
+	public ProductManagerEvent( ProductManager manager, Type type, ProductCard card ) {
 		super( manager );
 		this.type = type;
 		this.card = card;

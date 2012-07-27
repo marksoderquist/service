@@ -32,7 +32,8 @@ import javax.swing.Icon;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
-import com.parallelsymmetry.escape.product.Module;
+import com.parallelsymmetry.escape.product.ProductManager;
+import com.parallelsymmetry.escape.product.ProductModule;
 import com.parallelsymmetry.escape.product.Product;
 import com.parallelsymmetry.escape.product.ProductCard;
 import com.parallelsymmetry.escape.product.ProductCardException;
@@ -101,7 +102,7 @@ public abstract class Service extends Agent implements Product {
 
 	private TaskManager taskManager;
 
-	protected ServiceProductManager productManager;
+	protected ProductManager productManager;
 
 	/**
 	 * Construct the service with the default descriptor path.
@@ -164,7 +165,7 @@ public abstract class Service extends Agent implements Product {
 
 		peerServer = new PeerServer( this );
 		taskManager = new TaskManager();
-		productManager = new ServiceProductManager( this );
+		productManager = new ProductManager( this );
 	}
 
 	/**
@@ -214,7 +215,7 @@ public abstract class Service extends Agent implements Product {
 		return taskManager;
 	}
 
-	public ServiceProductManager getProductManager() {
+	public ProductManager getProductManager() {
 		return productManager;
 	}
 
@@ -308,6 +309,21 @@ public abstract class Service extends Agent implements Product {
 		return messages;
 	}
 
+	public void serviceRestart() {
+		// Register a shutdown hook to restart the application.
+		restartShutdownHook = new RestartShutdownHook( this );
+		Runtime.getRuntime().addShutdownHook( restartShutdownHook );
+	
+		// Request the program stop.
+		if( !requestStop() ) {
+			Runtime.getRuntime().removeShutdownHook( restartShutdownHook );
+			return;
+		}
+	
+		// The shutdown hook should restart the application.
+		Log.write( Log.INFO, "Restarting..." );
+	}
+
 	/**
 	 * This method should only be called through the processParameters() method.
 	 */
@@ -336,7 +352,7 @@ public abstract class Service extends Agent implements Product {
 
 		Log.write( getName() + " started." );
 
-		if( productManager.getCheckOption() == ServiceProductManager.CheckOption.STARTUP ) productManager.checkForUpdates();
+		if( productManager.getCheckOption() == ProductManager.CheckOption.STARTUP ) productManager.checkForUpdates();
 	}
 
 	/**
@@ -375,21 +391,6 @@ public abstract class Service extends Agent implements Product {
 		return true;
 	}
 
-	protected void serviceRestart() {
-		// Register a shutdown hook to restart the application.
-		restartShutdownHook = new RestartShutdownHook( this );
-		Runtime.getRuntime().addShutdownHook( restartShutdownHook );
-
-		// Request the program stop.
-		if( !requestStop() ) {
-			Runtime.getRuntime().removeShutdownHook( restartShutdownHook );
-			return;
-		}
-
-		// The shutdown hook should restart the application.
-		Log.write( Log.INFO, "Restarting..." );
-	}
-
 	/**
 	 * Override this method and return a set of valid command line flags if you
 	 * want the service to validate command line flags. By default this method
@@ -400,7 +401,7 @@ public abstract class Service extends Agent implements Product {
 	protected Set<String> getValidCommandLineFlags() {
 		return null;
 	}
-
+	
 	protected abstract void startService( Parameters parameters ) throws Exception;
 
 	protected abstract void process( Parameters parameters ) throws Exception;
@@ -488,7 +489,7 @@ public abstract class Service extends Agent implements Product {
 			}
 
 			// The logic is somewhat complex, the nested if statements help clarify it.
-			if( productManager.getCheckOption() != ServiceProductManager.CheckOption.DISABLED ) {
+			if( productManager.getCheckOption() != ProductManager.CheckOption.DISABLED ) {
 				if( ( parameters.isSet( ServiceFlag.UPDATE ) & parameters.isTrue( ServiceFlag.UPDATE ) ) | ( !parameters.isSet( ServiceFlag.UPDATE ) & !peer ) ) {
 					if( update() ) {
 						// The program should be allowed, but not forced, to exit at this point.
@@ -593,7 +594,7 @@ public abstract class Service extends Agent implements Product {
 
 		Log.write( Log.TRACE, "Home: ", home );
 
-		card.setTargetFolder( home );
+		card.setCodebase( home.toURI() );
 	}
 
 	private final void configureArtifact( Parameters parameters ) {
@@ -634,7 +635,7 @@ public abstract class Service extends Agent implements Product {
 		ProxySelector.setDefault( new ServiceProxySelector( this ) );
 
 		productManager.loadSettings( settings.getNode( "update" ) );
-		productManager.setUpdaterPath( new File( getHomeFolder(), ServiceProductManager.UPDATER_JAR_NAME ) );
+		productManager.setUpdaterPath( new File( getHomeFolder(), ProductManager.UPDATER_JAR_NAME ) );
 	}
 
 	private final void configureNetworkSettings() {
@@ -770,7 +771,7 @@ public abstract class Service extends Agent implements Product {
 	 * needed while the workareas are being generated.
 	 */
 	private void registerAllModules() {
-		for( Module module : productManager.getModules() ) {
+		for( ProductModule module : productManager.getModules() ) {
 			try {
 				if( getProductManager().isEnabled( module.getCard() ) ) module.register();
 			} catch( Throwable throwable ) {
@@ -784,7 +785,7 @@ public abstract class Service extends Agent implements Product {
 	 * registered modules.
 	 */
 	private void createAllModules() {
-		for( Module module : productManager.getModules() ) {
+		for( ProductModule module : productManager.getModules() ) {
 			try {
 				if( getProductManager().isEnabled( module.getCard() ) ) module.create();
 			} catch( Throwable throwable ) {
@@ -798,7 +799,7 @@ public abstract class Service extends Agent implements Product {
 	 * application frame, workareas, and other registered modules.
 	 */
 	private void destroyAllModules() {
-		for( Module module : productManager.getModules() ) {
+		for( ProductModule module : productManager.getModules() ) {
 			try {
 				if( getProductManager().isEnabled( module.getCard() ) ) module.destroy();
 			} catch( Throwable throwable ) {
@@ -812,7 +813,7 @@ public abstract class Service extends Agent implements Product {
 	 * that may have been allocated during program operation.
 	 */
 	private void unregisterAllModules() {
-		for( Module module : productManager.getModules() ) {
+		for( ProductModule module : productManager.getModules() ) {
 			try {
 				if( getProductManager().isEnabled( module.getCard() ) ) module.unregister();
 			} catch( Throwable throwable ) {

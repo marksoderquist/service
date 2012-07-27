@@ -1,4 +1,4 @@
-package com.parallelsymmetry.escape.service;
+package com.parallelsymmetry.escape.product;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,12 +22,10 @@ import java.util.concurrent.Future;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import com.parallelsymmetry.escape.product.Module;
-import com.parallelsymmetry.escape.product.PackProvider;
-import com.parallelsymmetry.escape.product.ProductCard;
-import com.parallelsymmetry.escape.product.ProductCatalog;
-import com.parallelsymmetry.escape.product.ProductResource;
-import com.parallelsymmetry.escape.service.ProductManagerEvent.Type;
+import com.parallelsymmetry.escape.product.ProductManagerEvent.Type;
+import com.parallelsymmetry.escape.service.ProductManagerListener;
+import com.parallelsymmetry.escape.service.Service;
+import com.parallelsymmetry.escape.service.ServiceFlag;
 import com.parallelsymmetry.escape.service.task.DescriptorDownloadTask;
 import com.parallelsymmetry.escape.service.task.DownloadTask;
 import com.parallelsymmetry.escape.updater.UpdaterFlag;
@@ -63,7 +61,7 @@ import com.parallelsymmetry.escape.utility.setting.Settings;
  * @author SoderquistMV
  */
 
-public class ServiceProductManager extends Agent implements Persistent {
+public class ProductManager extends Agent implements Persistent {
 
 	public enum CheckOption {
 		DISABLED, MANUAL, STARTUP, INTERVAL, SCHEDULE
@@ -85,11 +83,11 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 	public static final String MODULE_RESOURCE_CLASS_NAME_XPATH = ProductCard.PRODUCT_PATH + "/resources/module/@class";
 
-	static final String PRODUCT_MANAGER_SETTINGS_PATH = "manager/product";
+	public static final String UPDATER_JAR_NAME = "updater.jar";
 
-	static final String UPDATE_FOLDER_NAME = "updates";
+	public static final String PRODUCT_MANAGER_SETTINGS_PATH = "manager/product";
 
-	static final String UPDATER_JAR_NAME = "updater.jar";
+	public static final String UPDATE_FOLDER_NAME = "updates";
 
 	private static final String CHECK = "check";
 
@@ -101,7 +99,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 	private static final String REMOVES_SETTINGS_PATH = PRODUCT_MANAGER_SETTINGS_PATH + "/removes";
 
-	private static final String PRODUCT_SETTINGS_PATH = "products";
+	private static final String PRODUCT_SETTINGS_PATH = "productCards";
 
 	private static final String PRODUCT_ENABLED_KEY = "enabled";
 
@@ -109,7 +107,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 	private Set<ProductCatalog> catalogs;
 
-	private Map<String, Module> modules;
+	private Map<String, ProductModule> modules;
 
 	private Set<ClassLoader> loaders;
 
@@ -129,7 +127,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 	private Set<StagedUpdate> updates;
 
-	private Map<String, ProductCard> products;
+	private Map<String, ProductCard> productCards;
 
 	private Map<String, ProductState> productStates;
 
@@ -137,13 +135,13 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 	private Set<ProductManagerListener> listeners;
 
-	public ServiceProductManager( Service service ) {
+	public ProductManager( Service service ) {
 		this.service = service;
 		catalogs = new CopyOnWriteArraySet<ProductCatalog>();
-		modules = new ConcurrentHashMap<String, Module>();
+		modules = new ConcurrentHashMap<String, ProductModule>();
 		loaders = new CopyOnWriteArraySet<ClassLoader>();
 		updates = new CopyOnWriteArraySet<StagedUpdate>();
-		products = new ConcurrentHashMap<String, ProductCard>();
+		productCards = new ConcurrentHashMap<String, ProductCard>();
 		productStates = new ConcurrentHashMap<String, ProductState>();
 		listeners = new CopyOnWriteArraySet<ProductManagerListener>();
 
@@ -181,31 +179,31 @@ public class ServiceProductManager extends Agent implements Persistent {
 		return new HashSet<ProductCatalog>( catalogs );
 	}
 
-	public Set<Module> getModules() {
-		return new HashSet<Module>( modules.values() );
+	public Set<ProductModule> getModules() {
+		return new HashSet<ProductModule>( modules.values() );
 	}
 
-	public Set<ProductCard> getProducts() {
-		return new HashSet<ProductCard>( products.values() );
+	public Set<ProductCard> getProductCards() {
+		return new HashSet<ProductCard>( productCards.values() );
 	}
 
 	public void addProduct( ProductCard card, boolean updatable, boolean removable, boolean enabled ) {
-		products.put( card.getProductKey(), card );
+		productCards.put( card.getProductKey(), card );
 		productStates.put( card.getProductKey(), new ProductState( updatable, removable ) );
 		setEnabled( card, enabled );
 	}
 
 	public void removeProduct( ProductCard card ) {
-		products.remove( card.getProductKey() );
+		productCards.remove( card.getProductKey() );
 		productStates.remove( card.getProductKey() );
 	}
 
 	public boolean isInstalled( ProductCard card ) {
-		return products.get( card.getProductKey() ) != null;
+		return productCards.get( card.getProductKey() ) != null;
 	}
 
 	public boolean isReleaseInstalled( ProductCard card ) {
-		ProductCard internal = products.get( card.getProductKey() );
+		ProductCard internal = productCards.get( card.getProductKey() );
 		return internal != null && internal.getRelease().equals( card.getRelease() );
 	}
 
@@ -215,6 +213,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 	}
 
 	public void setUpdatable( ProductCard card, boolean updatable ) {
+		if( isUpdatable( card ) == updatable ) return;
 		ProductState state = productStates.get( card.getProductKey() );
 		if( state == null ) return;
 
@@ -228,6 +227,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 	}
 
 	public void setRemovable( ProductCard card, boolean removable ) {
+		if( isRemovable( card ) == removable ) return;
 		ProductState state = productStates.get( card.getProductKey() );
 		if( state == null ) return;
 
@@ -240,8 +240,42 @@ public class ServiceProductManager extends Agent implements Persistent {
 	}
 
 	public void setEnabled( ProductCard card, boolean enabled ) {
+		if( isEnabled( card ) == enabled ) return;
+
+		ProductModule module = modules.get( card.getProductKey() );
+		
+		if( module != null  ) {
+			if( enabled ) {
+				enableModule( module );
+			} else {
+				disableModule( module );
+			}
+		}
+
 		getProductSettings( card ).putBoolean( PRODUCT_ENABLED_KEY, enabled );
 		fireProductManagerEvent( new ProductManagerEvent( this, enabled ? Type.PRODUCT_ENABLED : Type.PRODUCT_DISABLED, card ) );
+	}
+
+	private void enableModule( ProductModule module ) {
+		loaders.add( module.getClass().getClassLoader() );
+
+		try {
+			module.register();
+			module.create();
+		} catch( Throwable throwable ) {
+			Log.write( throwable );
+		}
+	}
+
+	private void disableModule( ProductModule module ) {
+		try {
+			module.destroy();
+			module.unregister();
+		} catch( Throwable throwable ) {
+			Log.write( throwable );
+		}
+
+		loaders.remove( module.getClass().getClassLoader() );
 	}
 
 	/**
@@ -312,7 +346,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 		Set<ProductCard> newPacks = new HashSet<ProductCard>();
 		if( !isEnabled() ) return newPacks;
 
-		Set<ProductCard> oldPacks = getProducts();
+		Set<ProductCard> oldPacks = getProductCards();
 		Map<ProductCard, Future<Descriptor>> futures = new HashMap<ProductCard, Future<Descriptor>>();
 		for( ProductCard oldPack : oldPacks ) {
 			URI uri = getResolvedUpdateUri( oldPack.getSourceUri() );
@@ -374,12 +408,12 @@ public class ServiceProductManager extends Agent implements Persistent {
 	}
 
 	public void installProducts( Set<ProductCard> cards ) throws Exception {
-		Log.write( Log.TRACE, "Number of products to install: " + cards.size() );
+		Log.write( Log.TRACE, "Number of productCards to install: " + cards.size() );
 
 		// Download the product resources.
 		Map<ProductCard, Set<ProductResource>> productResources = downloadProductResources( cards );
 
-		// Install the products.
+		// Install the productCards.
 		for( ProductCard card : cards ) {
 			File installFolder = getProductInstallFolder( card );
 
@@ -391,15 +425,18 @@ public class ServiceProductManager extends Agent implements Persistent {
 
 			addProduct( card, true, true, true );
 			fireProductManagerEvent( new ProductManagerEvent( this, Type.PRODUCT_INSTALLED, card ) );
-			
-			// NEXT If a product is marked for removal, remove it from the list.
+
+			// If a product is marked for removal, remove it from the list.
+			Set<InstalledProduct> products = service.getSettings().getSet( REMOVES_SETTINGS_PATH, new HashSet<InstalledProduct>() );
+			products.remove( card );
+			service.getSettings().putSet( REMOVES_SETTINGS_PATH, products );
 		}
 	}
 
 	public void removeProducts( Set<ProductCard> cards ) throws Exception {
-		Log.write( Log.TRACE, "Number of products to remove: " + cards.size() );
+		Log.write( Log.TRACE, "Number of productCards to remove: " + cards.size() );
 
-		// Remove the products.
+		// Remove the productCards.
 		Set<InstalledProduct> removedProducts = new HashSet<InstalledProduct>();
 		for( ProductCard card : cards ) {
 			File installFolder = getProductInstallFolder( card );
@@ -446,7 +483,10 @@ public class ServiceProductManager extends Agent implements Persistent {
 		for( ProductCard card : cards ) {
 			ProductCard installedPack = installedPacks.get( card.getProductKey() );
 
-			File targetFolder = installedPack.getTargetFolder();
+			URI codebase = installedPack.getCodebase();
+			if( !"file".equals( codebase.getScheme() ) ) continue;
+			
+			File targetFolder = new File( codebase );
 			boolean targetFolderValid = targetFolder != null && targetFolder.exists();
 
 			// Check that the pack is valid.
@@ -734,7 +774,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 		homeModuleFolder = new File( service.getHomeFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
 		userModuleFolder = new File( service.getProgramDataFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
 
-		// Load products.
+		// Load productCards.
 		loadModules( new File[] { homeModuleFolder, userModuleFolder } );
 	}
 
@@ -760,13 +800,13 @@ public class ServiceProductManager extends Agent implements Persistent {
 		packs.put( service.getCard().getProductKey(), service.getCard() );
 
 		// Add the installed packs.
-		packs.putAll( products );
+		packs.putAll( productCards );
 
 		return packs;
 	}
 
 	private void cleanRemovedProducts() {
-		// Check for products marked for removal and remove the files.
+		// Check for productCards marked for removal and remove the files.
 		Set<InstalledProduct> products = service.getSettings().getSet( REMOVES_SETTINGS_PATH, new HashSet<InstalledProduct>() );
 		for( InstalledProduct product : products ) {
 			FileUtil.delete( product.getTarget() );
@@ -870,9 +910,9 @@ public class ServiceProductManager extends Agent implements Persistent {
 	 * @return
 	 * @throws Exception
 	 */
-	private Module loadClasspathModule( Descriptor descriptor, URI codebase, ClassLoader parent ) throws Exception {
+	private ProductModule loadClasspathModule( Descriptor descriptor, URI codebase, ClassLoader parent ) throws Exception {
 		ClassLoader loader = new ModuleClassLoader( codebase, new URL[0], parent );
-		Module module = loadModule( descriptor, codebase, loader, false, false );
+		ProductModule module = loadModule( descriptor, codebase, loader, false, false );
 		return module;
 	}
 
@@ -885,7 +925,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 	 * @return
 	 * @throws Exception
 	 */
-	private Module loadSimpleModule( Descriptor descriptor, URI jarUri, ClassLoader parent ) throws Exception {
+	private ProductModule loadSimpleModule( Descriptor descriptor, URI jarUri, ClassLoader parent ) throws Exception {
 		URI codebase = jarUri.resolve( ".." );
 
 		// Get the jar file.
@@ -905,7 +945,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 	 * @return
 	 * @throws Exception
 	 */
-	private Module loadComplexModule( Descriptor descriptor, URI moduleFolderUri, ClassLoader parent ) throws Exception {
+	private ProductModule loadComplexModule( Descriptor descriptor, URI moduleFolderUri, ClassLoader parent ) throws Exception {
 		// Get the folder to load from.
 		File folder = new File( moduleFolderUri );
 
@@ -921,7 +961,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 		return loadModule( descriptor, moduleFolderUri, loader, true, true );
 	}
 
-	private Module loadModule( Descriptor descriptor, URI codebase, ClassLoader loader, boolean updatable, boolean removable ) throws Exception {
+	private ProductModule loadModule( Descriptor descriptor, URI codebase, ClassLoader loader, boolean updatable, boolean removable ) throws Exception {
 		ProductCard card = new ProductCard( codebase, descriptor );
 
 		// Validate class name.
@@ -929,14 +969,14 @@ public class ServiceProductManager extends Agent implements Persistent {
 		if( className == null ) return null;
 
 		// Check if module is already loaded.
-		Module module = modules.get( card.getProductKey() );
+		ProductModule module = modules.get( card.getProductKey() );
 		if( module != null ) return module;
 
 		// Load the module.
 		try {
 			Class<?> moduleClass = loader.loadClass( className );
 			Constructor<?> constructor = moduleClass.getConstructor( ProductCard.class );
-			module = (Module)constructor.newInstance( card );
+			module = (ProductModule)constructor.newInstance( card );
 			registerModule( module, codebase, updatable, removable );
 		} catch( Throwable throwable ) {
 			Log.write( Log.WARN, "Could not load module: " + card.getArtifact() + " (" + className + ")" );
@@ -947,13 +987,13 @@ public class ServiceProductManager extends Agent implements Persistent {
 		return module;
 	}
 
-	private void registerModule( Module module, URI codebase, boolean updatable, boolean removable ) {
+	private void registerModule( ProductModule module, URI codebase, boolean updatable, boolean removable ) {
 		ProductCard card = module.getCard();
 
 		boolean enabled = isEnabled( module.getCard() );
 
-		// Set some module attributes.
-		module.setCodebase( codebase );
+		// Set the product codebase.
+		card.setCodebase( codebase );
 
 		// Add the module and loader to the collections.
 		modules.put( card.getProductKey(), module );
@@ -962,7 +1002,7 @@ public class ServiceProductManager extends Agent implements Persistent {
 		// Notify the program the module is installed.
 		addProduct( card, updatable, removable, enabled );
 
-		Log.write( Log.TRACE, "Module registered: " + card.getArtifact() + " (" + module.getClass().getName() + ")" );
+		Log.write( Log.TRACE, "ProductModule registered: " + card.getArtifact() + " (" + module.getClass().getName() + ")" );
 	}
 
 	private void fireProductManagerEvent( ProductManagerEvent event ) {

@@ -1,4 +1,4 @@
-package com.parallelsymmetry.escape.service;
+package com.parallelsymmetry.escape.product;
 
 import java.io.File;
 import java.net.URL;
@@ -16,9 +16,13 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import com.parallelsymmetry.escape.product.ProductCard;
-import com.parallelsymmetry.escape.service.ServiceProductManager.ApplyOption;
-import com.parallelsymmetry.escape.service.ServiceProductManager.CheckOption;
-import com.parallelsymmetry.escape.service.ServiceProductManager.FoundOption;
+import com.parallelsymmetry.escape.product.ProductManager;
+import com.parallelsymmetry.escape.product.ProductManagerEvent;
+import com.parallelsymmetry.escape.product.ProductManager.ApplyOption;
+import com.parallelsymmetry.escape.product.ProductManager.CheckOption;
+import com.parallelsymmetry.escape.product.ProductManager.FoundOption;
+import com.parallelsymmetry.escape.service.BaseServiceTest;
+import com.parallelsymmetry.escape.service.ProductManagerListener;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.XmlUtil;
@@ -51,7 +55,7 @@ public class ServiceProductManagerTest extends BaseServiceTest {
 
 	private static final String TEST_PRODUCT = "/META-INF/product.test.xml";
 
-	private ServiceProductManager manager;
+	private ProductManager manager;
 
 	@Override
 	public void setUp() throws Exception {
@@ -61,7 +65,7 @@ public class ServiceProductManagerTest extends BaseServiceTest {
 
 	@Test
 	public void testGetInstalledPacks() {
-		assertEquals( service.getCard(), manager.getProducts().iterator().next() );
+		assertEquals( service.getCard(), manager.getProductCards().iterator().next() );
 	}
 
 	@Test
@@ -141,7 +145,7 @@ public class ServiceProductManagerTest extends BaseServiceTest {
 	public void testStagePostedUpdates() throws Exception {
 		stageUpdate();
 
-		File stageFolder = new File( service.getProgramDataFolder(), ServiceProductManager.UPDATE_FOLDER_NAME );
+		File stageFolder = new File( service.getProgramDataFolder(), ProductManager.UPDATE_FOLDER_NAME );
 		File updateFile = new File( stageFolder, manager.getStagedUpdateFileName( service.getCard() ) );
 
 		// Cleanup from previous run.
@@ -150,12 +154,12 @@ public class ServiceProductManagerTest extends BaseServiceTest {
 
 		try {
 			// Enable the update manager temporarily.
-			manager.setCheckOption( ServiceProductManager.CheckOption.STARTUP );
+			manager.setCheckOption( ProductManager.CheckOption.STARTUP );
 			manager.stagePostedUpdates();
 			assertTrue( updateFile.toString(), updateFile.exists() );
 		} finally {
 			// Disable the update manager.
-			manager.setCheckOption( ServiceProductManager.CheckOption.DISABLED );
+			manager.setCheckOption( ProductManager.CheckOption.DISABLED );
 		}
 	}
 

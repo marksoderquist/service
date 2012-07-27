@@ -1,6 +1,5 @@
 package com.parallelsymmetry.escape.product;
 
-import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Calendar;
@@ -80,7 +79,7 @@ public class ProductCard {
 
 	private URI sourceUri;
 
-	private File folder;
+	private URI codebase;
 
 	private String productKey;
 
@@ -306,12 +305,12 @@ public class ProductCard {
 		this.sourceUri = uri;
 	}
 
-	public File getTargetFolder() {
-		return folder;
+	public URI getCodebase() {
+		return codebase;
 	}
 
-	public void setTargetFolder( File folder ) {
-		this.folder = folder;
+	public void setCodebase( URI uri ) {
+		codebase = uri;
 	}
 
 	@Override

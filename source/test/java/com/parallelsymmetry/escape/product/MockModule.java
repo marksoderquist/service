@@ -1,17 +1,10 @@
 package com.parallelsymmetry.escape.product;
 
-import com.parallelsymmetry.escape.product.Module;
-import com.parallelsymmetry.escape.product.ProductCard;
 
-public class MockModule extends Module {
+public class MockModule extends ProductModule {
 
 	public MockModule( ProductCard card ) {
 		super( card );
-	}
-
-	@Override
-	public String getName() {
-		return "Mock Module";
 	}
 
 	@Override

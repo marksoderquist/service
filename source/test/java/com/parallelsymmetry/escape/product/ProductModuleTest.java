@@ -10,7 +10,7 @@ import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.Release;
 import com.parallelsymmetry.escape.utility.Version;
 
-public class ModuleTest extends BaseTestCase {
+public class ProductModuleTest extends BaseTestCase {
 
 	private static final String TEST_MODULE_DESCRIPTOR_PATH = "/META-INF/product.mock.module.xml";
 
