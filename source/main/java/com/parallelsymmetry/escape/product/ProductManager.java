@@ -1005,7 +1005,7 @@ public class ProductManager extends Agent implements Persistent {
 		ProductCard card = new ProductCard( codebase, descriptor );
 		
 		Log.write( Log.DEBUG, "Loading product: " + card.getProductKey() );
-
+		
 		// Validate class name.
 		String className = descriptor.getValue( MODULE_RESOURCE_CLASS_NAME_XPATH );
 		if( className == null ) return null;
