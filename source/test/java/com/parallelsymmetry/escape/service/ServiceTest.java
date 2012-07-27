@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.logging.Level;
 
+import com.parallelsymmetry.escape.product.ProductManager;
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.LineParser;
 import com.parallelsymmetry.escape.utility.TextUtil;
@@ -29,7 +30,7 @@ public class ServiceTest extends BaseTestCase {
 		super.setUp();
 		service = new MockService();
 		service.call( ServiceFlag.DEVMODE, ServiceFlagValue.TEST, ServiceFlag.SETTINGS_RESET, ServiceFlag.STOP );
-		service.getProductManager().setCheckOption( ServiceProductManager.CheckOption.DISABLED );
+		service.getProductManager().setCheckOption( ProductManager.CheckOption.DISABLED );
 	}
 
 	public void testBeforeCall() throws Exception {
@@ -243,7 +244,7 @@ public class ServiceTest extends BaseTestCase {
 		//System.out.println( "...testPassParameters()..." );
 		String name1 = "Mock Service 1";
 		MockService service1 = new MockService( name1 );
-		service1.getProductManager().setCheckOption( ServiceProductManager.CheckOption.DISABLED );
+		service1.getProductManager().setCheckOption( ProductManager.CheckOption.DISABLED );
 		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false ) );
 		System.out.println( parser1.getRemaining() );
 		assertCommandLineHeader( name1, parser1 );
@@ -251,7 +252,7 @@ public class ServiceTest extends BaseTestCase {
 
 		String name2 = "Mock Service 2";
 		MockService service2 = new MockService( name2 );
-		service2.getProductManager().setCheckOption( ServiceProductManager.CheckOption.DISABLED );
+		service2.getProductManager().setCheckOption( ProductManager.CheckOption.DISABLED );
 		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.INFO, false ) );
 
 		System.out.println( parser2.getRemaining() );
@@ -277,7 +278,7 @@ public class ServiceTest extends BaseTestCase {
 		//Log.write( "...testPassStatus()..." );
 		String name1 = "Mock Service 1";
 		MockService service1 = new MockService( name1 );
-		service1.getProductManager().setCheckOption( ServiceProductManager.CheckOption.DISABLED );
+		service1.getProductManager().setCheckOption( ProductManager.CheckOption.DISABLED );
 		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false, ServiceFlag.STATUS, "-log.level", "none" ) );
 		assertCommandLineHeader( name1, parser1 );
 
@@ -293,7 +294,7 @@ public class ServiceTest extends BaseTestCase {
 
 		String name2 = "Mock Service 2";
 		MockService service2 = new MockService( name2 );
-		service2.getProductManager().setCheckOption( ServiceProductManager.CheckOption.DISABLED );
+		service2.getProductManager().setCheckOption( ProductManager.CheckOption.DISABLED );
 		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.INFO, false, ServiceFlag.STATUS, "-log.level", "none" ) );
 		service2.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertCommandLineHeader( name2, parser2 );

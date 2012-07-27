@@ -113,6 +113,14 @@ public class ProductCardTest extends BaseTestCase {
 		assertEquals( new File( "target/sandbox/update.xml" ).toURI(), loadCard( MOCK_SERVICE ).getSourceUri() );
 	}
 
+	public void testGetCodebase() throws Exception {
+		ProductCard card = loadCard( MOCK_SERVICE );
+		assertNull( card.getCodebase() );
+
+		card.setCodebase( new File( "." ).toURI() );
+		assertEquals( new File( "." ).toURI(), card.getCodebase() );
+	}
+
 	public void testEquals() throws Exception {
 		URL url = getClass().getResource( MOCK_SERVICE );
 		Descriptor descriptor = new Descriptor( url );

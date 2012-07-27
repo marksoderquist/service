@@ -1,20 +1,13 @@
 package com.parallelsymmetry.escape.product;
 
-import java.net.URI;
-
-import javax.swing.Icon;
-
-
-public abstract class Module implements Product, Comparable<Module> {
+public abstract class ProductModule implements Product, Comparable<ProductModule> {
 
 	private ProductCard card;
-	
-	private URI codebase;
 
-	public Module( ProductCard card ) {
+	public ProductModule( ProductCard card ) {
 		this.card = card;
 	}
-	
+
 	/**
 	 * Get the product card.
 	 * 
@@ -23,28 +16,6 @@ public abstract class Module implements Product, Comparable<Module> {
 	@Override
 	public ProductCard getCard() {
 		return card;
-	}
-
-	public Icon getIcon() {
-		// TODO Get the icon image somehow.
-		return null;
-	}
-
-	/**
-	 * Get the human readable name for this module.
-	 * 
-	 * @return The module name.
-	 */
-	public String getName() {
-		return card.getName();
-	}
-
-	public URI getCodebase() {
-		return codebase;
-	}
-
-	public void setCodebase( URI uri ) {
-		codebase = uri;
 	}
 
 	/**
@@ -72,13 +43,13 @@ public abstract class Module implements Product, Comparable<Module> {
 	public abstract void unregister();
 
 	@Override
-	public int compareTo( Module that ) {
+	public int compareTo( ProductModule that ) {
 		return this.card.getArtifact().compareTo( that.card.getArtifact() );
 	}
 
 	@Override
 	public String toString() {
-		return getName();
+		return card.getName();
 	}
 
 }
