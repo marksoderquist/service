@@ -167,7 +167,7 @@ public class ProductCard {
 			Log.write( exception );
 		}
 
-		this.codebase = base.resolve( ".." );
+		setCodebase( base );
 
 		updateKey();
 
@@ -312,6 +312,7 @@ public class ProductCard {
 	}
 
 	public void setCodebase( URI uri ) {
+		if( !uri.isAbsolute() ) throw new IllegalArgumentException( "Codebase must be absolute: " + uri );
 		codebase = uri;
 	}
 

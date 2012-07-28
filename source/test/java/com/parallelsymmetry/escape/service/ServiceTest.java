@@ -246,7 +246,6 @@ public class ServiceTest extends BaseTestCase {
 		MockService service1 = new MockService( name1 );
 		service1.getProductManager().setCheckOption( ProductManager.CheckOption.DISABLED );
 		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false ) );
-		System.out.println( parser1.getRemaining() );
 		assertCommandLineHeader( name1, parser1 );
 		assertTrue( "Service should be running and is not.", service1.isRunning() );
 
@@ -254,8 +253,6 @@ public class ServiceTest extends BaseTestCase {
 		MockService service2 = new MockService( name2 );
 		service2.getProductManager().setCheckOption( ProductManager.CheckOption.DISABLED );
 		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.INFO, false ) );
-
-		System.out.println( parser2.getRemaining() );
 
 		service2.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertCommandLineHeader( name2, parser2 );

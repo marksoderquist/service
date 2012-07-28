@@ -451,8 +451,9 @@ public class ProductManager extends Agent implements Persistent {
 		for( ProductCard card : cards ) {
 			ProductCard installedPack = installedPacks.get( card.getProductKey() );
 
+			// NEXT Ensure that the codebase is absolute.
 			URI codebase = installedPack.getCodebase();
-			if( !"file".equals( codebase.getScheme() ) ) continue;
+			if( !"file".equals( codebase.getScheme() ) ) throw new Exception( "Codebase scheme is not file: " + codebase );
 
 			File targetFolder = new File( codebase );
 			boolean targetFolderValid = targetFolder != null && targetFolder.exists();

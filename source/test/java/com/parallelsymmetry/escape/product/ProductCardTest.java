@@ -117,10 +117,17 @@ public class ProductCardTest extends BaseTestCase {
 		ProductCard card = loadCard( MOCK_SERVICE );
 
 		URL url = getClass().getResource( MOCK_SERVICE );
-		assertEquals( url.toURI().resolve( ".." ), card.getCodebase() );
+		assertEquals( url.toURI(), card.getCodebase() );
 
 		card.setCodebase( new File( "." ).toURI() );
 		assertEquals( new File( "." ).toURI(), card.getCodebase() );
+
+		try {
+			card.setCodebase( URI.create( "test/path" ) );
+			fail( "An IllegalArgumentException should be thrown." );
+		} catch( IllegalArgumentException exception ) {
+			// This exception should be thrown.
+		}
 	}
 
 	public void testEquals() throws Exception {

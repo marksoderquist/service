@@ -24,6 +24,7 @@ import com.parallelsymmetry.escape.service.ProductManagerListener;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.XmlUtil;
+import com.parallelsymmetry.escape.utility.log.Log;
 
 public class ProductManagerTest extends BaseServiceTest {
 
@@ -58,6 +59,7 @@ public class ProductManagerTest extends BaseServiceTest {
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
+		Log.setLevel( Log.ERROR );
 		manager = service.getProductManager();
 	}
 
@@ -125,8 +127,25 @@ public class ProductManagerTest extends BaseServiceTest {
 		service.getTaskManager().start();
 		manager.setCheckOption( CheckOption.MANUAL );
 
+		// Create the update card and modify the timestamp.
+		assertTrue( FileUtil.copy( SOURCE_PRODUCT_CARD, TARGET_UPDATE_CARD ) );
+		fixProductCardData( TARGET_UPDATE_CARD );
+
+		// Ensure there are posted updates.
+		assertEquals( 1, manager.getPostedUpdates().size() );
+	}
+
+	@Test
+	public void testGetPostedUpdatesWithMissingSource() throws Exception {
+		// Initialize the product card before starting the service.
+		assertTrue( FileUtil.copy( SOURCE_PRODUCT_CARD, TARGET_PRODUCT_CARD ) );
+
 		// Remove the old update card if it exists.
 		FileUtil.delete( TARGET_UPDATE_CARD );
+
+		// Start the service set the update manager for manual checks.
+		service.getTaskManager().start();
+		manager.setCheckOption( CheckOption.MANUAL );
 
 		// Ensure there are no posted updates.
 		try {
@@ -135,13 +154,6 @@ public class ProductManagerTest extends BaseServiceTest {
 		} catch( ExecutionException exception ) {
 			// Intentionally ignore exception.
 		}
-
-		// Create the update card and modify the timestamp.
-		assertTrue( FileUtil.copy( SOURCE_PRODUCT_CARD, TARGET_UPDATE_CARD ) );
-		fixProductCardData( TARGET_UPDATE_CARD );
-
-		// Ensure there are posted updates.
-		assertEquals( 1, manager.getPostedUpdates().size() );
 	}
 
 	@Test
@@ -199,19 +211,17 @@ public class ProductManagerTest extends BaseServiceTest {
 		assertEquals( 1, watcher.getEvents().size() );
 		assertEquals( ProductManagerEvent.Type.PRODUCT_ENABLED, watcher.getEvents().get( eventIndex++ ).getType() );
 
-		manager.installProducts( card );
+		manager.registerProduct( card );
 		assertTrue( manager.isEnabled( card ) );
-		assertEquals( 2, watcher.getEvents().size() );
-		assertEquals( ProductManagerEvent.Type.PRODUCT_INSTALLED, watcher.getEvents().get( eventIndex++ ).getType() );
 
 		manager.setEnabled( card, false );
 		assertFalse( manager.isEnabled( card ) );
-		assertEquals( 3, watcher.getEvents().size() );
+		assertEquals( 2, watcher.getEvents().size() );
 		assertEquals( ProductManagerEvent.Type.PRODUCT_DISABLED, watcher.getEvents().get( eventIndex++ ).getType() );
 
 		manager.setEnabled( card, true );
 		assertTrue( manager.isEnabled( card ) );
-		assertEquals( 4, watcher.getEvents().size() );
+		assertEquals( 3, watcher.getEvents().size() );
 		assertEquals( ProductManagerEvent.Type.PRODUCT_ENABLED, watcher.getEvents().get( eventIndex++ ).getType() );
 	}
 
