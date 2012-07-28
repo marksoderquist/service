@@ -115,7 +115,9 @@ public class ProductCardTest extends BaseTestCase {
 
 	public void testGetCodebase() throws Exception {
 		ProductCard card = loadCard( MOCK_SERVICE );
-		assertNull( card.getCodebase() );
+
+		URL url = getClass().getResource( MOCK_SERVICE );
+		assertEquals( url.toURI().resolve( ".." ), card.getCodebase() );
 
 		card.setCodebase( new File( "." ).toURI() );
 		assertEquals( new File( "." ).toURI(), card.getCodebase() );

@@ -167,6 +167,8 @@ public class ProductCard {
 			Log.write( exception );
 		}
 
+		this.codebase = base.resolve( ".." );
+
 		updateKey();
 
 		return this;
