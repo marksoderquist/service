@@ -24,7 +24,6 @@ import com.parallelsymmetry.escape.service.ProductManagerListener;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.XmlUtil;
-import com.parallelsymmetry.escape.utility.log.Log;
 
 public class ProductManagerTest extends BaseServiceTest {
 
@@ -59,7 +58,6 @@ public class ProductManagerTest extends BaseServiceTest {
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
-		Log.setLevel( Log.ERROR );
 		manager = service.getProductManager();
 	}
 

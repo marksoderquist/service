@@ -51,7 +51,7 @@ public class DescriptorDownloadTask extends Task<Descriptor> {
 	public Descriptor execute() throws Exception {
 		Download download = task.execute();
 		if( download == null ) return null;
-		return new Descriptor( getUri(), new FileInputStream( download.getTarget() ) );
+		return new Descriptor( new FileInputStream( download.getTarget() ) );
 	}
 
 }

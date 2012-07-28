@@ -363,7 +363,8 @@ public class ProductManager extends Agent implements Persistent {
 		if( !isEnabled() ) return newPacks;
 
 		Set<ProductCard> oldPacks = getProductCards();
-		Map<ProductCard, Future<Descriptor>> futures = new HashMap<ProductCard, Future<Descriptor>>();
+		Map<ProductCard, DescriptorDownloadTask> tasks = new HashMap<ProductCard, DescriptorDownloadTask>();
+		//Map<ProductCard, Future<Descriptor>> futures = new HashMap<ProductCard, Future<Descriptor>>();
 		for( ProductCard oldPack : oldPacks ) {
 			URI uri = getResolvedUpdateUri( oldPack.getSourceUri() );
 			if( uri == null ) {
@@ -373,14 +374,17 @@ public class ProductManager extends Agent implements Persistent {
 				Log.write( Log.DEBUG, "Installed pack source: " + uri );
 			}
 
-			futures.put( oldPack, service.getTaskManager().submit( new DescriptorDownloadTask( uri ) ) );
+			tasks.put( oldPack, new DescriptorDownloadTask( uri ) );
+			service.getTaskManager().submit( tasks.get( oldPack ) );
 		}
 
 		for( ProductCard oldPack : oldPacks ) {
-			Future<Descriptor> future = futures.get( oldPack );
-			if( future == null ) continue;
-			Descriptor descriptor = future.get();
-			ProductCard newPack = new ProductCard( descriptor.getSource(), descriptor );
+			DescriptorDownloadTask task = tasks.get( oldPack );
+			//Future<Descriptor> future = futures.get( oldPack );
+			if( task == null ) continue;
+			//if( future == null ) continue;
+			Descriptor descriptor = task.get();
+			ProductCard newPack = new ProductCard( task.getUri(), descriptor );
 
 			// Validate the pack key.
 			if( !oldPack.getProductKey().equals( newPack.getProductKey() ) ) {

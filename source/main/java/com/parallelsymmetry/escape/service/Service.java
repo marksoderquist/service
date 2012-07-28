@@ -127,8 +127,8 @@ public abstract class Service extends Agent implements Product {
 	 * 
 	 * @param descriptor
 	 */
-	public Service( Descriptor descriptor ) {
-		this( null, descriptor );
+	public Service( URI uri ) {
+		this( null, uri );
 	}
 
 	/**
@@ -138,17 +138,20 @@ public abstract class Service extends Agent implements Product {
 	 * @param name
 	 * @param descriptor
 	 */
-	public Service( String name, Descriptor descriptor ) {
+	public Service( String name, URI uri ) {
 		super( name );
 		this.name = name;
 
 		try {
-			if( descriptor == null ) {
+			if( uri == null ) {
 				URL url = getClass().getResource( DEFAULT_DESCRIPTOR_PATH );
-				if( url != null ) Log.write( Log.DEBUG, "Application descriptor found: " + DEFAULT_DESCRIPTOR_PATH );
-				describe( new Descriptor( url ), url.toURI() );
+				if( url != null ) {
+					uri = url.toURI();
+					Log.write( Log.DEBUG, "Application descriptor found: " + DEFAULT_DESCRIPTOR_PATH );
+					describe( uri, new Descriptor( uri ) );
+				}
 			} else {
-				describe( descriptor, descriptor.getSource() );
+				describe( uri, new Descriptor( uri ) );
 			}
 		} catch( Exception exception ) {
 			Log.write( exception );
@@ -408,11 +411,11 @@ public abstract class Service extends Agent implements Product {
 
 	protected abstract void stopService( Parameters parameters ) throws Exception;
 
-	private final synchronized void describe( Descriptor descriptor, URI base ) throws ProductCardException {
+	private final synchronized void describe( URI codebase, Descriptor descriptor ) throws ProductCardException {
 		if( this.descriptor != null ) return;
 		this.descriptor = descriptor;
 
-		card = new ProductCard( base, descriptor );
+		card = new ProductCard( codebase, descriptor );
 
 		// Determine the program name.
 		if( name == null ) setName( card.getName() );
