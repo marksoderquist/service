@@ -151,14 +151,6 @@ public class ProductCatalog implements Persistent {
 		} catch( Throwable throwable ) {
 			Log.write( throwable );
 		}
-
-		// Load the sources.
-		//		List<PersistentURI> list = new ArrayList<PersistentURI>();
-		//		list = settings.getList( "sources", list );
-		//		sources.clear();
-		//		for( PersistentURI puri : list ) {
-		//			sources.add( puri.uri );
-		//		}
 	}
 
 	@Override
@@ -171,45 +163,6 @@ public class ProductCatalog implements Persistent {
 
 		settings.put( "iconUri", iconUri == null ? null : iconUri.toString() );
 		settings.put( "sourceUri", sourceUri == null ? null : sourceUri.toString() );
-
-		// Save the sources.
-		//		List<PersistentURI> list = new ArrayList<PersistentURI>();
-		//		for( URI uri : sources ) {
-		//			list.add( new PersistentURI( uri ) );
-		//		}
-		//		settings.putList( "sources", list );
-	}
-
-	private static final class PersistentURI implements Persistent {
-
-		private URI uri;
-
-		/*
-		 * Used for the Settings API.
-		 */
-		@SuppressWarnings( "unused" )
-		public PersistentURI() {}
-
-		public PersistentURI( URI uri ) {
-			this.uri = uri;
-		}
-
-		@Override
-		public void loadSettings( Settings settings ) {
-			try {
-				uri = URI.create( settings.get( "uri", null ) );
-			} catch( NullPointerException exception ) {
-				// Intentionally ignore exception.
-			} catch( Throwable throwable ) {
-				Log.write( throwable );
-			}
-		}
-
-		@Override
-		public void saveSettings( Settings settings ) {
-			settings.put( "uri", uri == null ? null : uri.toString() );
-		}
-
 	}
 
 }

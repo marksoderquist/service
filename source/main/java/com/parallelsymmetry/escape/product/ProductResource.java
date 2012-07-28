@@ -17,7 +17,7 @@ public final class ProductResource {
 	private URI uri;
 
 	private Future<Download> future;
-	
+
 	private File file;
 
 	public ProductResource( ProductResource.Type type, URI uri ) {
@@ -32,7 +32,7 @@ public final class ProductResource {
 	public URI getUri() {
 		return uri;
 	}
-	
+
 	public void waitFor() throws Exception {
 		file = future.get().getTarget();
 	}

@@ -2,7 +2,6 @@ package com.parallelsymmetry.escape.product;
 
 import java.util.EventObject;
 
-
 public class ProductManagerEvent extends EventObject {
 
 	public static enum Type {

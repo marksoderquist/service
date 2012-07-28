@@ -1,6 +1,5 @@
 package com.parallelsymmetry.escape.product;
 
-
 public class MockModule extends ProductModule {
 
 	public MockModule( ProductCard card ) {

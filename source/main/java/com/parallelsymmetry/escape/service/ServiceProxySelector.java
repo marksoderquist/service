@@ -30,7 +30,7 @@ public class ServiceProxySelector extends ProxySelector {
 	@Override
 	public List<Proxy> select( URI uri ) {
 		Log.write( Log.DEBUG, "Select proxy for: " + uri );
-		
+
 		List<Proxy> proxies = new ArrayList<Proxy>();
 
 		Settings settings = service.getSettings().getNode( "/network/proxy" );

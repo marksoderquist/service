@@ -32,11 +32,11 @@ import javax.swing.Icon;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
-import com.parallelsymmetry.escape.product.ProductManager;
-import com.parallelsymmetry.escape.product.ProductModule;
 import com.parallelsymmetry.escape.product.Product;
 import com.parallelsymmetry.escape.product.ProductCard;
 import com.parallelsymmetry.escape.product.ProductCardException;
+import com.parallelsymmetry.escape.product.ProductManager;
+import com.parallelsymmetry.escape.product.ProductModule;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.OperatingSystem;
 import com.parallelsymmetry.escape.utility.Parameters;
@@ -81,7 +81,7 @@ public abstract class Service extends Agent implements Product {
 	private Thread shutdownHook = new ShutdownHook( this );
 
 	private Parameters parameters = Parameters.create();
-	
+
 	private String devModePrefix = "";
 
 	private Settings settings;
@@ -316,13 +316,13 @@ public abstract class Service extends Agent implements Product {
 		// Register a shutdown hook to restart the application.
 		restartShutdownHook = new RestartShutdownHook( this );
 		Runtime.getRuntime().addShutdownHook( restartShutdownHook );
-	
+
 		// Request the program stop.
 		if( !requestStop() ) {
 			Runtime.getRuntime().removeShutdownHook( restartShutdownHook );
 			return;
 		}
-	
+
 		// The shutdown hook should restart the application.
 		Log.write( Log.INFO, "Restarting..." );
 	}
@@ -404,7 +404,7 @@ public abstract class Service extends Agent implements Product {
 	protected Set<String> getValidCommandLineFlags() {
 		return null;
 	}
-	
+
 	protected abstract void startService( Parameters parameters ) throws Exception;
 
 	protected abstract void process( Parameters parameters ) throws Exception;
@@ -689,10 +689,10 @@ public abstract class Service extends Agent implements Product {
 			try {
 				socket = new Socket( host, port );
 				peer = socket.getInetAddress().getHostAddress() + ":" + socket.getPort();
-				
+
 				Log.write( getName() + " already running." );
 				Log.write( Log.TRACE, "Connected to peer: " + peer );
-				
+
 				ObjectOutputStream output = new ObjectOutputStream( socket.getOutputStream() );
 				output.writeObject( parameters.getCommands() );
 				output.flush();
