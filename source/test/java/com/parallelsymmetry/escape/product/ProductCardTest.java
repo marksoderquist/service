@@ -23,6 +23,18 @@ public class ProductCardTest extends BaseTestCase {
 		assertEquals( "/product/artifact", ProductCard.ARTIFACT_PATH );
 	}
 
+	public void testUriIssues() throws Exception {
+		URL url = new URL( "file:/C:/Program%20Files/Escape/program.jar!/META-INF/product.xml" );
+		URI uri = url.toURI();
+
+		System.out.println( "URI opaque: " + uri.isOpaque() );
+
+		System.out.println( "URL: " + url.toString() );
+		System.out.println( "URI: " + uri.toString() );
+		System.out.println( "URI: " + uri.resolve( "." ).toString() );
+		System.out.println( "URI: " + URI.create( ".." ).resolve( uri ).toString() );
+	}
+
 	public void testGetKey() throws Exception {
 		assertEquals( "com.parallelsymmetry.mock", loadCard( MOCK_SERVICE ).getProductKey() );
 	}
@@ -128,6 +140,13 @@ public class ProductCardTest extends BaseTestCase {
 		} catch( IllegalArgumentException exception ) {
 			// This exception should be thrown.
 		}
+	}
+	
+	public void testGetCodebaseFromConstructor() throws Exception {
+		URI uri = getClass().getResource( MOCK_SERVICE ).toURI();
+		Descriptor descriptor = new Descriptor( uri );
+		ProductCard card = new ProductCard( uri, descriptor );
+		assertEquals( uri.toString(), card.getCodebase().toString() );
 	}
 
 	public void testEquals() throws Exception {

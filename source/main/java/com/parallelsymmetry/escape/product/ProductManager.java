@@ -35,6 +35,7 @@ import com.parallelsymmetry.escape.utility.JavaUtil;
 import com.parallelsymmetry.escape.utility.OperatingSystem;
 import com.parallelsymmetry.escape.utility.Parameters;
 import com.parallelsymmetry.escape.utility.TextUtil;
+import com.parallelsymmetry.escape.utility.UriUtil;
 import com.parallelsymmetry.escape.utility.agent.Agent;
 import com.parallelsymmetry.escape.utility.log.Log;
 import com.parallelsymmetry.escape.utility.log.LogFlag;
@@ -624,8 +625,7 @@ public class ProductManager extends Agent implements Persistent {
 		Enumeration<URL> urls = parent.getResources( moduleDescriptorPath );
 		while( urls.hasMoreElements() ) {
 			url = urls.nextElement();
-			Log.write( Log.DEBUG, "Searching for module on class path: " + url );
-			loadClasspathModule( new Descriptor( url.openStream() ), url.toURI().resolve( ".." ), parent );
+			loadClasspathModule( new Descriptor( url.openStream() ), UriUtil.getParent( url.toURI() ), parent );
 		}
 
 		// Look for modules in the specified folders.
@@ -991,7 +991,7 @@ public class ProductManager extends Agent implements Persistent {
 	 * @throws Exception
 	 */
 	private ProductModule loadSimpleModule( Descriptor descriptor, URI jarUri, ClassLoader parent ) throws Exception {
-		URI codebase = jarUri.resolve( ".." );
+		URI codebase = UriUtil.getParent( jarUri );
 
 		// Get the jar file.
 		File jarfile = new File( jarUri );
