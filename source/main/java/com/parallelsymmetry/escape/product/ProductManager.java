@@ -1027,6 +1027,12 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	private ProductModule loadModule( Descriptor descriptor, URI codebase, ClassLoader loader, boolean updatable, boolean removable ) throws Exception {
+		if( codebase.isAbsolute() ) {
+			Log.write( "Product codebase: " + codebase );
+		} else {
+			Log.write( Log.ERROR, "Product codebase: " + codebase );
+		}
+
 		ProductCard card = new ProductCard( codebase, descriptor );
 
 		// Ignore included products.
