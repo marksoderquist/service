@@ -9,6 +9,7 @@ import com.parallelsymmetry.escape.service.BaseTestCase;
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.Release;
+import com.parallelsymmetry.escape.utility.UriUtil;
 import com.parallelsymmetry.escape.utility.Version;
 
 public class ProductCardTest extends BaseTestCase {
@@ -24,14 +25,14 @@ public class ProductCardTest extends BaseTestCase {
 	}
 
 	public void testUriIssues() throws Exception {
-		URL url = new URL( "file:/C:/Program%20Files/Escape/program.jar!/META-INF/product.xml" );
+		URL url = new URL( "jar:file:/C:/Program%20Files/Escape/program.jar!/META-INF/product.xml" );
 		URI uri = url.toURI();
 
 		System.out.println( "URI opaque: " + uri.isOpaque() );
 
 		System.out.println( "URL: " + url.toString() );
 		System.out.println( "URI: " + uri.toString() );
-		System.out.println( "URI: " + uri.resolve( "." ).toString() );
+		System.out.println( "URI: " + UriUtil.resolve( uri, URI.create( "otherfile.txt" ) ).toString() );
 		System.out.println( "URI: " + URI.create( ".." ).resolve( uri ).toString() );
 	}
 
@@ -125,30 +126,14 @@ public class ProductCardTest extends BaseTestCase {
 		assertEquals( new File( "target/sandbox/update.xml" ).toURI(), loadCard( MOCK_SERVICE ).getSourceUri() );
 	}
 
-	public void testGetCodebase() throws Exception {
+	public void testGetInstallFolder() throws Exception {
 		ProductCard card = loadCard( MOCK_SERVICE );
+		assertNull(card.getInstallFolder() );
 
-		URL url = getClass().getResource( MOCK_SERVICE );
-		assertEquals( url.toURI(), card.getCodebase() );
-
-		card.setCodebase( new File( "." ).toURI() );
-		assertEquals( new File( "." ).toURI(), card.getCodebase() );
-
-		try {
-			card.setCodebase( URI.create( "test/path" ) );
-			fail( "An IllegalArgumentException should be thrown." );
-		} catch( IllegalArgumentException exception ) {
-			// This exception should be thrown.
-		}
+		card.setInstallFolder( new File( "." ) );
+		assertEquals( new File( "." ), card.getInstallFolder() );
 	}
 	
-	public void testGetCodebaseFromConstructor() throws Exception {
-		URI uri = getClass().getResource( MOCK_SERVICE ).toURI();
-		Descriptor descriptor = new Descriptor( uri );
-		ProductCard card = new ProductCard( uri, descriptor );
-		assertEquals( uri.toString(), card.getCodebase().toString() );
-	}
-
 	public void testEquals() throws Exception {
 		URL url = getClass().getResource( MOCK_SERVICE );
 		Descriptor descriptor = new Descriptor( url );

@@ -168,6 +168,7 @@ public class ProductManagerTest extends BaseServiceTest {
 
 		URI uri = TARGET_PRODUCT_CARD.toURI();
 		ProductCard card = new ProductCard( uri, new Descriptor( uri ) );
+		card.setInstallFolder( SANDBOX );
 		manager.registerProduct( card );
 		manager.setUpdatable( card, true );
 

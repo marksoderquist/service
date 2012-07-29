@@ -257,7 +257,7 @@ public class ServiceTest extends BaseTestCase {
 		service2.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertCommandLineHeader( name2, parser2 );
 
-		assertEquals( "[I] " + name2 + " already running.", parser2.next() );
+		assertEquals( "[I] " + name2 + " connected to peer.", parser2.next() );
 		assertEquals( "", parser2.next() );
 		assertNull( parser2.next() );
 
@@ -296,7 +296,7 @@ public class ServiceTest extends BaseTestCase {
 		service2.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertCommandLineHeader( name2, parser2 );
 
-		assertEquals( "[I] " + name2 + " already running.", parser2.next() );
+		assertEquals( "[I] " + name2 + " connected to peer.", parser2.next() );
 		assertEquals( "[I] " + name1 + " status: STARTED", parser2.next() );
 		assertEquals( "", parser2.next() );
 		assertNull( parser2.next() );

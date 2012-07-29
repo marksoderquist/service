@@ -1,5 +1,6 @@
 package com.parallelsymmetry.escape.product;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Calendar;
@@ -79,7 +80,7 @@ public class ProductCard {
 
 	private URI sourceUri;
 
-	private URI codebase;
+	private File installFolder;
 
 	private String productKey;
 
@@ -166,8 +167,6 @@ public class ProductCard {
 		} catch( URISyntaxException exception ) {
 			Log.write( exception );
 		}
-
-		setCodebase( base );
 
 		updateKey();
 
@@ -307,13 +306,12 @@ public class ProductCard {
 		this.sourceUri = uri;
 	}
 
-	public URI getCodebase() {
-		return codebase;
+	public File getInstallFolder() {
+		return installFolder;
 	}
 
-	public void setCodebase( URI uri ) {
-		if( !uri.isAbsolute() ) throw new IllegalArgumentException( "Codebase must be absolute: " + uri );
-		codebase = uri;
+	public void setInstallFolder( File file ) {
+		installFolder = file;
 	}
 
 	@Override

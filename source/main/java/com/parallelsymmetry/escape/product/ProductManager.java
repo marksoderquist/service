@@ -19,8 +19,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 import com.parallelsymmetry.escape.product.ProductManagerEvent.Type;
 import com.parallelsymmetry.escape.service.ProductManagerListener;
@@ -104,8 +102,6 @@ public class ProductManager extends Agent implements Persistent {
 
 	private static final String PRODUCT_ENABLED_KEY = "enabled";
 
-	private static final Set<String> includedProducts;
-
 	private Service service;
 
 	private Set<ProductCatalog> catalogs;
@@ -134,15 +130,11 @@ public class ProductManager extends Agent implements Persistent {
 
 	private Map<String, ProductState> productStates;
 
+	private Set<String> includedProducts;
+
 	private Timer timer;
 
 	private Set<ProductManagerListener> listeners;
-
-	static {
-		includedProducts = new HashSet<String>();
-		includedProducts.add( "com.parallelsymmetry.escape" );
-		includedProducts.add( "com.parallelsymmetry.escape.updater" );
-	}
 
 	public ProductManager( Service service ) {
 		this.service = service;
@@ -153,6 +145,10 @@ public class ProductManager extends Agent implements Persistent {
 		productCards = new ConcurrentHashMap<String, ProductCard>();
 		productStates = new ConcurrentHashMap<String, ProductState>();
 		listeners = new CopyOnWriteArraySet<ProductManagerListener>();
+		
+		includedProducts = new HashSet<String>();
+		includedProducts.add( service.getCard().getProductKey() );
+		includedProducts.add( "com.parallelsymmetry.escape.updater" );
 
 		// Add service product.
 		registerProduct( service.getCard() );
@@ -436,46 +432,48 @@ public class ProductManager extends Agent implements Persistent {
 	 * Attempt to stage the product packs described by the specified product
 	 * cards.
 	 * 
-	 * @param cards
+	 * @param updateCards
 	 * @return true if one or more product packs were staged.
 	 * @throws Exception
 	 */
-	public boolean stageSelectedUpdates( Set<ProductCard> cards ) throws Exception {
+	public boolean stageSelectedUpdates( Set<ProductCard> updateCards ) throws Exception {
 		File stageFolder = new File( service.getProgramDataFolder(), UPDATE_FOLDER_NAME );
 		stageFolder.mkdirs();
 
-		Log.write( Log.TRACE, "Number of packs to stage for update: " + cards.size() );
+		Log.write( Log.TRACE, "Number of packs to stage for update: " + updateCards.size() );
 		Log.write( Log.DEBUG, "Pack stage folder: " + stageFolder );
 
 		// Download the product resources.
-		Map<ProductCard, Set<ProductResource>> productResources = downloadProductResources( cards );
+		Map<ProductCard, Set<ProductResource>> productResources = downloadProductResources( updateCards );
 
 		// Create an update for each product.
-		Map<String, ProductCard> installedPacks = getInstalledPackMap();
-		for( ProductCard card : cards ) {
-			ProductCard installedPack = installedPacks.get( card.getProductKey() );
+		boolean result = false;
+		for( ProductCard updateCard : updateCards ) {
+			ProductCard productCard = productCards.get( updateCard.getProductKey() );
 
-			// NEXT Ensure that the codebase is absolute.
-			URI codebase = installedPack.getCodebase();
-			if( !"file".equals( codebase.getScheme() ) ) throw new Exception( "Codebase scheme is not file: " + codebase );
+			File installFolder = productCard.getInstallFolder();
+			boolean installFolderValid = installFolder != null && installFolder.exists();
+			
+			if( !installFolderValid ) {
+				Log.write( Log.ERROR, "Error staging update for: " + productCard.getProductKey() );
+				Log.write( Log.ERROR, "Invalid install folder: " + installFolder );
+			}
 
-			File targetFolder = new File( codebase );
-			boolean targetFolderValid = targetFolder != null && targetFolder.exists();
-
-			// Check that the pack is valid.
-			if( installedPack == null || !targetFolderValid ) {
-				Log.write( Log.WARN, "Pack not installed: " + card );
+			// Check that the product is known and installed.
+			if( productCard == null || !installFolderValid ) {
+				Log.write( Log.WARN, "Update not staged: " + updateCard );
 				continue;
 			}
 
-			File update = new File( stageFolder, getStagedUpdateFileName( card ) );
-			createUpdatePack( productResources.get( card ), update );
-			updates.add( new StagedUpdate( update, targetFolder ) );
-			Log.write( Log.TRACE, "Update staged: " + update );
+			File updatePack = new File( stageFolder, getStagedUpdateFileName( updateCard ) );
+			createUpdatePack( productResources.get( updateCard ), updatePack );
+			updates.add( new StagedUpdate( updatePack, installFolder ) );
+			Log.write( Log.TRACE, "Update staged: " + updatePack );
+			result = true;
 		}
 		saveSettings( settings );
 
-		return true;
+		return result;
 	}
 
 	public String getStagedUpdateFileName( ProductCard card ) {
@@ -621,11 +619,11 @@ public class ProductManager extends Agent implements Persistent {
 		ClassLoader parent = getClass().getClassLoader();
 
 		// Look for modules on the classpath.
-		URL url = null;
 		Enumeration<URL> urls = parent.getResources( moduleDescriptorPath );
 		while( urls.hasMoreElements() ) {
-			url = urls.nextElement();
-			loadClasspathModule( new Descriptor( url.openStream() ), UriUtil.getParent( url.toURI() ), parent );
+			URI uri = urls.nextElement().toURI();
+			ProductCard card = new ProductCard( UriUtil.getParent( uri ), new Descriptor( uri ) );
+			loadClasspathModule( card, UriUtil.getParent( uri ), parent );
 		}
 
 		// Look for modules in the specified folders.
@@ -633,20 +631,16 @@ public class ProductManager extends Agent implements Persistent {
 			if( !folder.exists() ) continue;
 			if( !folder.isDirectory() ) continue;
 
-			// Look for simple modules.
+			// Look for simple modules (not common).
 			File[] jars = folder.listFiles( FileUtil.JAR_FILE_FILTER );
 			for( File jar : jars ) {
 				Log.write( Log.DEBUG, "Searching for simple module: " + jar.toURI() );
-
-				JarFile jarfile = new JarFile( jar );
-				JarEntry entry = jarfile.getJarEntry( moduleDescriptorPath );
-				Descriptor descriptor = entry == null ? null : new Descriptor( jarfile.getInputStream( entry ) );
-				jarfile.close();
-				if( descriptor == null ) continue;
-				loadSimpleModule( descriptor, jar.toURI(), parent );
+				URI uri = URI.create( "jar:" + jar.toURI().toASCIIString() + "!" + PRODUCT_DESCRIPTOR_PATH );
+				ProductCard card = new ProductCard( jar.getParentFile().toURI(), new Descriptor( uri ) );
+				loadSimpleModule( card, UriUtil.getParent( jar.toURI() ), parent );
 			}
 
-			// Look for complex modules.
+			// Look for complex modules (most common).
 			File[] moduleFolders = folder.listFiles( FileUtil.FOLDER_FILTER );
 			for( File moduleFolder : moduleFolders ) {
 				Log.write( Log.DEBUG, "Searching for complex module: " + moduleFolder.toURI() );
@@ -654,21 +648,15 @@ public class ProductManager extends Agent implements Persistent {
 				jars = moduleFolder.listFiles( FileUtil.JAR_FILE_FILTER );
 				for( File jar : jars ) {
 					try {
-						// Find the module descriptor.
-						JarFile jarfile = new JarFile( jar );
-						JarEntry entry = jarfile.getJarEntry( moduleDescriptorPath );
-						Descriptor descriptor = entry == null ? null : new Descriptor( jarfile.getInputStream( entry ) );
-						jarfile.close();
-						if( descriptor == null ) continue;
-
-						loadComplexModule( descriptor, moduleFolder.toURI(), parent );
+						URI uri = URI.create( "jar:" + jar.toURI().toASCIIString() + "!" + PRODUCT_DESCRIPTOR_PATH );
+						ProductCard card = new ProductCard( jar.getParentFile().toURI(), new Descriptor( uri ) );
+						loadComplexModule( card, moduleFolder.toURI(), parent );
 					} catch( Throwable throwable ) {
 						Log.write( throwable, jar );
 					}
 				}
 			}
 		}
-
 	}
 
 	public Class<?> getClassForName( String name ) throws ClassNotFoundException {
@@ -843,24 +831,6 @@ public class ProductManager extends Agent implements Persistent {
 		return checkOption != CheckOption.DISABLED;
 	}
 
-	/**
-	 * Get the installed packs. The map entry key is the product card key and the
-	 * map entry value is the product card that represents the pack.
-	 * 
-	 * @return A map of the installed packs.
-	 */
-	private Map<String, ProductCard> getInstalledPackMap() {
-		Map<String, ProductCard> packs = new ConcurrentHashMap<String, ProductCard>();
-
-		// Add the service pack.
-		packs.put( service.getCard().getProductKey(), service.getCard() );
-
-		// Add the installed packs.
-		packs.putAll( productCards );
-
-		return packs;
-	}
-
 	private void cleanRemovedProducts() {
 		// Check for products marked for removal and remove the files.
 		Set<InstalledProduct> products = service.getSettings().getSet( REMOVES_SETTINGS_PATH, new HashSet<InstalledProduct>() );
@@ -975,9 +945,9 @@ public class ProductManager extends Agent implements Persistent {
 	 * @return
 	 * @throws Exception
 	 */
-	private ProductModule loadClasspathModule( Descriptor descriptor, URI codebase, ClassLoader parent ) throws Exception {
+	private ProductModule loadClasspathModule( ProductCard card, URI codebase, ClassLoader parent ) throws Exception {
 		ClassLoader loader = new ModuleClassLoader( codebase, new URL[0], parent );
-		ProductModule module = loadModule( descriptor, codebase, loader, false, false );
+		ProductModule module = loadModule( card, loader, false, false );
 		return module;
 	}
 
@@ -990,15 +960,16 @@ public class ProductManager extends Agent implements Persistent {
 	 * @return
 	 * @throws Exception
 	 */
-	private ProductModule loadSimpleModule( Descriptor descriptor, URI jarUri, ClassLoader parent ) throws Exception {
+	private ProductModule loadSimpleModule( ProductCard card, URI jarUri, ClassLoader parent ) throws Exception {
 		URI codebase = UriUtil.getParent( jarUri );
 
 		// Get the jar file.
 		File jarfile = new File( jarUri );
+		card.setInstallFolder( jarfile.getParentFile() );
 
 		// Create the class loader.
 		ClassLoader loader = new ModuleClassLoader( codebase, new URL[] { jarfile.toURI().toURL() }, parent );
-		return loadModule( descriptor, codebase, loader, true, true );
+		return loadModule( card, loader, true, true );
 	}
 
 	/**
@@ -1010,9 +981,10 @@ public class ProductManager extends Agent implements Persistent {
 	 * @return
 	 * @throws Exception
 	 */
-	private ProductModule loadComplexModule( Descriptor descriptor, URI moduleFolderUri, ClassLoader parent ) throws Exception {
+	private ProductModule loadComplexModule( ProductCard card, URI moduleFolderUri, ClassLoader parent ) throws Exception {
 		// Get the folder to load from.
 		File folder = new File( moduleFolderUri );
+		card.setInstallFolder( folder );
 
 		// Find all the jars.
 		Set<URL> urls = new HashSet<URL>();
@@ -1023,18 +995,10 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Create the class loader.
 		ClassLoader loader = new ModuleClassLoader( moduleFolderUri, urls.toArray( new URL[urls.size()] ), parent );
-		return loadModule( descriptor, moduleFolderUri, loader, true, true );
+		return loadModule( card, loader, true, true );
 	}
 
-	private ProductModule loadModule( Descriptor descriptor, URI codebase, ClassLoader loader, boolean updatable, boolean removable ) throws Exception {
-		if( codebase.isAbsolute() ) {
-			Log.write( "Product codebase: " + codebase );
-		} else {
-			Log.write( Log.ERROR, "Product codebase: " + codebase );
-		}
-
-		ProductCard card = new ProductCard( codebase, descriptor );
-
+	private ProductModule loadModule( ProductCard card, ClassLoader loader, boolean updatable, boolean removable ) throws Exception {
 		// Ignore included products.
 		if( includedProducts.contains( card.getProductKey() ) ) return null;
 
@@ -1043,7 +1007,7 @@ public class ProductManager extends Agent implements Persistent {
 		Log.write( Log.DEBUG, "Loading module: " + card.getProductKey() );
 
 		// Validate class name.
-		String className = descriptor.getValue( MODULE_RESOURCE_CLASS_NAME_XPATH );
+		String className = card.getDescriptor().getValue( MODULE_RESOURCE_CLASS_NAME_XPATH );
 		if( className == null ) return null;
 
 		// Check if module is already loaded.
@@ -1055,7 +1019,7 @@ public class ProductManager extends Agent implements Persistent {
 			Class<?> moduleClass = loader.loadClass( className );
 			Constructor<?> constructor = moduleClass.getConstructor( ProductCard.class );
 			module = (ProductModule)constructor.newInstance( card );
-			registerModule( module, codebase, updatable, removable );
+			registerModule( module, updatable, removable );
 			Log.write( Log.TRACE, "Module loaded:  " + card.getProductKey() );
 		} catch( Throwable throwable ) {
 			Log.write( Log.WARN, "Module failed:  " + card.getProductKey() + " (" + className + ")" );
@@ -1066,11 +1030,8 @@ public class ProductManager extends Agent implements Persistent {
 		return module;
 	}
 
-	private void registerModule( ProductModule module, URI codebase, boolean updatable, boolean removable ) {
+	private void registerModule( ProductModule module, boolean updatable, boolean removable ) {
 		ProductCard card = module.getCard();
-
-		// Set the product codebase.
-		card.setCodebase( codebase );
 
 		// Add the module to the collection.
 		modules.put( card.getProductKey(), module );

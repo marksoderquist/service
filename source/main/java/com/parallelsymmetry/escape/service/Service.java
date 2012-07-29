@@ -143,16 +143,9 @@ public abstract class Service extends Agent implements Product {
 		this.name = name;
 
 		try {
-			if( uri == null ) {
-				URL url = getClass().getResource( DEFAULT_DESCRIPTOR_PATH );
-				if( url != null ) {
-					uri = url.toURI();
-					Log.write( Log.DEBUG, "Application descriptor found: " + DEFAULT_DESCRIPTOR_PATH );
-					describe( uri, new Descriptor( uri ) );
-				}
-			} else {
-				describe( uri, new Descriptor( uri ) );
-			}
+			if( uri == null ) uri = getDefaultDescriptorUri();
+			Log.write( Log.DEBUG, "Product descriptor: " + uri.toString() );
+			describe( uri, new Descriptor( uri ) );
 		} catch( Exception exception ) {
 			Log.write( exception );
 		}
@@ -411,7 +404,24 @@ public abstract class Service extends Agent implements Product {
 
 	protected abstract void stopService( Parameters parameters ) throws Exception;
 
-	private final synchronized void describe( URI codebase, Descriptor descriptor ) throws ProductCardException {
+	private static void setLocale( Parameters parameters ) {
+		String locale = parameters.get( LOCALE );
+
+		String[] parts = locale.split( "_" );
+
+		String l = parts.length > 0 ? parts[0] : "";
+		String c = parts.length > 1 ? parts[1] : "";
+		String v = parts.length > 2 ? parts[2] : "";
+
+		Locale.setDefault( new Locale( l, c, v ) );
+	}
+
+	private final URI getDefaultDescriptorUri() throws URISyntaxException {
+		URL url = getClass().getResource( DEFAULT_DESCRIPTOR_PATH );
+		return url == null ? null : url.toURI();
+	}
+
+	private final void describe( URI codebase, Descriptor descriptor ) throws ProductCardException {
 		if( this.descriptor != null ) return;
 		this.descriptor = descriptor;
 
@@ -513,18 +523,6 @@ public abstract class Service extends Agent implements Product {
 		}
 	}
 
-	private static void setLocale( Parameters parameters ) {
-		String locale = parameters.get( LOCALE );
-
-		String[] parts = locale.split( "_" );
-
-		String l = parts.length > 0 ? parts[0] : "";
-		String c = parts.length > 1 ? parts[1] : "";
-		String v = parts.length > 2 ? parts[2] : "";
-
-		Locale.setDefault( new Locale( l, c, v ) );
-	}
-
 	private final boolean checkJava( Parameters parameters ) {
 		String javaRuntimeVersion = System.getProperty( "java.runtime.version" );
 		Log.write( Log.DEBUG, "Comparing Java version: " + javaRuntimeVersion + " >= " + javaVersionMinimum );
@@ -597,7 +595,7 @@ public abstract class Service extends Agent implements Product {
 
 		Log.write( Log.TRACE, "Home: ", home );
 
-		card.setCodebase( home.toURI() );
+		card.setInstallFolder( home );
 	}
 
 	private final void configureArtifact( Parameters parameters ) {
@@ -615,7 +613,8 @@ public abstract class Service extends Agent implements Product {
 		}
 
 		// Add the preferences settings provider.
-		String preferencesPath = "/" + card.getGroup().replace( '.', '/' ) + "/" + devModePrefix + card.getArtifact();
+		//String preferencesPath = "/" + card.getGroup().replace( '.', '/' ) + "/" + devModePrefix + card.getArtifact();
+		String preferencesPath = "/" + card.getGroup() + "/" + devModePrefix + card.getArtifact();
 		Preferences preferences = Preferences.userRoot().node( preferencesPath );
 		if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
 		Log.write( Log.DEBUG, "Preferences path: " + preferencesPath );
@@ -690,7 +689,7 @@ public abstract class Service extends Agent implements Product {
 				socket = new Socket( host, port );
 				peer = socket.getInetAddress().getHostAddress() + ":" + socket.getPort();
 
-				Log.write( getName() + " already running." );
+				Log.write( getName() + " connected to peer." );
 				Log.write( Log.TRACE, "Connected to peer: " + peer );
 
 				ObjectOutputStream output = new ObjectOutputStream( socket.getOutputStream() );
