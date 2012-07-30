@@ -112,7 +112,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	private File homeModuleFolder;
 
-	private File userModuleFolder;
+	private File userProductFolder;
 
 	private CheckOption checkOption;
 
@@ -145,7 +145,7 @@ public class ProductManager extends Agent implements Persistent {
 		productCards = new ConcurrentHashMap<String, ProductCard>();
 		productStates = new ConcurrentHashMap<String, ProductState>();
 		listeners = new CopyOnWriteArraySet<ProductManagerListener>();
-		
+
 		includedProducts = new HashSet<String>();
 		includedProducts.add( service.getCard().getProductKey() );
 		includedProducts.add( "com.parallelsymmetry.escape.updater" );
@@ -453,7 +453,7 @@ public class ProductManager extends Agent implements Persistent {
 
 			File installFolder = productCard.getInstallFolder();
 			boolean installFolderValid = installFolder != null && installFolder.exists();
-			
+
 			if( !installFolderValid ) {
 				Log.write( Log.ERROR, "Error staging update for: " + productCard.getProductKey() );
 				Log.write( Log.ERROR, "Invalid install folder: " + installFolder );
@@ -637,7 +637,7 @@ public class ProductManager extends Agent implements Persistent {
 				Log.write( Log.DEBUG, "Searching for simple module: " + jar.toURI() );
 				URI uri = URI.create( "jar:" + jar.toURI().toASCIIString() + "!" + PRODUCT_DESCRIPTOR_PATH );
 				ProductCard card = new ProductCard( jar.getParentFile().toURI(), new Descriptor( uri ) );
-				loadSimpleModule( card, UriUtil.getParent( jar.toURI() ), parent );
+				loadSimpleModule( card, jar.toURI(), parent );
 			}
 
 			// Look for complex modules (most common).
@@ -730,10 +730,10 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Define the product folders.
 		homeModuleFolder = new File( service.getHomeFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
-		userModuleFolder = new File( service.getProgramDataFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
+		userProductFolder = new File( service.getProgramDataFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
 
 		// Load products.
-		loadModules( new File[] { homeModuleFolder, userModuleFolder } );
+		loadModules( new File[] { homeModuleFolder, userProductFolder } );
 	}
 
 	@Override
@@ -761,7 +761,7 @@ public class ProductManager extends Agent implements Persistent {
 		copyProductResources( resources, installFolder );
 
 		// Load the product.
-		loadModules( installFolder );
+		loadModules( userProductFolder );
 
 		// Set the enabled state.
 		setEnabledImpl( card, isEnabled( card ) );
