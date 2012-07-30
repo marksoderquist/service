@@ -84,7 +84,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	public static final String UPDATER_JAR_NAME = "updater.jar";
 
-	public static final String PRODUCT_MANAGER_SETTINGS_PATH = "manager/product";
+//	public static final String PRODUCT_MANAGER_SETTINGS_PATH = "manager/product";
 
 	public static final String UPDATE_FOLDER_NAME = "updates";
 
@@ -94,9 +94,9 @@ public class ProductManager extends Agent implements Persistent {
 
 	private static final String APPLY = "apply";
 
-	private static final String UPDATES_SETTINGS_PATH = PRODUCT_MANAGER_SETTINGS_PATH + "/updates";
+	private static final String UPDATES_SETTINGS_PATH = "updates";
 
-	private static final String REMOVES_SETTINGS_PATH = PRODUCT_MANAGER_SETTINGS_PATH + "/removes";
+	private static final String REMOVES_SETTINGS_PATH = "removes";
 
 	private static final String PRODUCT_SETTINGS_PATH = "products";
 
@@ -161,7 +161,7 @@ public class ProductManager extends Agent implements Persistent {
 		foundOption = FoundOption.STAGE;
 		applyOption = ApplyOption.RESTART;
 
-		service.getSettings().addSettingListener( PRODUCT_MANAGER_SETTINGS_PATH, new SettingChangeHandler() );
+		service.getSettings().addSettingListener( Service.PRODUCT_MANAGER_SETTINGS_PATH, new SettingChangeHandler() );
 	}
 
 	public int getCatalogCount() {

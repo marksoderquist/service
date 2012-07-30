@@ -112,6 +112,27 @@ public class ProductManagerTest extends BaseServiceTest {
 	}
 
 	@Test
+	public void testGetPostedUpdatesWithMissingSource() throws Exception {
+		// Initialize the product card before starting the service.
+		assertTrue( FileUtil.copy( SOURCE_PRODUCT_CARD, TARGET_PRODUCT_CARD ) );
+	
+		// Remove the old update card if it exists.
+		assertTrue( "Unable to remove file", FileUtil.delete( TARGET_UPDATE_CARD ) );
+	
+		// Start the service set the update manager for manual checks.
+		service.getTaskManager().start();
+		manager.setCheckOption( CheckOption.MANUAL );
+	
+		// Ensure there are no posted updates.
+		try {
+			manager.getPostedUpdates();
+			fail( "UpdateManager should throw an exception when the pack descriptor cannot be found." );
+		} catch( ExecutionException exception ) {
+			// Intentionally ignore exception.
+		}
+	}
+
+	@Test
 	public void testGetPostedUpdates() throws Exception {
 		// Initialize the product card before starting the service.
 		assertTrue( FileUtil.copy( SOURCE_PRODUCT_CARD, TARGET_PRODUCT_CARD ) );
@@ -131,27 +152,6 @@ public class ProductManagerTest extends BaseServiceTest {
 
 		// Ensure there are posted updates.
 		assertEquals( 1, manager.getPostedUpdates().size() );
-	}
-
-	@Test
-	public void testGetPostedUpdatesWithMissingSource() throws Exception {
-		// Initialize the product card before starting the service.
-		assertTrue( FileUtil.copy( SOURCE_PRODUCT_CARD, TARGET_PRODUCT_CARD ) );
-
-		// Remove the old update card if it exists.
-		FileUtil.delete( TARGET_UPDATE_CARD );
-
-		// Start the service set the update manager for manual checks.
-		service.getTaskManager().start();
-		manager.setCheckOption( CheckOption.MANUAL );
-
-		// Ensure there are no posted updates.
-		try {
-			manager.getPostedUpdates();
-			fail( "UpdateManager should throw an exception when the pack descriptor cannot be found." );
-		} catch( ExecutionException exception ) {
-			// Intentionally ignore exception.
-		}
 	}
 
 	@Test

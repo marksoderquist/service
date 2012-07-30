@@ -60,15 +60,9 @@ public abstract class Service extends Agent implements Product {
 
 	public static final String MANAGER_SETTINGS_ROOT = "/manager";
 
-	public static final String LOCALE = "locale";
+	public static final String TASK_MANAGER_SETTINGS_PATH = MANAGER_SETTINGS_ROOT + "/task";
 
-	public static final String DEVL_PREFIX = "#";
-
-	public static final String TEST_PREFIX = "$";
-
-	private static final String PEER_LOGGER_NAME = "peer";
-
-	private static final String TASK_MANAGER_SETTINGS_PATH = MANAGER_SETTINGS_ROOT + "/task";
+	public static final String PRODUCT_MANAGER_SETTINGS_PATH = MANAGER_SETTINGS_ROOT + "/product";
 
 	private static final String DEFAULT_DESCRIPTOR_PATH = "/META-INF/product.xml";
 
@@ -76,13 +70,21 @@ public abstract class Service extends Agent implements Product {
 
 	private static final String JAVA_VERSION_MINIMUM = "1.6";
 
+	private static final String PEER_LOGGER_NAME = "peer";
+
+	public static final String LOCALE = "locale";
+
+	public static final String TEST_PREFIX = "$";
+
+	public static final String DEVL_PREFIX = "#";
+
 	private static RestartShutdownHook restartShutdownHook;
 
 	private Thread shutdownHook = new ShutdownHook( this );
 
 	private Parameters parameters = Parameters.create();
 
-	private String devModePrefix = "";
+	private String execModePrefix = "";
 
 	private Settings settings;
 
@@ -216,7 +218,7 @@ public abstract class Service extends Agent implements Product {
 	}
 
 	public File getProgramDataFolder() {
-		return OperatingSystem.getUserProgramDataFolder( devModePrefix + card.getArtifact(), devModePrefix + getName() );
+		return OperatingSystem.getUserProgramDataFolder( execModePrefix + card.getArtifact(), execModePrefix + getName() );
 	}
 
 	public void printHelp( String topic ) {
@@ -538,9 +540,9 @@ public abstract class Service extends Agent implements Product {
 
 		if( parameters.isSet( ServiceFlag.DEVMODE ) ) {
 			if( ServiceFlagValue.TEST.equals( parameters.get( ServiceFlag.DEVMODE ) ) && !card.getArtifact().startsWith( TEST_PREFIX ) ) {
-				devModePrefix = TEST_PREFIX;
+				execModePrefix = TEST_PREFIX;
 			} else if( ServiceFlagValue.DEVL.equals( parameters.get( ServiceFlag.DEVMODE ) ) && !card.getArtifact().startsWith( DEVL_PREFIX ) ) {
-				devModePrefix = DEVL_PREFIX;
+				execModePrefix = DEVL_PREFIX;
 			}
 		}
 
@@ -613,8 +615,8 @@ public abstract class Service extends Agent implements Product {
 		}
 
 		// Add the preferences settings provider.
-		//String preferencesPath = "/" + card.getGroup().replace( '.', '/' ) + "/" + devModePrefix + card.getArtifact();
-		String preferencesPath = "/" + card.getGroup() + "/" + devModePrefix + card.getArtifact();
+		String preferencesPath = "/" + card.getGroup() + "." + card.getArtifact();
+		if( parameters.isSet( ServiceFlag.DEVMODE ) ) preferencesPath = "/" + card.getGroup() + execModePrefix + card.getArtifact();
 		Preferences preferences = Preferences.userRoot().node( preferencesPath );
 		if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
 		Log.write( Log.DEBUG, "Preferences path: " + preferencesPath );
@@ -636,7 +638,7 @@ public abstract class Service extends Agent implements Product {
 		Authenticator.setDefault( new ServiceProxyAuthenticator( this ) );
 		ProxySelector.setDefault( new ServiceProxySelector( this ) );
 
-		productManager.loadSettings( settings.getNode( "update" ) );
+		productManager.loadSettings( settings.getNode( PRODUCT_MANAGER_SETTINGS_PATH ) );
 		productManager.setUpdaterPath( new File( getHomeFolder(), ProductManager.UPDATER_JAR_NAME ) );
 	}
 
