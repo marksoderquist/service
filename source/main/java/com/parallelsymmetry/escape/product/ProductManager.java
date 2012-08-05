@@ -84,8 +84,6 @@ public class ProductManager extends Agent implements Persistent {
 
 	public static final String UPDATER_JAR_NAME = "updater.jar";
 
-//	public static final String PRODUCT_MANAGER_SETTINGS_PATH = "manager/product";
-
 	public static final String UPDATE_FOLDER_NAME = "updates";
 
 	private static final String CHECK = "check";
@@ -93,12 +91,14 @@ public class ProductManager extends Agent implements Persistent {
 	private static final String FOUND = "found";
 
 	private static final String APPLY = "apply";
+	
+	private static final String CATALOGS_SETTINGS_KEY = "catalogs";
 
-	private static final String UPDATES_SETTINGS_PATH = "updates";
+	private static final String PRODUCT_SETTINGS_KEY = "products";
 
-	private static final String REMOVES_SETTINGS_PATH = "removes";
+	private static final String REMOVES_SETTINGS_KEY = "removes";
 
-	private static final String PRODUCT_SETTINGS_PATH = "products";
+	private static final String UPDATES_SETTINGS_KEY = "updates";
 
 	private static final String PRODUCT_ENABLED_KEY = "enabled";
 
@@ -216,9 +216,9 @@ public class ProductManager extends Agent implements Persistent {
 			}
 		}
 
-		Set<InstalledProduct> products = service.getSettings().getSet( REMOVES_SETTINGS_PATH, new HashSet<InstalledProduct>() );
+		Set<InstalledProduct> products = service.getSettings().getSet( REMOVES_SETTINGS_KEY, new HashSet<InstalledProduct>() );
 		products.removeAll( installedProducts );
-		service.getSettings().putSet( REMOVES_SETTINGS_PATH, products );
+		service.getSettings().putSet( REMOVES_SETTINGS_KEY, products );
 	}
 
 	public void uninstallProducts( ProductCard... cards ) throws Exception {
@@ -235,9 +235,9 @@ public class ProductManager extends Agent implements Persistent {
 			removeProductImpl( card );
 		}
 
-		Set<InstalledProduct> products = service.getSettings().getSet( REMOVES_SETTINGS_PATH, new HashSet<InstalledProduct>() );
+		Set<InstalledProduct> products = service.getSettings().getSet( REMOVES_SETTINGS_KEY, new HashSet<InstalledProduct>() );
 		products.addAll( removedProducts );
-		service.getSettings().putSet( REMOVES_SETTINGS_PATH, products );
+		service.getSettings().putSet( REMOVES_SETTINGS_KEY, products );
 	}
 
 	public boolean isInstalled( ProductCard card ) {
@@ -610,7 +610,7 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	public Settings getProductSettings( ProductCard card ) {
-		return service.getSettings().getNode( PRODUCT_SETTINGS_PATH + "/" + card.getProductKey() );
+		return service.getSettings().getNode( PRODUCT_SETTINGS_KEY + "/" + card.getProductKey() );
 	}
 
 	public void loadModules( File... folders ) throws Exception {
@@ -699,24 +699,24 @@ public class ProductManager extends Agent implements Persistent {
 	public void loadSettings( Settings settings ) {
 		this.settings = settings;
 
-		this.catalogs = settings.getSet( "catalogs", this.catalogs );
+		this.catalogs = settings.getSet( CATALOGS_SETTINGS_KEY, this.catalogs );
+		this.updates = settings.getSet( UPDATES_SETTINGS_KEY, this.updates );
 
 		this.checkOption = CheckOption.valueOf( settings.get( CHECK, CheckOption.DISABLED.name() ) );
 		this.foundOption = FoundOption.valueOf( settings.get( FOUND, FoundOption.STAGE.name() ) );
 		this.applyOption = ApplyOption.valueOf( settings.get( APPLY, ApplyOption.RESTART.name() ) );
-		this.updates = settings.getSet( UPDATES_SETTINGS_PATH, new HashSet<StagedUpdate>() );
 	}
 
 	@Override
 	public void saveSettings( Settings settings ) {
 		if( settings == null ) return;
 
-		settings.putSet( "catalogs", catalogs );
+		settings.putSet( CATALOGS_SETTINGS_KEY, catalogs );
+		settings.putSet( UPDATES_SETTINGS_KEY, updates );
 
 		settings.put( CHECK, checkOption.name() );
 		settings.put( FOUND, foundOption.name() );
 		settings.put( APPLY, applyOption.name() );
-		settings.putSet( UPDATES_SETTINGS_PATH, updates );
 
 		settings.flush();
 	}
@@ -833,11 +833,11 @@ public class ProductManager extends Agent implements Persistent {
 
 	private void cleanRemovedProducts() {
 		// Check for products marked for removal and remove the files.
-		Set<InstalledProduct> products = service.getSettings().getSet( REMOVES_SETTINGS_PATH, new HashSet<InstalledProduct>() );
+		Set<InstalledProduct> products = service.getSettings().getSet( REMOVES_SETTINGS_KEY, new HashSet<InstalledProduct>() );
 		for( InstalledProduct product : products ) {
 			FileUtil.delete( product.getTarget() );
 		}
-		service.getSettings().removeNode( REMOVES_SETTINGS_PATH );
+		service.getSettings().removeNode( REMOVES_SETTINGS_KEY );
 	}
 
 	private URI getResolvedUpdateUri( URI uri ) {
