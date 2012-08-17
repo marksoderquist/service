@@ -756,7 +756,6 @@ public abstract class Service extends Agent implements Product {
 
 		// If updates are staged, apply them.
 		if( productManager.areUpdatesStaged() ) {
-			// NEXT If the right flags are set, notify the user of the updates.
 			Log.write( "Staged updates detected." );
 			boolean result = false;
 			try {
