@@ -6,7 +6,7 @@ public interface ServiceFlag extends CommonFlag {
 
 	public static final String ARTIFACT = "-artifact";
 
-	public static final String DEVMODE = "-devmode";
+	public static final String EXECMODE = "-execmode";
 
 	public static final String RESTART = "-restart";
 

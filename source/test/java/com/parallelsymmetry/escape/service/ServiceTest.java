@@ -29,7 +29,7 @@ public class ServiceTest extends BaseTestCase {
 	public void setUp() throws Exception {
 		super.setUp();
 		service = new MockService();
-		service.call( ServiceFlag.DEVMODE, ServiceFlagValue.TEST, ServiceFlag.SETTINGS_RESET, ServiceFlag.STOP );
+		service.call( ServiceFlag.EXECMODE, ServiceFlagValue.TEST, ServiceFlag.SETTINGS_RESET, ServiceFlag.STOP );
 		service.getProductManager().setCheckOption( ProductManager.CheckOption.DISABLED );
 	}
 
@@ -42,13 +42,13 @@ public class ServiceTest extends BaseTestCase {
 	}
 
 	public void testCall() throws Exception {
-		service.call( ServiceFlag.DEVMODE, ServiceFlagValue.TEST );
+		service.call( ServiceFlag.EXECMODE, ServiceFlagValue.TEST );
 		service.waitForStartup( TIMEOUT, TIMEUNIT );
 		assertTrue( service.isRunning() );
 
 		assertEquals( MOCK_RELEASE, service.getCard().getRelease().toHumanString() );
 
-		service.call( ServiceFlag.DEVMODE, ServiceFlagValue.TEST, ServiceFlag.STOP );
+		service.call( ServiceFlag.EXECMODE, ServiceFlagValue.TEST, ServiceFlag.STOP );
 		service.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertFalse( service.isRunning() );
 	}
@@ -330,7 +330,7 @@ public class ServiceTest extends BaseTestCase {
 		Log.addHandler( handler );
 
 		List<String> commandList = new ArrayList<String>( Arrays.asList( commands ) );
-		commandList.add( 0, ServiceFlag.DEVMODE );
+		commandList.add( 0, ServiceFlag.EXECMODE );
 		commandList.add( 1, ServiceFlagValue.TEST );
 
 		try {
@@ -338,7 +338,7 @@ public class ServiceTest extends BaseTestCase {
 			service.waitForStartup( TIMEOUT, TIMEUNIT );
 
 			if( stop && service.isRunning() ) {
-				service.call( new String[] { ServiceFlag.DEVMODE, ServiceFlagValue.TEST, ServiceFlag.STOP } );
+				service.call( new String[] { ServiceFlag.EXECMODE, ServiceFlagValue.TEST, ServiceFlag.STOP } );
 				service.waitForShutdown( TIMEOUT, TIMEUNIT );
 				assertFalse( service.isRunning() );
 			}

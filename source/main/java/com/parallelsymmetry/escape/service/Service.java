@@ -538,10 +538,10 @@ public abstract class Service extends Agent implements Product {
 	private final void configureOnce( Parameters parameters ) {
 		if( isRunning() ) return;
 
-		if( parameters.isSet( ServiceFlag.DEVMODE ) ) {
-			if( ServiceFlagValue.TEST.equals( parameters.get( ServiceFlag.DEVMODE ) ) && !card.getArtifact().startsWith( TEST_PREFIX ) ) {
+		if( parameters.isSet( ServiceFlag.EXECMODE ) ) {
+			if( ServiceFlagValue.TEST.equals( parameters.get( ServiceFlag.EXECMODE ) ) && !card.getArtifact().startsWith( TEST_PREFIX ) ) {
 				execModePrefix = TEST_PREFIX;
-			} else if( ServiceFlagValue.DEVL.equals( parameters.get( ServiceFlag.DEVMODE ) ) && !card.getArtifact().startsWith( DEVL_PREFIX ) ) {
+			} else if( ServiceFlagValue.DEVL.equals( parameters.get( ServiceFlag.EXECMODE ) ) && !card.getArtifact().startsWith( DEVL_PREFIX ) ) {
 				execModePrefix = DEVL_PREFIX;
 			}
 		}
@@ -581,7 +581,7 @@ public abstract class Service extends Agent implements Product {
 			}
 
 			// Check the development flag.
-			if( home == null && parameters.isSet( ServiceFlag.DEVMODE ) ) {
+			if( home == null && parameters.isSet( ServiceFlag.EXECMODE ) ) {
 				home = new File( System.getProperty( "user.dir" ), "target/install" );
 				home.mkdirs();
 			}
@@ -616,13 +616,17 @@ public abstract class Service extends Agent implements Product {
 
 		// Add the preferences settings provider.
 		String preferencesPath = "/" + card.getGroup() + "." + card.getArtifact();
-		if( parameters.isSet( ServiceFlag.DEVMODE ) ) preferencesPath = "/" + card.getGroup() + execModePrefix + card.getArtifact();
+		if( parameters.isSet( ServiceFlag.EXECMODE ) ) preferencesPath = "/" + card.getGroup() + execModePrefix + card.getArtifact();
 		Preferences preferences = Preferences.userRoot().node( preferencesPath );
 		if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
 		Log.write( Log.DEBUG, "Preferences path: " + preferencesPath );
 
 		// Reset the settings specified on the command line.
 		if( parameters.isTrue( ServiceFlag.SETTINGS_RESET ) ) {
+			if( "".equals( execModePrefix ) ) {
+				Log.write( Log.ERROR, "Resetting the program settings for a production instance:" );
+				Log.write( Log.ERROR, "Parameters: ", parameters.toString() );
+			}
 			Log.write( Log.WARN, "Resetting the program settings..." );
 			settings.reset();
 		}
