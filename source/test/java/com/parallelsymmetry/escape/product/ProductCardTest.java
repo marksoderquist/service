@@ -24,16 +24,14 @@ public class ProductCardTest extends BaseTestCase {
 		assertEquals( "/product/artifact", ProductCard.ARTIFACT_PATH );
 	}
 
-	public void testUriIssues() throws Exception {
+	public void testUriMethods() throws Exception {
 		URL url = new URL( "jar:file:/C:/Program%20Files/Escape/program.jar!/META-INF/product.xml" );
 		URI uri = url.toURI();
 
-		System.out.println( "URI opaque: " + uri.isOpaque() );
-
-		System.out.println( "URL: " + url.toString() );
-		System.out.println( "URI: " + uri.toString() );
-		System.out.println( "URI: " + UriUtil.resolve( uri, URI.create( "otherfile.txt" ) ).toString() );
-		System.out.println( "URI: " + URI.create( ".." ).resolve( uri ).toString() );
+		assertTrue( uri.isOpaque() );
+		assertEquals( "jar:file:/C:/Program%20Files/Escape/program.jar!/META-INF/product.xml", uri.toString() );
+		assertEquals( "jar:file:/C:/Program%20Files/Escape/program.jar!/META-INF/otherfile.txt", UriUtil.resolve( uri, URI.create( "otherfile.txt" ) ).toString() );
+		assertEquals( "jar:file:/C:/Program%20Files/Escape/program.jar!/META-INF/product.xml", URI.create( ".." ).resolve( uri ).toString() );
 	}
 
 	public void testGetKey() throws Exception {
@@ -128,12 +126,12 @@ public class ProductCardTest extends BaseTestCase {
 
 	public void testGetInstallFolder() throws Exception {
 		ProductCard card = loadCard( MOCK_SERVICE );
-		assertNull(card.getInstallFolder() );
+		assertNull( card.getInstallFolder() );
 
 		card.setInstallFolder( new File( "." ) );
 		assertEquals( new File( "." ), card.getInstallFolder() );
 	}
-	
+
 	public void testEquals() throws Exception {
 		URL url = getClass().getResource( MOCK_SERVICE );
 		Descriptor descriptor = new Descriptor( url );
