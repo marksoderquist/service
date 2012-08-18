@@ -16,6 +16,7 @@ import com.parallelsymmetry.escape.utility.TextUtil;
 import com.parallelsymmetry.escape.utility.agent.Agent;
 import com.parallelsymmetry.escape.utility.log.DefaultHandler;
 import com.parallelsymmetry.escape.utility.log.Log;
+import com.parallelsymmetry.escape.utility.log.LogFlag;
 
 public class ServiceTest extends BaseTestCase {
 
@@ -276,7 +277,7 @@ public class ServiceTest extends BaseTestCase {
 		String name1 = "Mock Service 1";
 		MockService service1 = new MockService( name1 );
 		service1.getProductManager().setCheckOption( ProductManager.CheckOption.DISABLED );
-		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false, ServiceFlag.STATUS, "-log.level", "none" ) );
+		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false, ServiceFlag.STATUS, LogFlag.LOG_LEVEL, Log.NONE.toString() ) );
 		assertCommandLineHeader( name1, parser1 );
 
 		assertEquals( "[I] " + name1 + " status: STOPPED", parser1.next() );
@@ -292,7 +293,7 @@ public class ServiceTest extends BaseTestCase {
 		String name2 = "Mock Service 2";
 		MockService service2 = new MockService( name2 );
 		service2.getProductManager().setCheckOption( ProductManager.CheckOption.DISABLED );
-		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.INFO, false, ServiceFlag.STATUS, "-log.level", "none" ) );
+		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.INFO, false, ServiceFlag.STATUS, LogFlag.LOG_LEVEL, Log.NONE.toString() ) );
 		service2.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertCommandLineHeader( name2, parser2 );
 
