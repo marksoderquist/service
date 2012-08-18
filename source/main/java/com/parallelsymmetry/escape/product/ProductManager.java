@@ -586,8 +586,7 @@ public class ProductManager extends Agent implements Persistent {
 			}
 		}
 
-		builder.command().add( "\\" + ServiceFlag.UPDATE );
-		builder.command().add( "false" );
+		builder.command().add( "\\" + ServiceFlag.NOUPDATE );
 
 		builder.command().add( UpdaterFlag.LAUNCH_HOME );
 		builder.command().add( System.getProperty( "user.dir" ) );

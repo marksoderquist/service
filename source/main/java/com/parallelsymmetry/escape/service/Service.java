@@ -505,7 +505,8 @@ public abstract class Service extends Agent implements Product {
 
 			// The logic is somewhat complex, the nested if statements help clarify it.
 			if( productManager.getCheckOption() != ProductManager.CheckOption.DISABLED ) {
-				if( ( parameters.isSet( ServiceFlag.UPDATE ) & parameters.isTrue( ServiceFlag.UPDATE ) ) | ( !parameters.isSet( ServiceFlag.UPDATE ) & !peer ) ) {
+				//if( ( parameters.isSet( ServiceFlag.UPDATE ) & parameters.isTrue( ServiceFlag.UPDATE ) ) | ( !parameters.isSet( ServiceFlag.UPDATE ) & !peer ) ) {
+				if( parameters.isTrue(ServiceFlag.NOUPDATE) | !peer ) {
 					if( update() ) {
 						// The program should be allowed, but not forced, to exit at this point.
 						Log.write( "Program exiting to apply updates." );

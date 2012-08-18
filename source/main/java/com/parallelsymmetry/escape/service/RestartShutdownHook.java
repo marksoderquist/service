@@ -19,6 +19,10 @@ public class RestartShutdownHook extends Thread {
 	private Service service;
 
 	public RestartShutdownHook( Service service ) {
+		this( service, null );
+	}
+
+	public RestartShutdownHook( Service service, String[] programCommands ) {
 		this.service = service;
 
 		builder = new ProcessBuilder( OperatingSystem.isWindows() ? "javaw" : "java" );
@@ -45,6 +49,13 @@ public class RestartShutdownHook extends Thread {
 		// Add the original command line parameters.
 		for( String command : service.getParameters().getCommands() ) {
 			builder.command().add( command );
+		}
+		
+		// Add program arguments.
+		if( programCommands != null ) {
+			for( String command : programCommands ) {
+				builder.command().add( command );
+			}
 		}
 
 		Log.write( Log.DEBUG, TextUtil.toString( builder.command(), " " ) );
