@@ -503,13 +503,14 @@ public abstract class Service extends Agent implements Product {
 				return;
 			}
 
-			// The logic is somewhat complex, the nested if statements help clarify it.
+			// This logic is not trivial, the nested if statements help clarify it.
 			if( productManager.getCheckOption() != ProductManager.CheckOption.DISABLED ) {
-				//if( ( parameters.isSet( ServiceFlag.UPDATE ) & parameters.isTrue( ServiceFlag.UPDATE ) ) | ( !parameters.isSet( ServiceFlag.UPDATE ) & !peer ) ) {
-				if( parameters.isTrue(ServiceFlag.NOUPDATE) | !peer ) {
+				if( !peer & !parameters.isTrue( ServiceFlag.NOUPDATE ) ) {
 					if( update() ) {
 						// The program should be allowed, but not forced, to exit at this point.
 						Log.write( "Program exiting to apply updates." );
+
+						// Do not call System.exit() or Runtime.getRuntime().exit(). Just return.
 						return;
 					}
 				}
@@ -625,8 +626,8 @@ public abstract class Service extends Agent implements Product {
 		// Reset the settings specified on the command line.
 		if( parameters.isTrue( ServiceFlag.SETTINGS_RESET ) ) {
 			if( "".equals( execModePrefix ) ) {
-				Log.write( Log.ERROR, "Resetting the program settings for a production instance:" );
 				Log.write( Log.ERROR, "Parameters: ", parameters.toString() );
+				Log.write( Log.ERROR, new RuntimeException( "Resetting the program settings for a production instance!" ) );
 			}
 			Log.write( Log.WARN, "Resetting the program settings..." );
 			settings.reset();
