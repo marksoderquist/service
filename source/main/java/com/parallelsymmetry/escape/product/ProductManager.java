@@ -513,8 +513,8 @@ public class ProductManager extends Agent implements Persistent {
 	 * 
 	 * @throws Exception
 	 */
-	public boolean applyStagedUpdates() throws Exception {
-		if( !isEnabled() || updates.size() == 0 ) return false;
+	public int applyStagedUpdates() throws Exception {
+		if( !isEnabled() || updates.size() == 0 ) return 0;
 
 		Log.write( Log.DEBUG, "Starting update process..." );
 		// Copy the updater to a temporary location.
@@ -600,12 +600,15 @@ public class ProductManager extends Agent implements Persistent {
 		// Start the process.
 		builder.start();
 		Log.write( Log.TRACE, "Update process started." );
+		
+		// Store the update count because the collection will be cleared.
+		int count = updates.size();
 
 		// Remove the updates settings.
 		updates.clear();
 		saveSettings( settings );
 
-		return true;
+		return count;
 	}
 
 	public Settings getProductSettings( ProductCard card ) {

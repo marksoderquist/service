@@ -504,15 +504,15 @@ public abstract class Service extends Agent implements Product {
 			}
 
 			// This logic is not trivial, the nested if statements help clarify it.
-			if( productManager.getCheckOption() != ProductManager.CheckOption.DISABLED ) {
-				if( !peer & !parameters.isSet( ServiceFlag.NOUPDATE ) ) {
-					if( update() ) {
-						// The program should be allowed, but not forced, to exit at this point.
-						Log.write( "Program exiting to apply updates." );
+			if( !peer & !parameters.isSet( ServiceFlag.NOUPDATE ) & productManager.getCheckOption() != ProductManager.CheckOption.DISABLED ) {
+				int updateResult = update();
+				
+				if( updateResult > 0 ) {
+					// The program should be allowed, but not forced, to exit at this point.
+					Log.write( "Program exiting to apply updates." );
 
-						// Do not call System.exit() or Runtime.getRuntime().exit(). Just return.
-						return;
-					}
+					// Do not call System.exit() or Runtime.getRuntime().exit(). Just return.
+					return;
 				}
 			}
 
@@ -752,10 +752,10 @@ public abstract class Service extends Agent implements Product {
 	 * @return True if updates were found, causing the service to terminate. False
 	 *         otherwise.
 	 */
-	private final boolean update() {
+	private final int update() {
 		if( home == null && parameters.isSet( "update" ) && !parameters.isTrue( "update" ) ) {
 			Log.write( Log.WARN, "Program not executed from updatable location." );
-			return false;
+			return 0;
 		}
 
 		Log.write( Log.DEBUG, "Checking for staged updates..." );
@@ -763,7 +763,7 @@ public abstract class Service extends Agent implements Product {
 		// If updates are staged, apply them.
 		if( productManager.areUpdatesStaged() ) {
 			Log.write( "Staged updates detected." );
-			boolean result = false;
+			int result = 0;
 			try {
 				result = productManager.applyStagedUpdates();
 			} catch( Exception exception ) {
@@ -772,7 +772,7 @@ public abstract class Service extends Agent implements Product {
 			return result;
 		} else {
 			Log.write( Log.TRACE, "No staged updates detected." );
-			return false;
+			return 0;
 		}
 	}
 
