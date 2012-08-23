@@ -341,6 +341,8 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	public void checkForUpdates() {
+		if( !isEnabled() ) return;
+
 		try {
 			Log.write( Log.TRACE, "Checking for updates..." );
 			int stagedUpdateCount = service.getProductManager().stagePostedUpdates();
@@ -834,7 +836,7 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	private boolean isEnabled() {
-		return checkOption != CheckOption.DISABLED;
+		return checkOption != CheckOption.DISABLED && !service.getParameters().isSet( ServiceFlag.NOUPDATE );
 	}
 
 	private void cleanRemovedProducts() {
@@ -1032,10 +1034,10 @@ public class ProductManager extends Agent implements Persistent {
 				task.cancel();
 				Log.write( Log.DEBUG, "Update task cancelled." );
 			}
-	
+
 			// Don't schedule tasks if the NOUPDATE flag is set. 
 			if( service.getParameters().isSet( ServiceFlag.NOUPDATE ) ) return;
-	
+
 			switch( checkOption ) {
 				case INTERVAL: {
 					task = new UpdateCheckTask( service );
@@ -1048,7 +1050,7 @@ public class ProductManager extends Agent implements Persistent {
 					break;
 				}
 			}
-	
+
 			Log.write( Log.DEBUG, "Update task scheduled." );
 		}
 	}
