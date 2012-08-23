@@ -115,14 +115,14 @@ public class ProductManagerTest extends BaseServiceTest {
 	public void testGetPostedUpdatesWithMissingSource() throws Exception {
 		// Initialize the product card before starting the service.
 		assertTrue( FileUtil.copy( SOURCE_PRODUCT_CARD, TARGET_PRODUCT_CARD ) );
-	
+
 		// Remove the old update card if it exists.
 		assertTrue( "Unable to remove file", FileUtil.delete( TARGET_UPDATE_CARD ) );
-	
+
 		// Start the service set the update manager for manual checks.
 		service.getTaskManager().start();
 		manager.setCheckOption( CheckOption.MANUAL );
-	
+
 		// Ensure there are no posted updates.
 		try {
 			manager.getPostedUpdates();
@@ -185,7 +185,7 @@ public class ProductManagerTest extends BaseServiceTest {
 		try {
 			// Enable the update manager temporarily.
 			manager.setCheckOption( ProductManager.CheckOption.STARTUP );
-			manager.stagePostedUpdates();
+			assertEquals( 1, manager.stagePostedUpdates() );
 			assertTrue( updateFile.toString(), updateFile.exists() );
 		} finally {
 			// Disable the update manager.

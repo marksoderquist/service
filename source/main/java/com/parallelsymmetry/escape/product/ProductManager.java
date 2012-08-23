@@ -91,7 +91,7 @@ public class ProductManager extends Agent implements Persistent {
 	private static final String FOUND = "found";
 
 	private static final String APPLY = "apply";
-	
+
 	private static final String CATALOGS_SETTINGS_KEY = "catalogs";
 
 	private static final String PRODUCT_SETTINGS_KEY = "products";
@@ -134,7 +134,11 @@ public class ProductManager extends Agent implements Persistent {
 
 	private Timer timer;
 
+	private UpdateCheckTask task;
+
 	private Set<ProductManagerListener> listeners;
+
+	// FIXME Cleanup use of the term module.
 
 	public ProductManager( Service service ) {
 		this.service = service;
@@ -315,6 +319,7 @@ public class ProductManager extends Agent implements Persistent {
 	public void setCheckOption( CheckOption checkOption ) {
 		this.checkOption = checkOption;
 		saveSettings( settings );
+		scheduleCheckUpdateTask();
 	}
 
 	public FoundOption getFoundOption() {
@@ -338,7 +343,8 @@ public class ProductManager extends Agent implements Persistent {
 	public void checkForUpdates() {
 		try {
 			Log.write( Log.TRACE, "Checking for updates..." );
-			if( service.getProductManager().stagePostedUpdates() ) {
+			int stagedUpdateCount = service.getProductManager().stagePostedUpdates();
+			if( stagedUpdateCount > 0 ) {
 				Log.write( Log.TRACE, "Updates staged, restarting..." );
 				service.serviceRestart();
 			}
@@ -414,11 +420,11 @@ public class ProductManager extends Agent implements Persistent {
 	 * @return true if one or more product packs were staged.
 	 * @throws Exception
 	 */
-	public boolean stagePostedUpdates() throws Exception {
-		if( !isEnabled() ) return false;
+	public int stagePostedUpdates() throws Exception {
+		if( !isEnabled() ) return 0;
 
 		Set<ProductCard> cards = getPostedUpdates();
-		if( cards.size() == 0 ) return false;
+		if( cards.size() == 0 ) return 0;
 
 		return stageSelectedUpdates( cards );
 	}
@@ -436,7 +442,7 @@ public class ProductManager extends Agent implements Persistent {
 	 * @return true if one or more product packs were staged.
 	 * @throws Exception
 	 */
-	public boolean stageSelectedUpdates( Set<ProductCard> updateCards ) throws Exception {
+	public int stageSelectedUpdates( Set<ProductCard> updateCards ) throws Exception {
 		File stageFolder = new File( service.getProgramDataFolder(), UPDATE_FOLDER_NAME );
 		stageFolder.mkdirs();
 
@@ -447,7 +453,6 @@ public class ProductManager extends Agent implements Persistent {
 		Map<ProductCard, Set<ProductResource>> productResources = downloadProductResources( updateCards );
 
 		// Create an update for each product.
-		boolean result = false;
 		for( ProductCard updateCard : updateCards ) {
 			ProductCard productCard = productCards.get( updateCard.getProductKey() );
 
@@ -469,11 +474,10 @@ public class ProductManager extends Agent implements Persistent {
 			createUpdatePack( productResources.get( updateCard ), updatePack );
 			updates.add( new StagedUpdate( updatePack, installFolder ) );
 			Log.write( Log.TRACE, "Update staged: " + updatePack );
-			result = true;
 		}
 		saveSettings( settings );
 
-		return result;
+		return updates.size();
 	}
 
 	public String getStagedUpdateFileName( ProductCard card ) {
@@ -481,6 +485,10 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	public boolean areUpdatesStaged() {
+		return getStagedUpdateCount() > 0;
+	}
+
+	public int getStagedUpdateCount() {
 		Set<StagedUpdate> staged = new HashSet<StagedUpdate>();
 		Set<StagedUpdate> remove = new HashSet<StagedUpdate>();
 
@@ -502,7 +510,7 @@ public class ProductManager extends Agent implements Persistent {
 			saveSettings( settings );
 		}
 
-		return staged.size() > 0;
+		return staged.size();
 	}
 
 	/**
@@ -600,7 +608,7 @@ public class ProductManager extends Agent implements Persistent {
 		// Start the process.
 		builder.start();
 		Log.write( Log.TRACE, "Update process started." );
-		
+
 		// Store the update count because the collection will be cleared.
 		int count = updates.size();
 
@@ -689,6 +697,50 @@ public class ProductManager extends Agent implements Persistent {
 		return clazz;
 	}
 
+	/**
+	 * Schedule the check update task according to the settings. This method may
+	 * safely be called as many times as necessary from any thread.
+	 */
+	public void scheduleCheckUpdateTask() {
+		synchronized( this ) {
+			if( task != null ) {
+				task.cancel();
+				Log.write( Log.DEBUG, "Update task cancelled." );
+			}
+
+			// Don't schedule tasks if the NOUPDATE flag is set. 
+			if( service.getParameters().isSet( ServiceFlag.NOUPDATE ) ) return;
+
+			task = new UpdateCheckTask( service );
+
+			switch( checkOption ) {
+				case MANUAL: {
+					break;
+				}
+				case STARTUP: {
+					timer.schedule( task, 0 );
+					break;
+				}
+				case INTERVAL: {
+					// TODO Schedule the task by interval.
+					break;
+				}
+				case SCHEDULE: {
+					// TODO Schedule the task by schedule.
+					break;
+				}
+				case DISABLED: {
+					break;
+				}
+				default: {
+					break;
+				}
+			}
+
+			Log.write( Log.DEBUG, "Update task scheduled." );
+		}
+	}
+
 	public void addProductManagerListener( ProductManagerListener listener ) {
 		listeners.add( listener );
 	}
@@ -727,8 +779,8 @@ public class ProductManager extends Agent implements Persistent {
 	protected void startAgent() throws Exception {
 		cleanRemovedProducts();
 
+		// Create the update check timer.
 		timer = new Timer();
-		if( isEnabled() ) scheduleCheckUpdateTask( new UpdateCheckTask( service ) );
 
 		// Define the product folders.
 		homeModuleFolder = new File( service.getHomeFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
@@ -875,31 +927,6 @@ public class ProductManager extends Agent implements Persistent {
 					FileUtil.unzip( resource.getLocalFile(), folder );
 					break;
 				}
-			}
-		}
-	}
-
-	private void scheduleCheckUpdateTask( UpdateCheckTask task ) {
-		switch( checkOption ) {
-			case MANUAL: {
-				break;
-			}
-			case STARTUP: {
-				break;
-			}
-			case INTERVAL: {
-				// TODO Schedule the task by interval.
-				break;
-			}
-			case SCHEDULE: {
-				// TODO Schedule the task by schedule.
-				break;
-			}
-			case DISABLED: {
-				break;
-			}
-			default: {
-				break;
 			}
 		}
 	}

@@ -322,67 +322,11 @@ public abstract class Service extends Agent implements Product {
 		Log.write( Log.INFO, "Restarting..." );
 	}
 
-	/**
-	 * This method should only be called through the processParameters() method.
-	 */
-	@Override
-	protected final void startAgent() throws Exception {
-		Log.write( Log.DEBUG, getName() + " starting..." );
-		Runtime.getRuntime().addShutdownHook( shutdownHook );
+	protected abstract void startService( Parameters parameters ) throws Exception;
 
-		// Start the peer server.
-		peerServer.startAndWait();
+	protected abstract void process( Parameters parameters ) throws Exception;
 
-		// Start the task manager.
-		taskManager.loadSettings( settings.getNode( TASK_MANAGER_SETTINGS_PATH ) );
-		taskManager.startAndWait();
-
-		// Start the product manager.
-		productManager.startAndWait();
-
-		// Register the modules.
-		registerAllModules();
-
-		startService( parameters );
-
-		// Allocate the modules.
-		createAllModules();
-
-		Log.write( getName() + " started." );
-
-		if( productManager.getCheckOption() == ProductManager.CheckOption.STARTUP ) productManager.checkForUpdates();
-	}
-
-	/**
-	 * This method should only be called through the processParameters() method.
-	 */
-	@Override
-	protected final void stopAgent() throws Exception {
-		Log.write( Log.DEBUG, getName() + " stopping..." );
-		if( socket != null ) socket.close();
-
-		// Deallocate the modules.
-		destroyAllModules();
-
-		stopService( parameters );
-
-		// Unregister modules.
-		unregisterAllModules();
-
-		productManager.stopAndWait();
-
-		taskManager.stopAndWait();
-		taskManager.saveSettings( settings.getNode( TASK_MANAGER_SETTINGS_PATH ) );
-
-		peerServer.stopAndWait();
-
-		try {
-			Runtime.getRuntime().removeShutdownHook( shutdownHook );
-		} catch( IllegalStateException exception ) {
-			// Intentionally ignore exception.
-		}
-		Log.write( getName() + " stopped." );
-	}
+	protected abstract void stopService( Parameters parameters ) throws Exception;
 
 	protected boolean requestStop() {
 		getTaskManager().submit( new ShutdownTask( this ) );
@@ -400,11 +344,67 @@ public abstract class Service extends Agent implements Product {
 		return null;
 	}
 
-	protected abstract void startService( Parameters parameters ) throws Exception;
+	/**
+	 * This method should only be called through the processParameters() method.
+	 */
+	@Override
+	protected final void startAgent() throws Exception {
+		Log.write( Log.DEBUG, getName() + " starting..." );
+		Runtime.getRuntime().addShutdownHook( shutdownHook );
+	
+		// Start the peer server.
+		peerServer.startAndWait();
+	
+		// Start the task manager.
+		taskManager.loadSettings( settings.getNode( TASK_MANAGER_SETTINGS_PATH ) );
+		taskManager.startAndWait();
+	
+		// Start the product manager.
+		productManager.startAndWait();
+	
+		// Register the modules.
+		registerAllModules();
+	
+		startService( parameters );
+	
+		// Allocate the modules.
+		createAllModules();
+	
+		Log.write( getName() + " started." );
+	
+		productManager.scheduleCheckUpdateTask();
+	}
 
-	protected abstract void process( Parameters parameters ) throws Exception;
-
-	protected abstract void stopService( Parameters parameters ) throws Exception;
+	/**
+	 * This method should only be called through the processParameters() method.
+	 */
+	@Override
+	protected final void stopAgent() throws Exception {
+		Log.write( Log.DEBUG, getName() + " stopping..." );
+		if( socket != null ) socket.close();
+	
+		// Deallocate the modules.
+		destroyAllModules();
+	
+		stopService( parameters );
+	
+		// Unregister modules.
+		unregisterAllModules();
+	
+		productManager.stopAndWait();
+	
+		taskManager.stopAndWait();
+		taskManager.saveSettings( settings.getNode( TASK_MANAGER_SETTINGS_PATH ) );
+	
+		peerServer.stopAndWait();
+	
+		try {
+			Runtime.getRuntime().removeShutdownHook( shutdownHook );
+		} catch( IllegalStateException exception ) {
+			// Intentionally ignore exception.
+		}
+		Log.write( getName() + " stopped." );
+	}
 
 	private static void setLocale( Parameters parameters ) {
 		String locale = parameters.get( LOCALE );
@@ -753,7 +753,7 @@ public abstract class Service extends Agent implements Product {
 	 *         otherwise.
 	 */
 	private final int update() {
-		if( home == null && parameters.isSet( "update" ) && !parameters.isTrue( "update" ) ) {
+		if( home == null ) {
 			Log.write( Log.WARN, "Program not executed from updatable location." );
 			return 0;
 		}
@@ -761,19 +761,19 @@ public abstract class Service extends Agent implements Product {
 		Log.write( Log.DEBUG, "Checking for staged updates..." );
 
 		// If updates are staged, apply them.
-		if( productManager.areUpdatesStaged() ) {
-			Log.write( "Staged updates detected." );
-			int result = 0;
+		int result = 0;
+		int updateCount = productManager.getStagedUpdateCount();
+		if( updateCount > 0 ) {
+			Log.write( "Staged updates detected: ", updateCount );
 			try {
 				result = productManager.applyStagedUpdates();
 			} catch( Exception exception ) {
 				Log.write( exception );
 			}
-			return result;
 		} else {
 			Log.write( Log.TRACE, "No staged updates detected." );
-			return 0;
 		}
+		return result;
 	}
 
 	/**
