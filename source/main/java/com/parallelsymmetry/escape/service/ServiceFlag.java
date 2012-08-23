@@ -10,6 +10,8 @@ public interface ServiceFlag extends CommonFlag {
 	
 	public static final String NOUPDATE = "-noupdate";
 
+	public static final String NOUPDATECHECK = "-noupdatecheck";
+
 	public static final String RESTART = "-restart";
 
 	public static final String STOP = "-stop";

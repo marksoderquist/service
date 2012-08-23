@@ -378,7 +378,7 @@ public abstract class Service extends Agent implements Product {
 		Log.write( getName() + " started." );
 
 		// Check for updates.
-		if( productManager.getCheckOption() == ProductManager.CheckOption.STARTUP ) productManager.checkForUpdates();
+		if( !parameters.isSet( ServiceFlag.NOUPDATECHECK ) && productManager.getCheckOption() == ProductManager.CheckOption.STARTUP ) productManager.checkForUpdates();
 	}
 
 	/**

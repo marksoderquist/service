@@ -348,7 +348,7 @@ public class ProductManager extends Agent implements Persistent {
 			int stagedUpdateCount = service.getProductManager().stagePostedUpdates();
 			if( stagedUpdateCount > 0 ) {
 				Log.write( Log.TRACE, "Updates staged, restarting..." );
-				service.serviceRestart( ServiceFlag.NOUPDATE );
+				service.serviceRestart( ServiceFlag.NOUPDATECHECK );
 			}
 		} catch( Exception exception ) {
 			Log.write( exception );
@@ -759,6 +759,37 @@ public class ProductManager extends Agent implements Persistent {
 		productStates.remove( card.getProductKey() );
 	}
 
+	/**
+	 * Schedule the check update task according to the settings. This method may
+	 * safely be called as many times as necessary from any thread.
+	 */
+	private void scheduleCheckUpdateTask() {
+		synchronized( this ) {
+			if( task != null ) {
+				task.cancel();
+				Log.write( Log.DEBUG, "Update task cancelled." );
+			}
+	
+			// Don't schedule tasks if the NOUPDATECHECK flag is set. 
+			if( service.getParameters().isSet( ServiceFlag.NOUPDATECHECK ) ) return;
+	
+			switch( checkOption ) {
+				case INTERVAL: {
+					task = new UpdateCheckTask( service );
+					// TODO Schedule the task by interval.
+					break;
+				}
+				case SCHEDULE: {
+					task = new UpdateCheckTask( service );
+					// TODO Schedule the task by schedule.
+					break;
+				}
+			}
+	
+			Log.write( Log.DEBUG, "Update task scheduled." );
+		}
+	}
+
 	private void installProductImpl( ProductCard card, Map<ProductCard, Set<ProductResource>> productResources ) throws Exception {
 		File installFolder = getProductInstallFolder( card );
 
@@ -836,7 +867,7 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	private boolean isEnabled() {
-		return checkOption != CheckOption.DISABLED && !service.getParameters().isSet( ServiceFlag.NOUPDATE );
+		return checkOption != CheckOption.DISABLED;
 	}
 
 	private void cleanRemovedProducts() {
@@ -1022,37 +1053,6 @@ public class ProductManager extends Agent implements Persistent {
 		// Set the enabled flag.
 		setUpdatable( card, card.getSourceUri() != null );
 		setRemovable( card, true );
-	}
-
-	/**
-	 * Schedule the check update task according to the settings. This method may
-	 * safely be called as many times as necessary from any thread.
-	 */
-	private void scheduleCheckUpdateTask() {
-		synchronized( this ) {
-			if( task != null ) {
-				task.cancel();
-				Log.write( Log.DEBUG, "Update task cancelled." );
-			}
-
-			// Don't schedule tasks if the NOUPDATE flag is set. 
-			if( service.getParameters().isSet( ServiceFlag.NOUPDATE ) ) return;
-
-			switch( checkOption ) {
-				case INTERVAL: {
-					task = new UpdateCheckTask( service );
-					// TODO Schedule the task by interval.
-					break;
-				}
-				case SCHEDULE: {
-					task = new UpdateCheckTask( service );
-					// TODO Schedule the task by schedule.
-					break;
-				}
-			}
-
-			Log.write( Log.DEBUG, "Update task scheduled." );
-		}
 	}
 
 	private void fireProductManagerEvent( ProductManagerEvent event ) {
