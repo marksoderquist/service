@@ -34,6 +34,14 @@ public class ServiceTest extends BaseTestCase {
 		service.getProductManager().setCheckOption( ProductManager.CheckOption.DISABLED );
 	}
 
+	@Override
+	public void tearDown() throws Exception {
+		service.call( ServiceFlag.EXECMODE, ServiceFlagValue.TEST, ServiceFlag.STOP );
+		service.waitForShutdown( TIMEOUT, TIMEUNIT );
+		assertEquals( Service.State.STOPPED, service.getState() );
+		assertFalse( "Service should not be running and is.", service.isRunning() );
+	}
+
 	public void testBeforeCall() throws Exception {
 		assertEquals( "com.parallelsymmetry", service.getCard().getGroup() );
 		assertEquals( "mock", service.getCard().getArtifact() );
@@ -48,10 +56,6 @@ public class ServiceTest extends BaseTestCase {
 		assertTrue( service.isRunning() );
 
 		assertEquals( MOCK_RELEASE, service.getCard().getRelease().toHumanString() );
-
-		service.call( ServiceFlag.EXECMODE, ServiceFlagValue.TEST, ServiceFlag.STOP );
-		service.waitForShutdown( TIMEOUT, TIMEUNIT );
-		assertFalse( service.isRunning() );
 	}
 
 	public void testCommandLineOutput() throws Exception {
@@ -310,6 +314,17 @@ public class ServiceTest extends BaseTestCase {
 		service2.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertEquals( Service.State.STOPPED, service2.getState() );
 		assertFalse( "Service should not be running and is.", service2.isRunning() );
+	}
+
+	public void testNoupdateFlag() throws Exception {
+		service.getProductManager().setCheckOption( ProductManager.CheckOption.MANUAL );
+		assertEquals( "Product manager should be enabled and is not.", ProductManager.CheckOption.MANUAL, service.getProductManager().getCheckOption() );
+
+		service.call( ServiceFlag.NOUPDATE );
+		service.waitForStartup( TIMEOUT, TIMEUNIT );
+		assertTrue( "Service should be running and is not.", service.isRunning() );
+
+		assertEquals( "Product manager should be disabled and is not.", ProductManager.CheckOption.DISABLED, service.getProductManager().getCheckOption() );
 	}
 
 	private List<String> parseCommandLineOutput( String output ) {
