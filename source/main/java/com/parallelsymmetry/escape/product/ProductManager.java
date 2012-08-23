@@ -732,6 +732,12 @@ public class ProductManager extends Agent implements Persistent {
 	@Override
 	protected void startAgent() throws Exception {
 		cleanRemovedProducts();
+		
+		// Disable updates if the NOUPDATE flag is set.
+		if( service.getParameters().isSet( ServiceFlag.NOUPDATE ) ) {
+			checkOption = CheckOption.DISABLED;
+			return;
+		}
 
 		// Create the update check timer.
 		timer = new Timer();
