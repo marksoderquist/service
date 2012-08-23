@@ -318,8 +318,8 @@ public class ProductManager extends Agent implements Persistent {
 
 	public void setCheckOption( CheckOption checkOption ) {
 		this.checkOption = checkOption;
-		saveSettings( settings );
 		scheduleCheckUpdateTask();
+		saveSettings( settings );
 	}
 
 	public FoundOption getFoundOption() {
@@ -346,7 +346,7 @@ public class ProductManager extends Agent implements Persistent {
 			int stagedUpdateCount = service.getProductManager().stagePostedUpdates();
 			if( stagedUpdateCount > 0 ) {
 				Log.write( Log.TRACE, "Updates staged, restarting..." );
-				service.serviceRestart();
+				service.serviceRestart( ServiceFlag.NOUPDATE );
 			}
 		} catch( Exception exception ) {
 			Log.write( exception );
@@ -422,11 +422,7 @@ public class ProductManager extends Agent implements Persistent {
 	 */
 	public int stagePostedUpdates() throws Exception {
 		if( !isEnabled() ) return 0;
-
-		Set<ProductCard> cards = getPostedUpdates();
-		if( cards.size() == 0 ) return 0;
-
-		return stageSelectedUpdates( cards );
+		return stageSelectedUpdates( getPostedUpdates() );
 	}
 
 	public File getProductInstallFolder( ProductCard card ) {
@@ -443,6 +439,8 @@ public class ProductManager extends Agent implements Persistent {
 	 * @throws Exception
 	 */
 	public int stageSelectedUpdates( Set<ProductCard> updateCards ) throws Exception {
+		if( updateCards.size() == 0 ) return 0;
+
 		File stageFolder = new File( service.getProgramDataFolder(), UPDATE_FOLDER_NAME );
 		stageFolder.mkdirs();
 
@@ -594,8 +592,6 @@ public class ProductManager extends Agent implements Persistent {
 			}
 		}
 
-		builder.command().add( "\\" + ServiceFlag.NOUPDATE );
-
 		builder.command().add( UpdaterFlag.LAUNCH_HOME );
 		builder.command().add( System.getProperty( "user.dir" ) );
 
@@ -695,50 +691,6 @@ public class ProductManager extends Agent implements Persistent {
 		if( clazz == null ) throw new ClassNotFoundException( name );
 
 		return clazz;
-	}
-
-	/**
-	 * Schedule the check update task according to the settings. This method may
-	 * safely be called as many times as necessary from any thread.
-	 */
-	public void scheduleCheckUpdateTask() {
-		synchronized( this ) {
-			if( task != null ) {
-				task.cancel();
-				Log.write( Log.DEBUG, "Update task cancelled." );
-			}
-
-			// Don't schedule tasks if the NOUPDATE flag is set. 
-			if( service.getParameters().isSet( ServiceFlag.NOUPDATE ) ) return;
-
-			task = new UpdateCheckTask( service );
-
-			switch( checkOption ) {
-				case MANUAL: {
-					break;
-				}
-				case STARTUP: {
-					timer.schedule( task, 0 );
-					break;
-				}
-				case INTERVAL: {
-					// TODO Schedule the task by interval.
-					break;
-				}
-				case SCHEDULE: {
-					// TODO Schedule the task by schedule.
-					break;
-				}
-				case DISABLED: {
-					break;
-				}
-				default: {
-					break;
-				}
-			}
-
-			Log.write( Log.DEBUG, "Update task scheduled." );
-		}
 	}
 
 	public void addProductManagerListener( ProductManagerListener listener ) {
@@ -1068,6 +1020,37 @@ public class ProductManager extends Agent implements Persistent {
 		// Set the enabled flag.
 		setUpdatable( card, card.getSourceUri() != null );
 		setRemovable( card, true );
+	}
+
+	/**
+	 * Schedule the check update task according to the settings. This method may
+	 * safely be called as many times as necessary from any thread.
+	 */
+	private void scheduleCheckUpdateTask() {
+		synchronized( this ) {
+			if( task != null ) {
+				task.cancel();
+				Log.write( Log.DEBUG, "Update task cancelled." );
+			}
+	
+			// Don't schedule tasks if the NOUPDATE flag is set. 
+			if( service.getParameters().isSet( ServiceFlag.NOUPDATE ) ) return;
+	
+			switch( checkOption ) {
+				case INTERVAL: {
+					task = new UpdateCheckTask( service );
+					// TODO Schedule the task by interval.
+					break;
+				}
+				case SCHEDULE: {
+					task = new UpdateCheckTask( service );
+					// TODO Schedule the task by schedule.
+					break;
+				}
+			}
+	
+			Log.write( Log.DEBUG, "Update task scheduled." );
+		}
 	}
 
 	private void fireProductManagerEvent( ProductManagerEvent event ) {

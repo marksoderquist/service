@@ -156,6 +156,13 @@ public class ProductManagerTest extends BaseServiceTest {
 
 	@Test
 	public void testStagePostedUpdates() throws Exception {
+		File stageFolder = new File( service.getProgramDataFolder(), ProductManager.UPDATE_FOLDER_NAME );
+		File updateFile = new File( stageFolder, manager.getStagedUpdateFileName( service.getCard() ) );
+
+		// Cleanup from previous run.
+		FileUtil.delete( stageFolder );
+		assertFalse( stageFolder.exists() );
+
 		// Create an update for the deployed project.
 		UPDATE.mkdirs();
 
@@ -175,16 +182,9 @@ public class ProductManagerTest extends BaseServiceTest {
 		// Modify the update card timestamp.
 		fixProductCardData( TARGET_UPDATE_CARD );
 
-		File stageFolder = new File( service.getProgramDataFolder(), ProductManager.UPDATE_FOLDER_NAME );
-		File updateFile = new File( stageFolder, manager.getStagedUpdateFileName( service.getCard() ) );
-
-		// Cleanup from previous run.
-		FileUtil.delete( stageFolder );
-		assertFalse( stageFolder.exists() );
-
 		try {
 			// Enable the update manager temporarily.
-			manager.setCheckOption( ProductManager.CheckOption.STARTUP );
+			manager.setCheckOption( ProductManager.CheckOption.MANUAL );
 			assertEquals( 1, manager.stagePostedUpdates() );
 			assertTrue( updateFile.toString(), updateFile.exists() );
 		} finally {

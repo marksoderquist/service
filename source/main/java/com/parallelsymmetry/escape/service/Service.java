@@ -307,9 +307,14 @@ public abstract class Service extends Agent implements Product {
 		return messages;
 	}
 
-	public void serviceRestart() {
+	/**
+	 * Restart the service supplying extra commands if desired.
+	 * 
+	 * @param commands
+	 */
+	public void serviceRestart( String... commands ) {
 		// Register a shutdown hook to restart the application.
-		restartShutdownHook = new RestartShutdownHook( this );
+		restartShutdownHook = new RestartShutdownHook( this, commands );
 		Runtime.getRuntime().addShutdownHook( restartShutdownHook );
 
 		// Request the program stop.
@@ -351,28 +356,29 @@ public abstract class Service extends Agent implements Product {
 	protected final void startAgent() throws Exception {
 		Log.write( Log.DEBUG, getName() + " starting..." );
 		Runtime.getRuntime().addShutdownHook( shutdownHook );
-	
+
 		// Start the peer server.
 		peerServer.startAndWait();
-	
+
 		// Start the task manager.
 		taskManager.loadSettings( settings.getNode( TASK_MANAGER_SETTINGS_PATH ) );
 		taskManager.startAndWait();
-	
+
 		// Start the product manager.
 		productManager.startAndWait();
-	
+
 		// Register the modules.
 		registerAllModules();
-	
+
 		startService( parameters );
-	
+
 		// Allocate the modules.
 		createAllModules();
-	
+
 		Log.write( getName() + " started." );
-	
-		productManager.scheduleCheckUpdateTask();
+
+		// Check for updates.
+		if( !parameters.isSet( ServiceFlag.NOUPDATE ) && productManager.getCheckOption() == ProductManager.CheckOption.STARTUP ) productManager.checkForUpdates();
 	}
 
 	/**
@@ -382,22 +388,22 @@ public abstract class Service extends Agent implements Product {
 	protected final void stopAgent() throws Exception {
 		Log.write( Log.DEBUG, getName() + " stopping..." );
 		if( socket != null ) socket.close();
-	
+
 		// Deallocate the modules.
 		destroyAllModules();
-	
+
 		stopService( parameters );
-	
+
 		// Unregister modules.
 		unregisterAllModules();
-	
+
 		productManager.stopAndWait();
-	
+
 		taskManager.stopAndWait();
 		taskManager.saveSettings( settings.getNode( TASK_MANAGER_SETTINGS_PATH ) );
-	
+
 		peerServer.stopAndWait();
-	
+
 		try {
 			Runtime.getRuntime().removeShutdownHook( shutdownHook );
 		} catch( IllegalStateException exception ) {
@@ -506,7 +512,7 @@ public abstract class Service extends Agent implements Product {
 			// This logic is not trivial, the nested if statements help clarify it.
 			if( !peer & !parameters.isSet( ServiceFlag.NOUPDATE ) & productManager.getCheckOption() != ProductManager.CheckOption.DISABLED ) {
 				int updateResult = update();
-				
+
 				if( updateResult > 0 ) {
 					// The program should be allowed, but not forced, to exit at this point.
 					Log.write( "Program exiting to apply updates." );
