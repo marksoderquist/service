@@ -38,6 +38,7 @@ import com.parallelsymmetry.escape.product.ProductCardException;
 import com.parallelsymmetry.escape.product.ProductManager;
 import com.parallelsymmetry.escape.product.ProductModule;
 import com.parallelsymmetry.escape.utility.Descriptor;
+import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.OperatingSystem;
 import com.parallelsymmetry.escape.utility.Parameters;
 import com.parallelsymmetry.escape.utility.TextUtil;
@@ -588,10 +589,16 @@ public abstract class Service extends Agent implements Product {
 				}
 			}
 
-			// Check the development flag.
+			// Check the execmode flag.
 			if( home == null && parameters.isSet( ServiceFlag.EXECMODE ) ) {
 				home = new File( System.getProperty( "user.dir" ), "target/install" );
 				home.mkdirs();
+				
+				// Copy the updater library.
+				File updaterSource = new File( System.getProperty( "user.dir" ), "../updater/target/updater-" + card.getRelease().getVersion() + ".jar" ).getCanonicalFile();
+				File updaterTarget = new File( home, "updater.jar" ).getCanonicalFile();
+				FileUtil.copy( updaterSource, updaterTarget );
+				Log.write( Log.DEBUG, "Updater copied: " + updaterSource );
 			}
 
 			// Use the user directory as a last resort.
