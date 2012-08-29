@@ -1,6 +1,7 @@
 package com.parallelsymmetry.escape.product;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
@@ -659,6 +660,8 @@ public class ProductManager extends Agent implements Persistent {
 						URI uri = URI.create( "jar:" + jar.toURI().toASCIIString() + "!" + PRODUCT_DESCRIPTOR_PATH );
 						ProductCard card = new ProductCard( jar.getParentFile().toURI(), new Descriptor( uri ) );
 						loadComplexModule( card, moduleFolder.toURI(), parent );
+					} catch( FileNotFoundException exception ) {
+						// Not finding a product card is a common situation with dependencies.
 					} catch( Throwable throwable ) {
 						Log.write( throwable, jar );
 					}
