@@ -81,7 +81,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	public static final String PRODUCT_DESCRIPTOR_PATH = "/META-INF/" + DEFAULT_PRODUCT_FILE_NAME;
 
-	public static final String MODULE_RESOURCE_CLASS_NAME_XPATH = ProductCard.PRODUCT_PATH + "/resources/module/@class";
+	public static final String MODULE_CLASS_NAME_XPATH = ProductCard.PRODUCT_PATH + "/resources/module/@class";
 
 	public static final String UPDATER_JAR_NAME = "updater.jar";
 
@@ -111,7 +111,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	private Set<ClassLoader> loaders;
 
-	private File homeModuleFolder;
+	private File homeProductFolder;
 
 	private File userProductFolder;
 
@@ -138,8 +138,6 @@ public class ProductManager extends Agent implements Persistent {
 	private UpdateCheckTask task;
 
 	private Set<ProductManagerListener> listeners;
-
-	// FIXME Cleanup use of the term module.
 
 	public ProductManager( Service service ) {
 		this.service = service;
@@ -735,7 +733,7 @@ public class ProductManager extends Agent implements Persistent {
 	@Override
 	protected void startAgent() throws Exception {
 		cleanRemovedProducts();
-		
+
 		// Disable updates if the NOUPDATE flag is set.
 		if( service.getParameters().isSet( ServiceFlag.NOUPDATE ) ) {
 			checkOption = CheckOption.DISABLED;
@@ -746,11 +744,11 @@ public class ProductManager extends Agent implements Persistent {
 		timer = new Timer();
 
 		// Define the product folders.
-		homeModuleFolder = new File( service.getHomeFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
+		homeProductFolder = new File( service.getHomeFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
 		userProductFolder = new File( service.getProgramDataFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
 
 		// Load products.
-		loadModules( new File[] { homeModuleFolder, userProductFolder } );
+		loadModules( new File[] { homeProductFolder, userProductFolder } );
 	}
 
 	@Override
@@ -778,10 +776,10 @@ public class ProductManager extends Agent implements Persistent {
 				task.cancel();
 				Log.write( Log.DEBUG, "Update task cancelled." );
 			}
-	
+
 			// Don't schedule tasks if the NOUPDATECHECK flag is set. 
 			if( service.getParameters().isSet( ServiceFlag.NOUPDATECHECK ) ) return;
-	
+
 			switch( checkOption ) {
 				case INTERVAL: {
 					task = new UpdateCheckTask( service );
@@ -794,7 +792,7 @@ public class ProductManager extends Agent implements Persistent {
 					break;
 				}
 			}
-	
+
 			Log.write( Log.DEBUG, "Update task scheduled." );
 		}
 	}
@@ -844,35 +842,27 @@ public class ProductManager extends Agent implements Persistent {
 
 	private void setEnabledImpl( ProductCard card, boolean enabled ) {
 		ProductModule module = modules.get( card.getProductKey() );
-		if( module != null ) {
-			if( enabled ) {
-				enableModule( module );
-			} else {
-				disableModule( module );
+		if( module == null ) return;
+
+		if( enabled ) {
+			loaders.add( module.getClass().getClassLoader() );
+
+			try {
+				module.register();
+				module.create();
+			} catch( Throwable throwable ) {
+				Log.write( throwable );
 			}
+		} else {
+			try {
+				module.destroy();
+				module.unregister();
+			} catch( Throwable throwable ) {
+				Log.write( throwable );
+			}
+
+			loaders.remove( module.getClass().getClassLoader() );
 		}
-	}
-
-	private void enableModule( ProductModule module ) {
-		loaders.add( module.getClass().getClassLoader() );
-
-		try {
-			module.register();
-			module.create();
-		} catch( Throwable throwable ) {
-			Log.write( throwable );
-		}
-	}
-
-	private void disableModule( ProductModule module ) {
-		try {
-			module.destroy();
-			module.unregister();
-		} catch( Throwable throwable ) {
-			Log.write( throwable );
-		}
-
-		loaders.remove( module.getClass().getClassLoader() );
 	}
 
 	private boolean isEnabled() {
@@ -1025,20 +1015,20 @@ public class ProductManager extends Agent implements Persistent {
 		// Ignore included products.
 		if( includedProducts.contains( card.getProductKey() ) ) return null;
 
-		// Register the product.
-		registerProduct( card );
-		Log.write( Log.DEBUG, "Loading module: " + card.getProductKey() );
-
-		// Validate class name.
-		String className = card.getDescriptor().getValue( MODULE_RESOURCE_CLASS_NAME_XPATH );
-		if( className == null ) return null;
-
 		// Check if module is already loaded.
 		ProductModule module = modules.get( card.getProductKey() );
 		if( module != null ) return module;
 
+		// Validate class name.
+		String className = card.getDescriptor().getValue( MODULE_CLASS_NAME_XPATH );
+		if( className == null ) return null;
+
+		// Register the product.
+		registerProduct( card );
+
 		// Load the module.
 		try {
+			Log.write( Log.DEBUG, "Loading module: " + card.getProductKey() );
 			Class<?> moduleClass = loader.loadClass( className );
 			Constructor<?> constructor = moduleClass.getConstructor( ProductCard.class );
 			module = (ProductModule)constructor.newInstance( card );
