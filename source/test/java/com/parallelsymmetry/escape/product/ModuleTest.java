@@ -5,6 +5,7 @@ import java.net.URL;
 import org.junit.Test;
 
 import com.parallelsymmetry.escape.service.BaseTestCase;
+import com.parallelsymmetry.escape.service.MockService;
 import com.parallelsymmetry.escape.utility.DateUtil;
 import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.Release;
@@ -20,9 +21,10 @@ public class ModuleTest extends BaseTestCase {
 
 	@Override
 	public void setUp() throws Exception {
+		MockService service = new MockService();
 		URL url = getClass().getResource( TEST_MODULE_DESCRIPTOR_PATH );
 		descriptor = new Descriptor( url );
-		module = new MockModule( new ProductCard( url.toURI(), descriptor ) );
+		module = new MockModule( service, new ProductCard( url.toURI(), descriptor ) );
 	}
 
 	@Test

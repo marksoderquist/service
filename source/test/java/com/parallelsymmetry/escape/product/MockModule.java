@@ -1,9 +1,11 @@
 package com.parallelsymmetry.escape.product;
 
+import com.parallelsymmetry.escape.service.Service;
+
 public class MockModule extends ProductModule {
 
-	public MockModule( ProductCard card ) {
-		super( card );
+	public MockModule( Service service, ProductCard card ) {
+		super( service, card );
 	}
 
 	@Override

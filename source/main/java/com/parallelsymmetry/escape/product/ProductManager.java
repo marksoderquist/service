@@ -1030,8 +1030,8 @@ public class ProductManager extends Agent implements Persistent {
 		try {
 			Log.write( Log.DEBUG, "Loading " + source + " module: " + card.getProductKey() );
 			Class<?> moduleClass = loader.loadClass( className );
-			Constructor<?> constructor = moduleClass.getConstructor( ProductCard.class );
-			module = (ProductModule)constructor.newInstance( card );
+			Constructor<?> constructor = moduleClass.getConstructor( Service.class, ProductCard.class );
+			module = (ProductModule)constructor.newInstance( service, card );
 			registerModule( module, updatable, removable );
 			Log.write( Log.TRACE, source + " module loaded:  " + card.getProductKey() );
 		} catch( Throwable throwable ) {
