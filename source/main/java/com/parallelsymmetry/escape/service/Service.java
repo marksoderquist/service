@@ -176,14 +176,22 @@ public abstract class Service extends Agent implements Product {
 	 */
 	public synchronized void call( String... commands ) {
 		try {
-			parameters = Parameters.parse( commands, getValidCommandLineFlags() );
-		} catch( InvalidParameterException exception ) {
-			Log.write( exception );
-			printHelp( null );
-			return;
-		}
+			try {
+				parameters = Parameters.parse( commands, getValidCommandLineFlags() );
+			} catch( InvalidParameterException exception ) {
+				Log.write( exception );
+				printHelp( null );
+				return;
+			}
 
-		processParameters( parameters, false );
+			processParameters( parameters, false );
+		} catch( Throwable programThrowable ) {
+			try {
+				error( programThrowable );
+			} catch( Throwable fatalThrowable ) {
+				fatalThrowable.printStackTrace();
+			}
+		}
 	}
 
 	@Override
@@ -593,7 +601,7 @@ public abstract class Service extends Agent implements Product {
 			if( home == null && parameters.isSet( ServiceFlag.EXECMODE ) ) {
 				home = new File( System.getProperty( "user.dir" ), "target/install" );
 				home.mkdirs();
-				
+
 				// Copy the updater library.
 				File updaterSource = new File( System.getProperty( "user.dir" ), "../updater/target/updater-" + card.getRelease().getVersion() + ".jar" ).getCanonicalFile();
 				File updaterTarget = new File( home, "updater.jar" ).getCanonicalFile();
