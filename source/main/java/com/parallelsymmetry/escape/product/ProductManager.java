@@ -677,7 +677,9 @@ public class ProductManager extends Agent implements Persistent {
 			// Intentionally ignore exception.
 		}
 
-		// FIXME There is potential for class name/version conflicts with this implementation.
+		// FIXME There is potential for class name/version conflicts with this implementation 
+		// because we simply search through the loaders, regardless of whether the loader is
+		// associated to the product.
 		if( clazz == null ) {
 			for( ClassLoader loader : loaders ) {
 				try {
