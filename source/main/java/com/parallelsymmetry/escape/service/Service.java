@@ -462,42 +462,44 @@ public abstract class Service extends Agent implements Product {
 	private final void processParameters( Parameters parameters, boolean peer ) {
 		if( this.parameters == null ) this.parameters = parameters;
 
+		Log.write( Log.DEBUG, "Processing parameters: " + parameters.toString() );
+
 		try {
 			// Initialize logging.
-			Log.config( parameters );
+			if( !peer ) {
+				Log.config( parameters );
 
-			// TODO Fix log file name collision when two instances run.
-			//			if( !parameters.isSet( LogFlag.LOG_FILE ) ) {
-			//				try {
-			//					File folder = getProgramDataFolder();
-			//					String pattern = new File( folder, "program.log" ).getCanonicalPath().replace( '\\', '/' );
-			//					folder.mkdirs();
-			//
-			//					FileHandler handler = new FileHandler( pattern, parameters.isTrue( LogFlag.LOG_FILE_APPEND ) );
-			//					handler.setLevel( Log.getLevel() );
-			//					if( parameters.isSet( LogFlag.LOG_FILE_LEVEL ) ) handler.setLevel( Log.parseLevel( parameters.get( LogFlag.LOG_FILE_LEVEL ) ) );
-			//					handler.setFormatter( new DefaultFormatter() );
-			//					Log.addHandler( handler );
-			//				} catch( IOException exception ) {
-			//					Log.write( exception );
-			//				}
-			//			}
+				// TODO Fix log file name collision when two instances run.
+				//			if( !parameters.isSet( LogFlag.LOG_FILE ) ) {
+				//				try {
+				//					File folder = getProgramDataFolder();
+				//					String pattern = new File( folder, "program.log" ).getCanonicalPath().replace( '\\', '/' );
+				//					folder.mkdirs();
+				//
+				//					FileHandler handler = new FileHandler( pattern, parameters.isTrue( LogFlag.LOG_FILE_APPEND ) );
+				//					handler.setLevel( Log.getLevel() );
+				//					if( parameters.isSet( LogFlag.LOG_FILE_LEVEL ) ) handler.setLevel( Log.parseLevel( parameters.get( LogFlag.LOG_FILE_LEVEL ) ) );
+				//					handler.setFormatter( new DefaultFormatter() );
+				//					Log.addHandler( handler );
+				//				} catch( IOException exception ) {
+				//					Log.write( exception );
+				//				}
+				//			}
 
-			// Set the locale.
-			if( parameters.isSet( LOCALE ) ) setLocale( parameters );
+				// Set the locale.
+				if( parameters.isSet( LOCALE ) ) setLocale( parameters );
 
-			// Print the program header.
-			if( !isRunning() ) printHeader();
+				// Print the program header.
+				if( !isRunning() ) printHeader();
 
-			// Verify Java environment.
-			if( !checkJava( parameters ) ) return;
+				// Verify Java environment.
+				if( !checkJava( parameters ) ) return;
 
-			Log.write( Log.DEBUG, "Processing parameters: " + parameters.toString() );
+				configureOnce( parameters );
 
-			configureOnce( parameters );
-
-			// Check for existing peer.
-			if( !peer && peerExists( parameters ) ) return;
+				// Check for existing peer.
+				if( peerExists( parameters ) ) return;
+			}
 
 			// If the watch parameter is set then exit before doing anything else.
 			if( parameters.isTrue( ServiceFlag.WATCH ) ) return;
