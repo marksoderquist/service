@@ -2,6 +2,7 @@ package com.parallelsymmetry.escape.service;
 
 import com.parallelsymmetry.escape.utility.Parameters;
 import com.parallelsymmetry.escape.utility.ThreadUtil;
+import com.parallelsymmetry.escape.utility.log.Log;
 
 public class MockService extends Service {
 
@@ -32,6 +33,7 @@ public class MockService extends Service {
 	}
 
 	public static final void main( String[] commands ) {
+		Log.setShowDate( true );
 		new MockService().call( commands );
 	}
 
