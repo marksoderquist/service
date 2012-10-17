@@ -111,27 +111,7 @@ public abstract class Service extends Agent implements Product {
 	 * Construct the service with the default descriptor path.
 	 */
 	public Service() {
-		this( null, null );
-	}
-
-	/**
-	 * Construct the service with the specified name and the default descriptor
-	 * path.
-	 * 
-	 * @param name
-	 */
-	public Service( String name ) {
-		this( name, null );
-	}
-
-	/**
-	 * Construct the service with the specified descriptor. The descriptor must
-	 * conform to the Escape service descriptor specification.
-	 * 
-	 * @param descriptor
-	 */
-	public Service( URI uri ) {
-		this( null, uri );
+		this( null );
 	}
 
 	/**
@@ -141,12 +121,12 @@ public abstract class Service extends Agent implements Product {
 	 * @param name
 	 * @param descriptor
 	 */
-	public Service( String name, URI uri ) {
+	public Service( String name ) {
 		super( name );
 		this.name = name;
 
 		try {
-			if( uri == null ) uri = getDefaultDescriptorUri();
+			URI uri = getDescriptorUri();
 			Log.write( Log.DEBUG, "Product descriptor: " + uri.toString() );
 			describe( uri, new Descriptor( uri ) );
 		} catch( Exception exception ) {
@@ -336,6 +316,11 @@ public abstract class Service extends Agent implements Product {
 		Log.write( Log.INFO, "Restarting..." );
 	}
 
+	protected URI getDescriptorUri() throws URISyntaxException {
+		URL url = getClass().getResource( DEFAULT_DESCRIPTOR_PATH );
+		return url == null ? null : url.toURI();
+	}
+
 	protected abstract void startService( Parameters parameters ) throws Exception;
 
 	protected abstract void process( Parameters parameters ) throws Exception;
@@ -431,11 +416,6 @@ public abstract class Service extends Agent implements Product {
 		String v = parts.length > 2 ? parts[2] : "";
 
 		Locale.setDefault( new Locale( l, c, v ) );
-	}
-
-	private final URI getDefaultDescriptorUri() throws URISyntaxException {
-		URL url = getClass().getResource( DEFAULT_DESCRIPTOR_PATH );
-		return url == null ? null : url.toURI();
 	}
 
 	private final void describe( URI codebase, Descriptor descriptor ) throws ProductCardException {
