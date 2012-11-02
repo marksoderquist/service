@@ -1,0 +1,14 @@
+<settings>
+
+	<network>
+		<enableipv6>false</enableipv6>
+		<preferipv6>false</preferipv6>
+	</network>
+
+	<update>
+		<check>STARTUP</check>
+		<found>STAGE</found>
+		<apply>RESTART</apply>
+	</update>
+
+</settings>

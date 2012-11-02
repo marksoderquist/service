@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+
+<product version="1">
+	<group>com.parallelsymmetry</group>
+	<artifact>mock-product</artifact>
+	<version>1.0.0-a-00</version>
+	<timestamp>114215340000</timestamp>
+
+	<name>Mock Product</name>
+	<provider>Parallel Symmetry</provider>
+	
+	<summary>Mock product for testing</summary>
+	<description>The Mock Product is used for product development and testing.</description>
+
+	<inception>1973</inception>
+	<copyright>
+		<notice>All rights reserved.</notice>
+	</copyright>
+
+	<license uri="http://www.parallelsymmetry.com/legal/software.license.html">
+		<summary>Mock Product comes with ABSOLUTELY NO WARRANTY. This is open
+			software, and you are welcome to redistribute it under certain conditions.
+		</summary>
+	</license>
+
+	<resources>
+		<java version="1.6.0_11"/>
+		<pack uri="../../../sandbox/update.jar"/>
+	</resources>
+
+	<source uri="../../../sandbox/update.xml"/>
+</product>
