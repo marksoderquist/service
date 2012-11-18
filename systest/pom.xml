@@ -80,22 +80,12 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jarsigner-plugin</artifactId>
-				<version>1.2</version>
 				<executions>
 						<execution>
 								<id>sign</id>
-								<goals>
-										<goal>sign</goal>
-								</goals>
 								<phase>none</phase>
 						</execution>
 				</executions>
-				<configuration>
-						<keystore>${parallelsymmetry.keystore}</keystore>
-						<alias>software</alias>
-						<storepass>parallelsymmetry</storepass>
-						<verify>true</verify>
-				</configuration>
 			</plugin>
 
 			<plugin>
