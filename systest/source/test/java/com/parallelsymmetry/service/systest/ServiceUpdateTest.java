@@ -1,9 +1,12 @@
-package com.parallelsymmetry.escape.service;
+package com.parallelsymmetry.service.systest;
 
 import java.io.File;
 import java.util.List;
 
 import com.parallelsymmetry.escape.product.ProductManager;
+import com.parallelsymmetry.escape.service.Service;
+import com.parallelsymmetry.escape.service.ServiceFlag;
+import com.parallelsymmetry.escape.service.ServiceFlagValue;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.TextUtil;
 import com.parallelsymmetry.escape.utility.log.Log;

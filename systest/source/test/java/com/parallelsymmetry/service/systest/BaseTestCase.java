@@ -1,12 +1,10 @@
-package com.parallelsymmetry.escape.service;
+package com.parallelsymmetry.service.systest;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +23,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import com.parallelsymmetry.escape.product.ProductCard;
-import com.parallelsymmetry.escape.product.ProductManager;
+import com.parallelsymmetry.escape.service.ServiceFlag;
+import com.parallelsymmetry.escape.service.ServiceFlagValue;
 import com.parallelsymmetry.escape.utility.ConsoleReader;
 import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.IoUtil;
@@ -33,7 +32,6 @@ import com.parallelsymmetry.escape.utility.TextUtil;
 import com.parallelsymmetry.escape.utility.XmlUtil;
 import com.parallelsymmetry.escape.utility.log.Log;
 import com.parallelsymmetry.escape.utility.log.LogFlag;
-import com.parallelsymmetry.service.systest.VerifyService;
 
 public abstract class BaseTestCase extends TestCase {
 
