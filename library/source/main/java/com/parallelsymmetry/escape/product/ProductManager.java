@@ -381,6 +381,7 @@ public class ProductManager extends Agent implements Persistent {
 			service.getTaskManager().submit( tasks.get( oldPack ) );
 		}
 
+		// FIXME This method fails if just one product cannot be found.
 		for( ProductCard oldPack : oldPacks ) {
 			DescriptorDownloadTask task = tasks.get( oldPack );
 			//Future<Descriptor> future = futures.get( oldPack );
