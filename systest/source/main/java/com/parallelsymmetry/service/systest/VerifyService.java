@@ -1,9 +1,11 @@
-package com.parallelsymmetry.escape.service;
+package com.parallelsymmetry.service.systest;
 
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 
+import com.parallelsymmetry.escape.service.Service;
+import com.parallelsymmetry.escape.service.ServiceFlag;
 import com.parallelsymmetry.escape.utility.Parameters;
 import com.parallelsymmetry.escape.utility.log.Log;
 

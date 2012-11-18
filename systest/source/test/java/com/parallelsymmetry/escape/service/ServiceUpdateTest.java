@@ -8,6 +8,7 @@ import com.parallelsymmetry.escape.utility.FileUtil;
 import com.parallelsymmetry.escape.utility.TextUtil;
 import com.parallelsymmetry.escape.utility.log.Log;
 import com.parallelsymmetry.escape.utility.setting.Settings;
+import com.parallelsymmetry.service.systest.VerifyService;
 
 public class ServiceUpdateTest extends BaseTestCase {
 

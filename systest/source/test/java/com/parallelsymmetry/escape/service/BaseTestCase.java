@@ -33,6 +33,7 @@ import com.parallelsymmetry.escape.utility.TextUtil;
 import com.parallelsymmetry.escape.utility.XmlUtil;
 import com.parallelsymmetry.escape.utility.log.Log;
 import com.parallelsymmetry.escape.utility.log.LogFlag;
+import com.parallelsymmetry.service.systest.VerifyService;
 
 public abstract class BaseTestCase extends TestCase {
 

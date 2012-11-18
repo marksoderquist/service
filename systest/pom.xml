@@ -68,7 +68,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>com.parallelsymmetry.escape.service.VerifyService</mainClass>
+							<mainClass>com.parallelsymmetry.service.systest.VerifyService</mainClass>
 							<addClasspath>true</addClasspath>
 							<classpathLayoutType>custom</classpathLayoutType>
 							<customClasspathLayout>$${artifact.artifactId}.$${artifact.extension}</customClasspathLayout>
