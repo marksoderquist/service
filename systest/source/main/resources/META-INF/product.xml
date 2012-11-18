@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<product version="1">
+
+	<group>${project.groupId}</group>
+	<artifact>${project.artifactId}</artifact>
+	<version>${project.version}</version>
+	<timestamp>0</timestamp>
+
+	<name>Verify Service</name>
+	<provider>${project.organization.name}</provider>
+	<inception>${project.inceptionYear}</inception>
+
+	<resources>
+		<java version="1.6" />
+		<pack uri="sandbox/update.jar" />
+	</resources>
+
+	<source uri="../update.xml" />
+
+</product>
