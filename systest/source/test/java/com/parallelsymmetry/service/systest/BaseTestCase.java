@@ -131,7 +131,7 @@ public abstract class BaseTestCase extends TestCase {
 		// Create the product update descriptor.
 		File updatePackDescriptor = new File( SANDBOX, UPDATE_PACK_DESCRIPTOR_NAME );
 		FileUtil.copy( new File( "target/main/java/META-INF/product.xml" ), updatePackDescriptor );
-		fixProductDescriptor( updatePackDescriptor, SANDBOX.toURI() );
+		changeProductSourceUri( updatePackDescriptor, SANDBOX.toURI() );
 
 		// This implementation, while elegant, leaves the file locked.
 		//		URL url = new URL( "jar:" + new File( INSTALL, "verify.jar" ).toURI().toString() + "!" + ProductManager.PRODUCT_DESCRIPTOR_PATH );
@@ -305,12 +305,12 @@ public abstract class BaseTestCase extends TestCase {
 		@Override
 		public void modify( File folder ) throws Exception {
 			File programDescriptorFile = new File( folder, "META-INF/product.xml" );
-			fixProductDescriptor( programDescriptorFile, sourceUri );
+			changeProductSourceUri( programDescriptorFile, sourceUri );
 		}
 
 	}
 
-	private static void fixProductDescriptor( File programDescriptorFile, URI sourceUri ) throws Exception {
+	private static void changeProductSourceUri( File programDescriptorFile, URI sourceUri ) throws Exception {
 		XPath xpath = XPathFactory.newInstance().newXPath();
 		Document programDescriptor = XmlUtil.loadXmlDocument( programDescriptorFile );
 
