@@ -381,29 +381,36 @@ public class ProductManager extends Agent implements Persistent {
 			service.getTaskManager().submit( tasks.get( oldPack ) );
 		}
 
-		// FIXME This method fails if just one product cannot be found.
+		Exception exception = null;
 		for( ProductCard oldPack : oldPacks ) {
-			DescriptorDownloadTask task = tasks.get( oldPack );
-			//Future<Descriptor> future = futures.get( oldPack );
-			if( task == null ) continue;
-			//if( future == null ) continue;
-			Descriptor descriptor = task.get();
-			ProductCard newPack = new ProductCard( task.getUri(), descriptor );
+			try {
+				DescriptorDownloadTask task = tasks.get( oldPack );
+				//Future<Descriptor> future = futures.get( oldPack );
+				if( task == null ) continue;
+				//if( future == null ) continue;
+				Descriptor descriptor = task.get();
+				ProductCard newPack = new ProductCard( task.getUri(), descriptor );
 
-			// Validate the pack key.
-			if( !oldPack.getProductKey().equals( newPack.getProductKey() ) ) {
-				Log.write( Log.WARN, "Pack mismatch: ", oldPack.getProductKey(), " != ", newPack.getProductKey() );
-				continue;
-			}
+				// Validate the pack key.
+				if( !oldPack.getProductKey().equals( newPack.getProductKey() ) ) {
+					Log.write( Log.WARN, "Pack mismatch: ", oldPack.getProductKey(), " != ", newPack.getProductKey() );
+					continue;
+				}
 
-			Log.write( Log.DEBUG, "Old release: ", oldPack.getArtifact(), " ", oldPack.getRelease() );
-			Log.write( Log.DEBUG, "New release: ", newPack.getArtifact(), " ", newPack.getRelease() );
+				Log.write( Log.DEBUG, "Old release: ", oldPack.getArtifact(), " ", oldPack.getRelease() );
+				Log.write( Log.DEBUG, "New release: ", newPack.getArtifact(), " ", newPack.getRelease() );
 
-			if( newPack.getRelease().compareTo( oldPack.getRelease() ) > 0 ) {
-				Log.write( Log.TRACE, "Update found for: " + oldPack.toString() );
-				newPacks.add( newPack );
+				if( newPack.getRelease().compareTo( oldPack.getRelease() ) > 0 ) {
+					Log.write( Log.TRACE, "Update found for: " + oldPack.toString() );
+					newPacks.add( newPack );
+				}
+			} catch( Exception workException ) {
+				if( exception == null ) exception = workException;
 			}
 		}
+
+		// If there are no updates and there is an exception, throw it.
+		if( newPacks.size() == 0 && exception != null ) throw exception;
 
 		return newPacks;
 	}
