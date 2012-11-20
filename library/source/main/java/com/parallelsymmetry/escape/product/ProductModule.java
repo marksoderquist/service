@@ -4,9 +4,9 @@ import com.parallelsymmetry.escape.service.Service;
 
 public abstract class ProductModule implements Product, Comparable<ProductModule> {
 	
-	private Service program;
+	protected Service program;
 
-	private ProductCard card;
+	protected ProductCard card;
 
 	public ProductModule( Service program, ProductCard card ) {
 		this.program = program;
