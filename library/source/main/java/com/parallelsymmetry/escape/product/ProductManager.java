@@ -385,9 +385,8 @@ public class ProductManager extends Agent implements Persistent {
 		for( ProductCard oldPack : oldPacks ) {
 			try {
 				DescriptorDownloadTask task = tasks.get( oldPack );
-				//Future<Descriptor> future = futures.get( oldPack );
 				if( task == null ) continue;
-				//if( future == null ) continue;
+
 				Descriptor descriptor = task.get();
 				ProductCard newPack = new ProductCard( task.getUri(), descriptor );
 
