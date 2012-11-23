@@ -2,20 +2,28 @@ package com.parallelsymmetry.escape.product;
 
 import java.util.Comparator;
 
+import com.parallelsymmetry.escape.service.Service;
+
 public class ProductCardComparator implements Comparator<ProductCard> {
 
 	public static enum Field {
 		KEY, NAME, GROUP, ARTIFACT, RELEASE
 	}
+	
+	private Service service;
 
 	private Field field;
 
-	public ProductCardComparator( Field field ) {
+	public ProductCardComparator(Service service, Field field ) {
+		this.service = service;
 		this.field = field;
 	}
 
 	@Override
 	public int compare( ProductCard card1, ProductCard card2 ) {
+		if( card1 == service.getCard() ) return -1;
+		if( card2 == service.getCard() ) return 1;
+		
 		switch( field ) {
 			case KEY: {
 				return card1.getProductKey().compareTo( card2.getProductKey() );
