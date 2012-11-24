@@ -244,12 +244,32 @@ public abstract class Service extends Agent implements Product {
 		Log.write( Log.NONE, "                       none, error, warn, info, trace, debug, all" );
 	}
 
+	public int notify( Object message ) {
+		return notify( UIManager.getString( "OptionPane.messageDialogTitle" ), message, JOptionPane.INFORMATION_MESSAGE );
+	}
+
+	public int notify( Object message, int messageType ) {
+		return notify( UIManager.getString( "OptionPane.messageDialogTitle" ), message, JOptionPane.DEFAULT_OPTION, messageType );
+	}
+
+	public int notify( Object message, int optionType, int messageType ) {
+		return notify( UIManager.getString( "OptionPane.messageDialogTitle" ), message, optionType, messageType, null );
+	}
+
+	public int notify( Object message, int optionType, int messageType, Icon icon ) {
+		return notify( UIManager.getString( "OptionPane.messageDialogTitle" ), message, optionType, messageType, icon, null, null );
+	}
+
+	public int notify( Object message, int optionType, int messageType, Icon icon, Object[] options, Object initialValue ) {
+		return notify( UIManager.getString( "OptionPane.messageDialogTitle" ), message, optionType, messageType, icon, options, initialValue );
+	}
+
 	public int notify( String title, Object message ) {
-		return notify( UIManager.getString( "OptionPane.messageDialogTitle", null ), message, JOptionPane.INFORMATION_MESSAGE );
+		return notify( title, message, JOptionPane.INFORMATION_MESSAGE );
 	}
 
 	public int notify( String title, Object message, int messageType ) {
-		return notify( UIManager.getString( "OptionPane.messageDialogTitle", null ), message, JOptionPane.DEFAULT_OPTION, messageType );
+		return notify( title, message, JOptionPane.DEFAULT_OPTION, messageType );
 	}
 
 	public int notify( String title, Object message, int optionType, int messageType ) {
@@ -266,24 +286,33 @@ public abstract class Service extends Agent implements Product {
 		return -1;
 	}
 
-	public void error( String message ) {
-		error( "Error", message, null );
+	public void error( Object message ) {
+		//UIManager.getString( "OptionPane.messageDialogTitle", null )
+		error( UIManager.getString( "OptionPane.errorDialogTitle", null ), message, null );
 	}
 
 	public void error( Throwable throwable ) {
-		error( "Error", null, throwable );
+		error( UIManager.getString( "OptionPane.errorDialogTitle", null ), null, throwable );
 	}
 
-	public void error( String message, Throwable throwable ) {
-		error( "Error", message, throwable );
+	public void error( Object message, Throwable throwable ) {
+		error( UIManager.getString( "OptionPane.errorDialogTitle", null ), message, throwable );
 	}
 
-	public String[] error( String title, String message, Throwable throwable ) {
+	public void error( String title, Object message ) {
+		error( title, message, null );
+	}
+
+	public void error( String title, Throwable throwable ) {
+		error( title, null, throwable );
+	}
+
+	public String[] error( String title, Object message, Throwable throwable ) {
 		String[] messages = null;
 		if( message == null && throwable != null ) message = throwable.getMessage();
 		if( message != null ) {
 			messages = new String[1];
-			messages[0] = message;
+			messages[0] = message.toString();
 		}
 
 		StringWriter writer = new StringWriter();
