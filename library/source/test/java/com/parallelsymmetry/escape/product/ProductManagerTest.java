@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 
@@ -49,7 +50,7 @@ public class ProductManagerTest extends BaseServiceTest {
 
 	private static final File TARGET_UPDATE_PACK = new File( SANDBOX, UPDATE_PACK_NAME );
 
-	private static final int TIMESTAMP_OFFSET = 61174;
+	private static final int TIMESTAMP_OFFSET = 31174;
 
 	private static final String TEST_PRODUCT = "/META-INF/product.test.xml";
 
@@ -191,6 +192,18 @@ public class ProductManagerTest extends BaseServiceTest {
 			// Disable the update manager.
 			manager.setCheckOption( ProductManager.CheckOption.DISABLED );
 		}
+	}
+
+	@Test
+	public void testGetStagedUpdates() throws Exception {
+		testStagePostedUpdates();
+		URI uri = TARGET_UPDATE_CARD.toURI();
+		ProductCard card = new ProductCard( uri, new Descriptor( uri ) );
+
+		Set<ProductCard> cards = manager.getStagedUpdates();
+		assertEquals( 1, cards.size() );
+
+		ProductCardTest.assertEquals( card, cards.iterator().next() );
 	}
 
 	@Test

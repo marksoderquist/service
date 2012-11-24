@@ -125,7 +125,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	private Settings settings;
 
-	private Set<StagedUpdate> updates;
+	private Set<ProductUpdate> updates;
 
 	private Map<String, ProductCard> productCards;
 
@@ -144,7 +144,7 @@ public class ProductManager extends Agent implements Persistent {
 		catalogs = new CopyOnWriteArraySet<ProductCatalog>();
 		modules = new ConcurrentHashMap<String, ProductModule>();
 		loaders = new CopyOnWriteArraySet<ClassLoader>();
-		updates = new CopyOnWriteArraySet<StagedUpdate>();
+		updates = new CopyOnWriteArraySet<ProductUpdate>();
 		productCards = new ConcurrentHashMap<String, ProductCard>();
 		productStates = new ConcurrentHashMap<String, ProductState>();
 		listeners = new CopyOnWriteArraySet<ProductManagerListener>();
@@ -446,7 +446,7 @@ public class ProductManager extends Agent implements Persistent {
 	 * @return true if one or more product packs were staged.
 	 * @throws Exception
 	 */
-	public int stageSelectedUpdates( Set<ProductCard> updateCards ) throws Exception {
+	public int stageSelectedUpdates( Set<ProductCard> updateCards ) throws IOException {
 		if( updateCards.size() == 0 ) return 0;
 
 		File stageFolder = new File( service.getProgramDataFolder(), UPDATE_FOLDER_NAME );
@@ -478,8 +478,17 @@ public class ProductManager extends Agent implements Persistent {
 
 			File updatePack = new File( stageFolder, getStagedUpdateFileName( updateCard ) );
 			createUpdatePack( productResources.get( updateCard ), updatePack );
-			updates.add( new StagedUpdate( updatePack, installFolder ) );
-			Log.write( Log.TRACE, "Update staged: " + updatePack );
+
+			ProductUpdate update = new ProductUpdate( updateCard, updatePack, installFolder );
+
+			// Remove any old staged updates for this product.
+			updates.remove( update );
+
+			// Add the update to the set of staged updates.
+			updates.add( update );
+
+			Log.write( Log.TRACE, "Update staged: ", updateCard.getName(), " ", updateCard.getRelease() );
+			Log.write( Log.TRACE, "Update pack:   ", updatePack );
 		}
 		saveSettings( settings );
 
@@ -490,15 +499,11 @@ public class ProductManager extends Agent implements Persistent {
 		return card.getGroup() + "." + card.getArtifact() + ".pak";
 	}
 
-	public boolean areUpdatesStaged() {
-		return getStagedUpdateCount() > 0;
-	}
+	public Set<ProductCard> getStagedUpdates() {
+		Set<ProductUpdate> staged = new HashSet<ProductUpdate>();
+		Set<ProductUpdate> remove = new HashSet<ProductUpdate>();
 
-	public int getStagedUpdateCount() {
-		Set<StagedUpdate> staged = new HashSet<StagedUpdate>();
-		Set<StagedUpdate> remove = new HashSet<StagedUpdate>();
-
-		for( StagedUpdate update : updates ) {
+		for( ProductUpdate update : updates ) {
 			if( update.getSource().exists() ) {
 				staged.add( update );
 				Log.write( Log.DEBUG, "Staged update found: " + update.getSource() );
@@ -510,13 +515,30 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Remove updates that cannot be found.
 		if( remove.size() > 0 ) {
-			for( StagedUpdate update : remove ) {
+			for( ProductUpdate update : remove ) {
 				updates.remove( update );
 			}
 			saveSettings( settings );
 		}
 
-		return staged.size();
+		Set<ProductCard> cards = new HashSet<ProductCard>();
+		for( ProductUpdate update : staged ) {
+			cards.add( update.getCard() );
+		}
+
+		return cards;
+	}
+
+	public int getStagedUpdateCount() {
+		return getStagedUpdates().size();
+	}
+
+	public boolean areUpdatesStaged() {
+		return getStagedUpdateCount() > 0;
+	}
+
+	public boolean isStaged( ProductCard update ) {
+		return getStagedUpdates().contains( update );
 	}
 
 	/**
@@ -540,7 +562,7 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Check if process elevation is necessary.
 		boolean elevate = false;
-		for( StagedUpdate update : updates ) {
+		for( ProductUpdate update : updates ) {
 			elevate |= !FileUtil.isWritable( update.getTarget() );
 		}
 
@@ -562,7 +584,7 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Add the updates.
 		builder.command().add( UpdaterFlag.UPDATE );
-		for( StagedUpdate update : updates ) {
+		for( ProductUpdate update : updates ) {
 			builder.command().add( update.getSource().getAbsolutePath() );
 			builder.command().add( update.getTarget().getAbsolutePath() );
 		}
@@ -737,6 +759,17 @@ public class ProductManager extends Agent implements Persistent {
 		settings.put( APPLY, applyOption.name() );
 
 		settings.flush();
+	}
+
+	public static final Map<String, ProductCard> getProductCardMap( Set<ProductCard> cards ) {
+		if( cards == null ) return null;
+
+		Map<String, ProductCard> map = new HashMap<String, ProductCard>();
+		for( ProductCard card : cards ) {
+			map.put( card.getProductKey(), card );
+		}
+
+		return map;
 	}
 
 	@Override
@@ -1114,53 +1147,6 @@ public class ProductManager extends Agent implements Persistent {
 		protected String findLibrary( String libname ) {
 			File file = new File( codebase.resolve( System.mapLibraryName( libname ) ) );
 			return file.exists() ? file.toString() : null;
-		}
-
-	}
-
-	/**
-	 * NOTE: This class is Persistent and changing the package will most likely
-	 * result in a ClassNotFoundException being thrown at runtime.
-	 * 
-	 * @author SoderquistMV
-	 */
-	private static final class StagedUpdate implements Persistent {
-
-		private File source;
-
-		private File target;
-
-		/*
-		 * This constructor is used by the settings API via reflection.
-		 */
-		@SuppressWarnings( "unused" )
-		public StagedUpdate() {}
-
-		public StagedUpdate( File source, File target ) {
-			this.source = source;
-			this.target = target;
-		}
-
-		public File getSource() {
-			return source;
-		}
-
-		public File getTarget() {
-			return target;
-		}
-
-		@Override
-		public void loadSettings( Settings settings ) {
-			String sourcePath = settings.get( "source", null );
-			String targetPath = settings.get( "target", null );
-			source = sourcePath == null ? null : new File( sourcePath );
-			target = targetPath == null ? null : new File( targetPath );
-		}
-
-		@Override
-		public void saveSettings( Settings settings ) {
-			settings.put( "source", source.getPath() );
-			settings.put( "target", target.getPath() );
 		}
 
 	}

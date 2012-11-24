@@ -11,6 +11,8 @@ import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.Release;
 import com.parallelsymmetry.escape.utility.UriUtil;
 import com.parallelsymmetry.escape.utility.Version;
+import com.parallelsymmetry.escape.utility.mock.MockWritableSettingProvider;
+import com.parallelsymmetry.escape.utility.setting.Settings;
 
 public class ProductCardTest extends BaseTestCase {
 
@@ -150,6 +152,15 @@ public class ProductCardTest extends BaseTestCase {
 		card2.setArtifact( "card2" );
 		assertFalse( card1.equals( card2 ) );
 	}
+	
+	public void testDeepEquals() throws Exception {
+		URL url = getClass().getResource( MOCK_SERVICE );
+		Descriptor descriptor = new Descriptor( url );
+
+		ProductCard card1 = new ProductCard( url.toURI(), descriptor );
+		ProductCard card2 = new ProductCard( url.toURI(), descriptor );
+		assertTrue( card1.deepEquals( card2 ) );
+	}
 
 	public void testHashCode() throws Exception {
 		URL url = getClass().getResource( MOCK_SERVICE );
@@ -196,6 +207,35 @@ public class ProductCardTest extends BaseTestCase {
 
 		// Check the update information.
 		assertEquals( getClass().getResource( MINIMAL_CARD ).toURI(), card.getSourceUri() );
+	}
+
+	public void testSaveLoadSaveSettings() throws Exception {
+		ProductCard standard = loadCard( MOCK_SERVICE );
+		MockWritableSettingProvider provider = new MockWritableSettingProvider();
+		Settings settings = new Settings();
+		settings.addProvider( provider );
+		standard.saveSettings( settings );
+
+		ProductCard test = new ProductCard( settings );
+		assertEquals( standard, test );
+	}
+
+	public static final void assertEquals( ProductCard standard, ProductCard test ) {
+		assertEquals( standard.getProductKey(), test.getProductKey() );
+		assertEquals( standard.getGroup(), test.getGroup() );
+		assertEquals( standard.getArtifact(), test.getArtifact() );
+		assertEquals( standard.getRelease(), test.getRelease() );
+		assertEquals( standard.getIconUri(), test.getIconUri() );
+		assertEquals( standard.getName(), test.getName() );
+		assertEquals( standard.getProvider(), test.getProvider() );
+		assertEquals( standard.getInceptionYear(), test.getInceptionYear() );
+		assertEquals( standard.getSummary(), test.getSummary() );
+		assertEquals( standard.getDescription(), test.getDescription() );
+		assertEquals( standard.getCopyrightHolder(), test.getCopyrightHolder() );
+		assertEquals( standard.getCopyrightNotice(), test.getCopyrightNotice() );
+		assertEquals( standard.getLicenseUri(), test.getLicenseUri() );
+		assertEquals( standard.getLicenseSummary(), test.getLicenseSummary() );
+		assertEquals( standard.getSourceUri(), test.getSourceUri() );
 	}
 
 	private ProductCard loadCard( String path ) throws Exception {

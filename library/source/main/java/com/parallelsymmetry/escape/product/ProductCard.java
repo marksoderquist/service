@@ -11,6 +11,7 @@ import com.parallelsymmetry.escape.utility.Descriptor;
 import com.parallelsymmetry.escape.utility.Release;
 import com.parallelsymmetry.escape.utility.UriUtil;
 import com.parallelsymmetry.escape.utility.log.Log;
+import com.parallelsymmetry.escape.utility.setting.Settings;
 
 public class ProductCard {
 
@@ -84,8 +85,17 @@ public class ProductCard {
 
 	private String productKey;
 
+	public ProductCard( Settings settings ) {
+		loadSettings( settings );
+	}
+
 	public ProductCard( URI base, Descriptor descriptor ) throws ProductCardException {
 		update( base, descriptor );
+	}
+	
+	public ProductCard( String group, String artifact ) throws ProductCardException {
+		this.group = group;
+		this.artifact = artifact;
 	}
 
 	public ProductCard update( URI base, Descriptor descriptor ) throws ProductCardException {
@@ -314,6 +324,46 @@ public class ProductCard {
 		installFolder = file;
 	}
 
+	public void loadSettings( Settings settings ) {
+		String iconUri = settings.get( "icon.uri", null );
+		String licenseUri = settings.get( "license.uri", null );
+		String sourceUri = settings.get( "source.uri", null );
+
+		group = settings.get( "group", null );
+		artifact = settings.get( "artifact", null );
+		release = Release.decode( settings.get( "release", null ) );
+		this.iconUri = iconUri == null ? null : URI.create( iconUri );
+		name = settings.get( "name", null );
+		provider = settings.get( "provider", null );
+		inceptionYear = settings.getInt( "inception", DateUtil.getCurrentYear() );
+		summary = settings.get( "summary", null );
+		description = settings.get( "description", null );
+		copyrightHolder = settings.get( "copyright.holder", null );
+		copyrightNotice = settings.get( "copyright.notice", null );
+		this.licenseUri = licenseUri == null ? null : URI.create( licenseUri );
+		licenseSummary = settings.get( "license.summary", null );
+		this.sourceUri = sourceUri == null ? null : URI.create( sourceUri );
+
+		updateKey();
+	}
+
+	public void saveSettings( Settings settings ) {
+		settings.put( "group", group );
+		settings.put( "artifact", artifact );
+		settings.put( "release", Release.encode( release ) );
+		if( iconUri != null ) settings.put( "icon.uri", iconUri.toString() );
+		settings.put( "name", name );
+		settings.put( "provider", provider );
+		settings.putInt( "inception", inceptionYear );
+		settings.put( "summary", summary );
+		settings.put( "description", description );
+		settings.put( "copyright.holder", copyrightHolder );
+		settings.put( "copyright.notice", copyrightNotice );
+		if( licenseUri != null ) settings.put( "license.uri", licenseUri.toString() );
+		settings.put( "license.summary", licenseSummary );
+		if( sourceUri != null ) settings.put( "source.uri", sourceUri.toString() );
+	}
+
 	@Override
 	public String toString() {
 		return getProductKey();
@@ -324,6 +374,29 @@ public class ProductCard {
 		if( !( object instanceof ProductCard ) ) return false;
 		ProductCard that = (ProductCard)object;
 		return this.group.equals( that.group ) && this.artifact.equals( that.artifact );
+	}
+	
+	public boolean deepEquals( Object object ) {
+		if( !( object instanceof ProductCard ) ) return false;
+		ProductCard that = (ProductCard)object;
+
+		boolean equals = true;
+		equals = equals && this.group.equals( that.group );
+		equals = equals && this.artifact.equals( that.artifact );
+		equals = equals && this.release.equals( that.release );
+		equals = equals && this.iconUri.equals( that.iconUri );
+		equals = equals && this.name.equals( that.name );
+		equals = equals && this.provider.equals( that.provider );
+		equals = equals && this.inceptionYear == that.inceptionYear;
+		equals = equals && this.summary.equals( that.summary );
+		equals = equals && this.description.equals( that.description );
+		equals = equals && this.copyrightHolder.equals( that.copyrightHolder );
+		equals = equals && this.copyrightNotice.equals( that.copyrightNotice );
+		equals = equals && this.licenseUri.equals( that.licenseUri );
+		equals = equals && this.licenseSummary.equals( that.licenseSummary );
+		equals = equals && this.sourceUri.equals( that.sourceUri );
+
+		return equals;
 	}
 
 	@Override
