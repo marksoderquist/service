@@ -6,10 +6,10 @@ import org.junit.Test;
 
 import com.parallelsymmetry.escape.service.BaseTestCase;
 import com.parallelsymmetry.escape.service.MockService;
-import com.parallelsymmetry.escape.utility.DateUtil;
-import com.parallelsymmetry.escape.utility.Descriptor;
-import com.parallelsymmetry.escape.utility.Release;
-import com.parallelsymmetry.escape.utility.Version;
+import com.parallelsymmetry.utility.DateUtil;
+import com.parallelsymmetry.utility.Descriptor;
+import com.parallelsymmetry.utility.Release;
+import com.parallelsymmetry.utility.Version;
 
 public class ProductModuleTest extends BaseTestCase {
 

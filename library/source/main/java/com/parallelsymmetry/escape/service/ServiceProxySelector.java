@@ -13,11 +13,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import com.parallelsymmetry.escape.utility.BundleKey;
-import com.parallelsymmetry.escape.utility.Bundles;
-import com.parallelsymmetry.escape.utility.TextUtil;
-import com.parallelsymmetry.escape.utility.log.Log;
-import com.parallelsymmetry.escape.utility.setting.Settings;
+import com.parallelsymmetry.utility.BundleKey;
+import com.parallelsymmetry.utility.Bundles;
+import com.parallelsymmetry.utility.TextUtil;
+import com.parallelsymmetry.utility.log.Log;
+import com.parallelsymmetry.utility.setting.Settings;
 
 public class ServiceProxySelector extends ProxySelector {
 

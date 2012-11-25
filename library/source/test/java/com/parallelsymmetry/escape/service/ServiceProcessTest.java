@@ -2,9 +2,9 @@ package com.parallelsymmetry.escape.service;
 
 import junit.framework.TestCase;
 
-import com.parallelsymmetry.escape.utility.ArrayUtil;
-import com.parallelsymmetry.escape.utility.ConsoleReader;
-import com.parallelsymmetry.escape.utility.ThreadUtil;
+import com.parallelsymmetry.utility.ArrayUtil;
+import com.parallelsymmetry.utility.ConsoleReader;
+import com.parallelsymmetry.utility.ThreadUtil;
 
 public class ServiceProcessTest extends TestCase {
 

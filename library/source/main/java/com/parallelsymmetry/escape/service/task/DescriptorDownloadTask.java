@@ -3,11 +3,11 @@ package com.parallelsymmetry.escape.service.task;
 import java.io.FileInputStream;
 import java.net.URI;
 
-import com.parallelsymmetry.escape.utility.BundleKey;
-import com.parallelsymmetry.escape.utility.Bundles;
-import com.parallelsymmetry.escape.utility.Descriptor;
-import com.parallelsymmetry.escape.utility.task.Task;
-import com.parallelsymmetry.escape.utility.task.TaskListener;
+import com.parallelsymmetry.utility.BundleKey;
+import com.parallelsymmetry.utility.Bundles;
+import com.parallelsymmetry.utility.Descriptor;
+import com.parallelsymmetry.utility.task.Task;
+import com.parallelsymmetry.utility.task.TaskListener;
 
 public class DescriptorDownloadTask extends Task<Descriptor> {
 

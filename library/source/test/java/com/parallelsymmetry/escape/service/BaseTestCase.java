@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit;
 
 import junit.framework.TestCase;
 
-import com.parallelsymmetry.escape.utility.log.Log;
+import com.parallelsymmetry.utility.log.Log;
 
 public abstract class BaseTestCase extends TestCase {
 

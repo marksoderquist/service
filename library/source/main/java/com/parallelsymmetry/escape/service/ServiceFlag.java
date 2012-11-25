@@ -1,6 +1,6 @@
 package com.parallelsymmetry.escape.service;
 
-import com.parallelsymmetry.escape.utility.CommonFlag;
+import com.parallelsymmetry.utility.CommonFlag;
 
 public interface ServiceFlag extends CommonFlag {
 

@@ -2,8 +2,8 @@ package com.parallelsymmetry.escape.product;
 
 import java.io.File;
 
-import com.parallelsymmetry.escape.utility.setting.Persistent;
-import com.parallelsymmetry.escape.utility.setting.Settings;
+import com.parallelsymmetry.utility.setting.Persistent;
+import com.parallelsymmetry.utility.setting.Settings;
 
 /**
  * NOTE: This class is Persistent and changing the package will most likely

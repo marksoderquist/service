@@ -1,8 +1,8 @@
 package com.parallelsymmetry.escape.service;
 
-import com.parallelsymmetry.escape.utility.Parameters;
-import com.parallelsymmetry.escape.utility.ThreadUtil;
-import com.parallelsymmetry.escape.utility.log.Log;
+import com.parallelsymmetry.utility.Parameters;
+import com.parallelsymmetry.utility.ThreadUtil;
+import com.parallelsymmetry.utility.log.Log;
 
 public class MockService extends Service {
 

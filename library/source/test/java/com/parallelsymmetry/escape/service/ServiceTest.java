@@ -10,13 +10,13 @@ import java.util.TimeZone;
 import java.util.logging.Level;
 
 import com.parallelsymmetry.escape.product.ProductManager;
-import com.parallelsymmetry.escape.utility.DateUtil;
-import com.parallelsymmetry.escape.utility.LineParser;
-import com.parallelsymmetry.escape.utility.TextUtil;
-import com.parallelsymmetry.escape.utility.agent.Agent;
-import com.parallelsymmetry.escape.utility.log.DefaultHandler;
-import com.parallelsymmetry.escape.utility.log.Log;
-import com.parallelsymmetry.escape.utility.log.LogFlag;
+import com.parallelsymmetry.utility.DateUtil;
+import com.parallelsymmetry.utility.LineParser;
+import com.parallelsymmetry.utility.TextUtil;
+import com.parallelsymmetry.utility.agent.Agent;
+import com.parallelsymmetry.utility.log.DefaultHandler;
+import com.parallelsymmetry.utility.log.Log;
+import com.parallelsymmetry.utility.log.LogFlag;
 
 public class ServiceTest extends BaseTestCase {
 

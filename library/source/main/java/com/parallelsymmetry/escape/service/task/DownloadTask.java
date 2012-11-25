@@ -9,10 +9,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import com.parallelsymmetry.escape.utility.BundleKey;
-import com.parallelsymmetry.escape.utility.Bundles;
-import com.parallelsymmetry.escape.utility.log.Log;
-import com.parallelsymmetry.escape.utility.task.Task;
+import com.parallelsymmetry.utility.BundleKey;
+import com.parallelsymmetry.utility.Bundles;
+import com.parallelsymmetry.utility.log.Log;
+import com.parallelsymmetry.utility.task.Task;
 
 public class DownloadTask extends Task<Download> {
 

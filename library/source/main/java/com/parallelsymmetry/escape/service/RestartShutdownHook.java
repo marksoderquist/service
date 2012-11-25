@@ -7,10 +7,10 @@ import java.lang.management.RuntimeMXBean;
 import java.net.URI;
 import java.util.List;
 
-import com.parallelsymmetry.escape.utility.JavaUtil;
-import com.parallelsymmetry.escape.utility.OperatingSystem;
-import com.parallelsymmetry.escape.utility.TextUtil;
-import com.parallelsymmetry.escape.utility.log.Log;
+import com.parallelsymmetry.utility.JavaUtil;
+import com.parallelsymmetry.utility.OperatingSystem;
+import com.parallelsymmetry.utility.TextUtil;
+import com.parallelsymmetry.utility.log.Log;
 
 public class RestartShutdownHook extends Thread {
 

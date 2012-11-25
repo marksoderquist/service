@@ -22,9 +22,9 @@ import com.parallelsymmetry.escape.product.ProductManager.CheckOption;
 import com.parallelsymmetry.escape.product.ProductManager.FoundOption;
 import com.parallelsymmetry.escape.service.BaseServiceTest;
 import com.parallelsymmetry.escape.service.ProductManagerListener;
-import com.parallelsymmetry.escape.utility.Descriptor;
-import com.parallelsymmetry.escape.utility.FileUtil;
-import com.parallelsymmetry.escape.utility.XmlUtil;
+import com.parallelsymmetry.utility.Descriptor;
+import com.parallelsymmetry.utility.FileUtil;
+import com.parallelsymmetry.utility.XmlUtil;
 
 public class ProductManagerTest extends BaseServiceTest {
 

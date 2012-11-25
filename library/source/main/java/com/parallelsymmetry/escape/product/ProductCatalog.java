@@ -8,11 +8,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.w3c.dom.Node;
 
-import com.parallelsymmetry.escape.utility.Descriptor;
-import com.parallelsymmetry.escape.utility.UriUtil;
-import com.parallelsymmetry.escape.utility.log.Log;
-import com.parallelsymmetry.escape.utility.setting.Persistent;
-import com.parallelsymmetry.escape.utility.setting.Settings;
+import com.parallelsymmetry.utility.Descriptor;
+import com.parallelsymmetry.utility.UriUtil;
+import com.parallelsymmetry.utility.log.Log;
+import com.parallelsymmetry.utility.setting.Persistent;
+import com.parallelsymmetry.utility.setting.Settings;
 
 public class ProductCatalog implements Persistent {
 

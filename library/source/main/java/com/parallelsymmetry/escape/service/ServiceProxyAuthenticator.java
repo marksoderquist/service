@@ -3,7 +3,7 @@ package com.parallelsymmetry.escape.service;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 
-import com.parallelsymmetry.escape.utility.setting.Settings;
+import com.parallelsymmetry.utility.setting.Settings;
 
 public class ServiceProxyAuthenticator extends Authenticator {
 

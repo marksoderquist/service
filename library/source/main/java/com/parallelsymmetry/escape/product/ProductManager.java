@@ -28,20 +28,20 @@ import com.parallelsymmetry.escape.service.ServiceFlag;
 import com.parallelsymmetry.escape.service.task.DescriptorDownloadTask;
 import com.parallelsymmetry.escape.service.task.DownloadTask;
 import com.parallelsymmetry.escape.updater.UpdaterFlag;
-import com.parallelsymmetry.escape.utility.Descriptor;
-import com.parallelsymmetry.escape.utility.FileUtil;
-import com.parallelsymmetry.escape.utility.JavaUtil;
-import com.parallelsymmetry.escape.utility.OperatingSystem;
-import com.parallelsymmetry.escape.utility.Parameters;
-import com.parallelsymmetry.escape.utility.TextUtil;
-import com.parallelsymmetry.escape.utility.UriUtil;
-import com.parallelsymmetry.escape.utility.agent.Agent;
-import com.parallelsymmetry.escape.utility.log.Log;
-import com.parallelsymmetry.escape.utility.log.LogFlag;
-import com.parallelsymmetry.escape.utility.setting.Persistent;
-import com.parallelsymmetry.escape.utility.setting.SettingEvent;
-import com.parallelsymmetry.escape.utility.setting.SettingListener;
-import com.parallelsymmetry.escape.utility.setting.Settings;
+import com.parallelsymmetry.utility.Descriptor;
+import com.parallelsymmetry.utility.FileUtil;
+import com.parallelsymmetry.utility.JavaUtil;
+import com.parallelsymmetry.utility.OperatingSystem;
+import com.parallelsymmetry.utility.Parameters;
+import com.parallelsymmetry.utility.TextUtil;
+import com.parallelsymmetry.utility.UriUtil;
+import com.parallelsymmetry.utility.agent.Agent;
+import com.parallelsymmetry.utility.log.Log;
+import com.parallelsymmetry.utility.log.LogFlag;
+import com.parallelsymmetry.utility.setting.Persistent;
+import com.parallelsymmetry.utility.setting.SettingEvent;
+import com.parallelsymmetry.utility.setting.SettingListener;
+import com.parallelsymmetry.utility.setting.Settings;
 
 /**
  * The update manager handles discovery, staging and applying product updates.

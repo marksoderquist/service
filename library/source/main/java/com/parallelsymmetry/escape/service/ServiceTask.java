@@ -1,6 +1,6 @@
 package com.parallelsymmetry.escape.service;
 
-import com.parallelsymmetry.escape.utility.task.Task;
+import com.parallelsymmetry.utility.task.Task;
 
 public abstract class ServiceTask<V> extends Task<V> {
 

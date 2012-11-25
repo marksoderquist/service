@@ -6,13 +6,13 @@ import java.net.URL;
 import java.util.Date;
 
 import com.parallelsymmetry.escape.service.BaseTestCase;
-import com.parallelsymmetry.escape.utility.DateUtil;
-import com.parallelsymmetry.escape.utility.Descriptor;
-import com.parallelsymmetry.escape.utility.Release;
-import com.parallelsymmetry.escape.utility.UriUtil;
-import com.parallelsymmetry.escape.utility.Version;
-import com.parallelsymmetry.escape.utility.mock.MockWritableSettingProvider;
-import com.parallelsymmetry.escape.utility.setting.Settings;
+import com.parallelsymmetry.utility.DateUtil;
+import com.parallelsymmetry.utility.Descriptor;
+import com.parallelsymmetry.utility.Release;
+import com.parallelsymmetry.utility.UriUtil;
+import com.parallelsymmetry.utility.Version;
+import com.parallelsymmetry.utility.mock.MockWritableSettingProvider;
+import com.parallelsymmetry.utility.setting.Settings;
 
 public class ProductCardTest extends BaseTestCase {
 

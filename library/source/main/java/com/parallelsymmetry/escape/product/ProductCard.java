@@ -6,12 +6,12 @@ import java.net.URISyntaxException;
 import java.util.Calendar;
 import java.util.Date;
 
-import com.parallelsymmetry.escape.utility.DateUtil;
-import com.parallelsymmetry.escape.utility.Descriptor;
-import com.parallelsymmetry.escape.utility.Release;
-import com.parallelsymmetry.escape.utility.UriUtil;
-import com.parallelsymmetry.escape.utility.log.Log;
-import com.parallelsymmetry.escape.utility.setting.Settings;
+import com.parallelsymmetry.utility.DateUtil;
+import com.parallelsymmetry.utility.Descriptor;
+import com.parallelsymmetry.utility.Release;
+import com.parallelsymmetry.utility.UriUtil;
+import com.parallelsymmetry.utility.log.Log;
+import com.parallelsymmetry.utility.setting.Settings;
 
 public class ProductCard {
 

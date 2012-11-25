@@ -9,8 +9,8 @@ import java.util.concurrent.Future;
 import org.w3c.dom.Node;
 
 import com.parallelsymmetry.escape.service.task.DescriptorDownloadTask;
-import com.parallelsymmetry.escape.utility.Descriptor;
-import com.parallelsymmetry.escape.utility.task.TaskManager;
+import com.parallelsymmetry.utility.Descriptor;
+import com.parallelsymmetry.utility.task.TaskManager;
 
 public class JnlpProvider implements ProductResourceProvider {
 
