@@ -4,8 +4,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 
-import com.parallelsymmetry.escape.service.Service;
-import com.parallelsymmetry.escape.service.ServiceFlag;
+import com.parallelsymmetry.service.Service;
+import com.parallelsymmetry.service.ServiceFlag;
 import com.parallelsymmetry.utility.Parameters;
 import com.parallelsymmetry.utility.log.Log;
 

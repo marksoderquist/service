@@ -3,10 +3,10 @@ package com.parallelsymmetry.service.systest;
 import java.io.File;
 import java.util.List;
 
-import com.parallelsymmetry.escape.product.ProductManager;
-import com.parallelsymmetry.escape.service.Service;
-import com.parallelsymmetry.escape.service.ServiceFlag;
-import com.parallelsymmetry.escape.service.ServiceFlagValue;
+import com.parallelsymmetry.service.Service;
+import com.parallelsymmetry.service.ServiceFlag;
+import com.parallelsymmetry.service.ServiceFlagValue;
+import com.parallelsymmetry.service.product.ProductManager;
 import com.parallelsymmetry.service.systest.VerifyService;
 import com.parallelsymmetry.utility.FileUtil;
 import com.parallelsymmetry.utility.TextUtil;

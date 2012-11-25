@@ -22,9 +22,9 @@ import junit.framework.TestCase;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
-import com.parallelsymmetry.escape.product.ProductCard;
-import com.parallelsymmetry.escape.service.ServiceFlag;
-import com.parallelsymmetry.escape.service.ServiceFlagValue;
+import com.parallelsymmetry.service.ServiceFlag;
+import com.parallelsymmetry.service.ServiceFlagValue;
+import com.parallelsymmetry.service.product.ProductCard;
 import com.parallelsymmetry.utility.ConsoleReader;
 import com.parallelsymmetry.utility.FileUtil;
 import com.parallelsymmetry.utility.IoUtil;
