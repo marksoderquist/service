@@ -25,13 +25,13 @@ import org.w3c.dom.Node;
 import com.parallelsymmetry.escape.product.ProductCard;
 import com.parallelsymmetry.escape.service.ServiceFlag;
 import com.parallelsymmetry.escape.service.ServiceFlagValue;
-import com.parallelsymmetry.escape.utility.ConsoleReader;
-import com.parallelsymmetry.escape.utility.FileUtil;
-import com.parallelsymmetry.escape.utility.IoUtil;
-import com.parallelsymmetry.escape.utility.TextUtil;
-import com.parallelsymmetry.escape.utility.XmlUtil;
-import com.parallelsymmetry.escape.utility.log.Log;
-import com.parallelsymmetry.escape.utility.log.LogFlag;
+import com.parallelsymmetry.utility.ConsoleReader;
+import com.parallelsymmetry.utility.FileUtil;
+import com.parallelsymmetry.utility.IoUtil;
+import com.parallelsymmetry.utility.TextUtil;
+import com.parallelsymmetry.utility.XmlUtil;
+import com.parallelsymmetry.utility.log.Log;
+import com.parallelsymmetry.utility.log.LogFlag;
 
 public abstract class BaseTestCase extends TestCase {
 
