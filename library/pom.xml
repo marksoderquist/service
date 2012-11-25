@@ -63,7 +63,7 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>com.parallelsymmetry.escape.service.DemoService</mainClass>
+							<mainClass>com.parallelsymmetry.service.DemoService</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
