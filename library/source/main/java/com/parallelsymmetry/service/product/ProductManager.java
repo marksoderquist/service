@@ -21,13 +21,13 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import com.parallelsymmetry.escape.updater.UpdaterFlag;
 import com.parallelsymmetry.service.ProductManagerListener;
 import com.parallelsymmetry.service.Service;
 import com.parallelsymmetry.service.ServiceFlag;
 import com.parallelsymmetry.service.product.ProductManagerEvent.Type;
 import com.parallelsymmetry.service.task.DescriptorDownloadTask;
 import com.parallelsymmetry.service.task.DownloadTask;
+import com.parallelsymmetry.updater.UpdaterFlag;
 import com.parallelsymmetry.utility.Descriptor;
 import com.parallelsymmetry.utility.FileUtil;
 import com.parallelsymmetry.utility.JavaUtil;
@@ -151,7 +151,7 @@ public class ProductManager extends Agent implements Persistent {
 
 		includedProducts = new HashSet<String>();
 		includedProducts.add( service.getCard().getProductKey() );
-		includedProducts.add( "com.parallelsymmetry.escape.updater" );
+		includedProducts.add( "com.parallelsymmetry.updater" );
 
 		// Add service product.
 		registerProduct( service.getCard() );
