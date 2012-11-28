@@ -193,7 +193,7 @@ public class ProductManager extends Agent implements Persistent {
 	public Set<ProductModule> getModules() {
 		return new HashSet<ProductModule>( modules.values() );
 	}
-
+	
 	public Set<ProductCard> getProductCards() {
 		return new HashSet<ProductCard>( productCards.values() );
 	}
@@ -243,10 +243,26 @@ public class ProductManager extends Agent implements Persistent {
 		service.getSettings().putSet( REMOVES_SETTINGS_KEY, products );
 	}
 
+	public int getInstalledProductCount() {
+		return productCards.size();
+	}
+
+	/**
+	 * Determines if a product is installed regardless of release.
+	 * 
+	 * @param card
+	 * @return
+	 */
 	public boolean isInstalled( ProductCard card ) {
 		return productCards.get( card.getProductKey() ) != null;
 	}
 
+	/**
+	 * Determines if a specific release of a product is installed.
+	 *  
+	 * @param card
+	 * @return
+	 */
 	public boolean isReleaseInstalled( ProductCard card ) {
 		ProductCard internal = productCards.get( card.getProductKey() );
 		return internal != null && internal.getRelease().equals( card.getRelease() );
