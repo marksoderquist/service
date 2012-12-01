@@ -193,7 +193,7 @@ public class ProductManager extends Agent implements Persistent {
 	public Set<ProductModule> getModules() {
 		return new HashSet<ProductModule>( modules.values() );
 	}
-	
+
 	public Set<ProductCard> getProductCards() {
 		return new HashSet<ProductCard>( productCards.values() );
 	}
@@ -259,7 +259,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	/**
 	 * Determines if a specific release of a product is installed.
-	 *  
+	 * 
 	 * @param card
 	 * @return
 	 */
@@ -468,7 +468,7 @@ public class ProductManager extends Agent implements Persistent {
 		File stageFolder = new File( service.getProgramDataFolder(), UPDATE_FOLDER_NAME );
 		stageFolder.mkdirs();
 
-		Log.write( Log.TRACE, "Number of packs to stage for update: " + updateCards.size() );
+		Log.write( Log.TRACE, "Number of packs to stage: " + updateCards.size() );
 		Log.write( Log.DEBUG, "Pack stage folder: " + stageFolder );
 
 		// Download the product resources.
@@ -502,6 +502,9 @@ public class ProductManager extends Agent implements Persistent {
 
 			// Add the update to the set of staged updates.
 			updates.add( update );
+
+			// Notify listeners the update is staged.
+			fireProductManagerEvent( new ProductManagerEvent( this, ProductManagerEvent.Type.PRODUCT_STAGED, updateCard ) );
 
 			Log.write( Log.TRACE, "Update staged: ", updateCard.getName(), " ", updateCard.getRelease() );
 			Log.write( Log.TRACE, "Update pack:   ", updatePack );

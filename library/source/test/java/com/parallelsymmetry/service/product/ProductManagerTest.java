@@ -186,11 +186,16 @@ public class ProductManagerTest extends BaseServiceTest {
 		// Modify the update card timestamp.
 		fixProductCardData( TARGET_UPDATE_CARD );
 
+		ProductManagerWatcher watcher = new ProductManagerWatcher();
+		manager.addProductManagerListener( watcher );
+
 		try {
 			// Enable the update manager temporarily.
 			manager.setCheckOption( ProductManager.CheckOption.MANUAL );
 			assertEquals( 1, manager.stagePostedUpdates() );
 			assertTrue( updateFile.toString(), updateFile.exists() );
+			assertEquals( 1, watcher.getEvents().size() );
+			assertEquals( ProductManagerEvent.Type.PRODUCT_STAGED, watcher.getEvents().get( 0 ).getType() );
 		} finally {
 			// Disable the update manager.
 			manager.setCheckOption( ProductManager.CheckOption.DISABLED );
