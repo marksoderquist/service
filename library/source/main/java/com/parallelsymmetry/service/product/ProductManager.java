@@ -125,7 +125,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	private Settings settings;
 
-	private Set<ProductUpdate> updates;
+	private Map<String, ProductUpdate> updates;
 
 	private Map<String, ProductCard> productCards;
 
@@ -144,7 +144,7 @@ public class ProductManager extends Agent implements Persistent {
 		catalogs = new CopyOnWriteArraySet<ProductCatalog>();
 		modules = new ConcurrentHashMap<String, ProductModule>();
 		loaders = new CopyOnWriteArraySet<ClassLoader>();
-		updates = new CopyOnWriteArraySet<ProductUpdate>();
+		updates = new ConcurrentHashMap<String, ProductUpdate>();
 		productCards = new ConcurrentHashMap<String, ProductCard>();
 		productStates = new ConcurrentHashMap<String, ProductState>();
 		listeners = new CopyOnWriteArraySet<ProductManagerListener>();
@@ -501,7 +501,7 @@ public class ProductManager extends Agent implements Persistent {
 			updates.remove( update );
 
 			// Add the update to the set of staged updates.
-			updates.add( update );
+			updates.put( update.getCard().getProductKey(), update );
 
 			// Notify listeners the update is staged.
 			fireProductManagerEvent( new ProductManagerEvent( this, ProductManagerEvent.Type.PRODUCT_STAGED, updateCard ) );
@@ -522,7 +522,7 @@ public class ProductManager extends Agent implements Persistent {
 		Set<ProductUpdate> staged = new HashSet<ProductUpdate>();
 		Set<ProductUpdate> remove = new HashSet<ProductUpdate>();
 
-		for( ProductUpdate update : updates ) {
+		for( ProductUpdate update : updates.values() ) {
 			if( update.getSource().exists() ) {
 				staged.add( update );
 				Log.write( Log.DEBUG, "Staged update found: " + update.getSource() );
@@ -556,8 +556,16 @@ public class ProductManager extends Agent implements Persistent {
 		return getStagedUpdateCount() > 0;
 	}
 
-	public boolean isStaged( ProductCard update ) {
-		return getStagedUpdates().contains( update );
+	public boolean isStaged( ProductCard card ) {
+		return getStagedUpdates().contains( card );
+	}
+
+	public boolean isReleaseStaged( ProductCard card ) {
+		ProductUpdate update = updates.get( card.getProductKey() );
+		if( update == null ) return false;
+
+		ProductCard internal = update.getCard();
+		return internal != null && internal.getRelease().equals( card.getRelease() );
 	}
 
 	/**
@@ -581,7 +589,7 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Check if process elevation is necessary.
 		boolean elevate = false;
-		for( ProductUpdate update : updates ) {
+		for( ProductUpdate update : updates.values() ) {
 			elevate |= !FileUtil.isWritable( update.getTarget() );
 		}
 
@@ -603,7 +611,7 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Add the updates.
 		builder.command().add( UpdaterFlag.UPDATE );
-		for( ProductUpdate update : updates ) {
+		for( ProductUpdate update : updates.values() ) {
 			builder.command().add( update.getSource().getAbsolutePath() );
 			builder.command().add( update.getTarget().getAbsolutePath() );
 		}
@@ -759,7 +767,7 @@ public class ProductManager extends Agent implements Persistent {
 		this.settings = settings;
 
 		this.catalogs = settings.getSet( CATALOGS_SETTINGS_KEY, this.catalogs );
-		this.updates = settings.getSet( UPDATES_SETTINGS_KEY, this.updates );
+		this.updates = settings.getMap( UPDATES_SETTINGS_KEY, this.updates );
 
 		this.checkOption = CheckOption.valueOf( settings.get( CHECK, CheckOption.DISABLED.name() ) );
 		this.foundOption = FoundOption.valueOf( settings.get( FOUND, FoundOption.STAGE.name() ) );
@@ -771,7 +779,7 @@ public class ProductManager extends Agent implements Persistent {
 		if( settings == null ) return;
 
 		settings.putSet( CATALOGS_SETTINGS_KEY, catalogs );
-		settings.putSet( UPDATES_SETTINGS_KEY, updates );
+		settings.putMap( UPDATES_SETTINGS_KEY, updates );
 
 		settings.put( CHECK, checkOption.name() );
 		settings.put( FOUND, foundOption.name() );
