@@ -219,9 +219,9 @@ public class ProductManager extends Agent implements Persistent {
 			}
 		}
 
-		Set<InstalledProduct> products = service.getSettings().getSet( REMOVES_SETTINGS_KEY, new HashSet<InstalledProduct>() );
+		Set<InstalledProduct> products = getStoredRemovedProducts();
 		products.removeAll( installedProducts );
-		service.getSettings().putSet( REMOVES_SETTINGS_KEY, products );
+		service.getSettings().putNodeSet( REMOVES_SETTINGS_KEY, products );
 	}
 
 	public void uninstallProducts( ProductCard... cards ) throws Exception {
@@ -238,9 +238,9 @@ public class ProductManager extends Agent implements Persistent {
 			removeProductImpl( card );
 		}
 
-		Set<InstalledProduct> products = service.getSettings().getSet( REMOVES_SETTINGS_KEY, new HashSet<InstalledProduct>() );
+		Set<InstalledProduct> products = getStoredRemovedProducts();
 		products.addAll( removedProducts );
-		service.getSettings().putSet( REMOVES_SETTINGS_KEY, products );
+		service.getSettings().putNodeSet( REMOVES_SETTINGS_KEY, products );
 	}
 
 	public int getInstalledProductCount() {
@@ -766,8 +766,26 @@ public class ProductManager extends Agent implements Persistent {
 	public void loadSettings( Settings settings ) {
 		this.settings = settings;
 
-		this.catalogs = settings.getSet( CATALOGS_SETTINGS_KEY, this.catalogs );
-		this.updates = settings.getMap( UPDATES_SETTINGS_KEY, this.updates );
+		// Load the product catalogs.
+		Set<ProductCatalog> catalogsSet = new CopyOnWriteArraySet<ProductCatalog>();
+		Set<Settings> catalogsSettings = settings.getNodeSet( CATALOGS_SETTINGS_KEY, this.catalogs );
+		for( Settings catalogSettings : catalogsSettings ) {
+			ProductCatalog catalog = new ProductCatalog();
+			catalog.loadSettings( catalogSettings );
+			catalogsSet.add( catalog );
+		}
+		this.catalogs = catalogsSet;
+
+		// Load the product updates.
+		Map<String, ProductUpdate> updatesMap = new ConcurrentHashMap<String, ProductUpdate>();
+		Map<String, Settings> updatesSettings = settings.getNodeMap( UPDATES_SETTINGS_KEY, this.updates );
+		for( String key : updatesSettings.keySet() ) {
+			Settings updateSettings = updatesSettings.get( key );
+			ProductUpdate update = new ProductUpdate();
+			update.loadSettings( updateSettings );
+			updatesMap.put( key, update );
+		}
+		this.updates = updatesMap;
 
 		this.checkOption = CheckOption.valueOf( settings.get( CHECK, CheckOption.DISABLED.name() ) );
 		this.foundOption = FoundOption.valueOf( settings.get( FOUND, FoundOption.STAGE.name() ) );
@@ -778,8 +796,8 @@ public class ProductManager extends Agent implements Persistent {
 	public void saveSettings( Settings settings ) {
 		if( settings == null ) return;
 
-		settings.putSet( CATALOGS_SETTINGS_KEY, catalogs );
-		settings.putMap( UPDATES_SETTINGS_KEY, updates );
+		settings.putNodeSet( CATALOGS_SETTINGS_KEY, catalogs );
+		settings.putNodeMap( UPDATES_SETTINGS_KEY, updates );
 
 		settings.put( CHECK, checkOption.name() );
 		settings.put( FOUND, foundOption.name() );
@@ -940,7 +958,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	private void cleanRemovedProducts() {
 		// Check for products marked for removal and remove the files.
-		Set<InstalledProduct> products = service.getSettings().getSet( REMOVES_SETTINGS_KEY, new HashSet<InstalledProduct>() );
+		Set<InstalledProduct> products = getStoredRemovedProducts();
 		for( InstalledProduct product : products ) {
 			FileUtil.delete( product.getTarget() );
 		}
@@ -951,6 +969,17 @@ public class ProductManager extends Agent implements Persistent {
 		if( uri == null ) return null;
 		if( uri.getScheme() == null ) uri = new File( uri.getPath() ).toURI();
 		return uri;
+	}
+
+	private Set<InstalledProduct> getStoredRemovedProducts() {
+		Set<InstalledProduct> products = new HashSet<InstalledProduct>();
+		Set<Settings> productSettings = service.getSettings().getNodeSet( REMOVES_SETTINGS_KEY, new HashSet<InstalledProduct>() );
+		for( Settings settings : productSettings ) {
+			InstalledProduct product = new InstalledProduct();
+			product.loadSettings( settings );
+			products.add( product );
+		}
+		return products;
 	}
 
 	private void createUpdatePack( Set<ProductResource> resources, File update ) throws IOException {
