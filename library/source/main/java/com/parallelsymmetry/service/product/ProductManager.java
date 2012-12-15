@@ -664,12 +664,16 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Store the update count because the collection will be cleared.
 		int count = updates.size();
+		
+		clearStagedUpdates();
 
+		return count;
+	}
+	
+	public void clearStagedUpdates() {
 		// Remove the updates settings.
 		updates.clear();
 		saveSettings( settings );
-
-		return count;
 	}
 
 	public Settings getProductSettings( ProductCard card ) {
