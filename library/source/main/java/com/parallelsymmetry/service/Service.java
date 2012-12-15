@@ -37,10 +37,13 @@ import com.parallelsymmetry.service.product.ProductCard;
 import com.parallelsymmetry.service.product.ProductCardException;
 import com.parallelsymmetry.service.product.ProductManager;
 import com.parallelsymmetry.service.product.ProductModule;
+import com.parallelsymmetry.utility.BundleKey;
+import com.parallelsymmetry.utility.Bundles;
 import com.parallelsymmetry.utility.Descriptor;
 import com.parallelsymmetry.utility.FileUtil;
 import com.parallelsymmetry.utility.OperatingSystem;
 import com.parallelsymmetry.utility.Parameters;
+import com.parallelsymmetry.utility.Release;
 import com.parallelsymmetry.utility.TextUtil;
 import com.parallelsymmetry.utility.agent.Agent;
 import com.parallelsymmetry.utility.agent.ServerAgent;
@@ -283,6 +286,9 @@ public abstract class Service extends Agent implements Product {
 	public int notify( String title, Object message, int optionType, int messageType, Icon icon, Object[] options, Object initialValue ) {
 		// Services do not have any interaction with users but these methods allow 
 		// the service to interact with users of sub-classed programs.
+
+		Log.write( Log.INFO, message.toString().trim() );
+
 		return -1;
 	}
 
@@ -547,10 +553,23 @@ public abstract class Service extends Agent implements Product {
 
 			// Process parameters.
 			process( parameters );
+
+			// NEXT If the program was updated, log it and/or notify the user.
+			if( programUpdated() ) notify( Bundles.getString( BundleKey.MESSAGES, "program.updated" ) );
 		} catch( Exception exception ) {
 			Log.write( exception );
 			return;
 		}
+	}
+
+	private final boolean programUpdated() {
+		// Get the previous release.
+		Release that = Release.decode( settings.get( "/service/release", null ) );
+
+		// Set the current release.
+		settings.put( "/service/release", Release.encode( this.getCard().getRelease() ) );
+
+		return that == null ? false : this.getCard().getRelease().compareTo( that ) > 0;
 	}
 
 	private final boolean checkJava( Parameters parameters ) {
@@ -778,11 +797,10 @@ public abstract class Service extends Agent implements Product {
 	}
 
 	/**
-	 * Apply updates. If updates are found then the method returns true, allowing
-	 * the service to terminate cleanly.
+	 * Apply updates. If updates are found then the method returns the number of
+	 * updates applied.
 	 * 
-	 * @return True if updates were found, causing the service to terminate. False
-	 *         otherwise.
+	 * @return The number of updates applied.
 	 */
 	private final int update() {
 		if( home == null ) {
