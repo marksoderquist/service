@@ -570,6 +570,7 @@ public abstract class Service extends Agent implements Product {
 		// Set the current release.
 		settings.put( "/service/release", Release.encode( this.getCard().getRelease() ) );
 
+		// Return the result.
 		return that == null ? false : this.getCard().getRelease().compareTo( that ) > 0;
 	}
 
