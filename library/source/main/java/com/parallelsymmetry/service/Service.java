@@ -141,6 +141,7 @@ public abstract class Service extends Agent implements Product {
 		try {
 			InputStream input = getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH );
 			settings.setDefaultProvider( new DescriptorSettingProvider( new Descriptor( input ) ) );
+			input.close();
 		} catch( Exception exception ) {
 			Log.write( exception );
 		}
