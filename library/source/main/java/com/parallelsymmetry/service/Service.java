@@ -554,7 +554,7 @@ public abstract class Service extends Agent implements Product {
 			// Process parameters.
 			process( parameters );
 
-			// NEXT If the program was updated, log it and/or notify the user.
+			// If the program was updated notify the user.
 			if( programUpdated() ) notify( Bundles.getString( BundleKey.MESSAGES, "program.updated" ) );
 		} catch( Exception exception ) {
 			Log.write( exception );
