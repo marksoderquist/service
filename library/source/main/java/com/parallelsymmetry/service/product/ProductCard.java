@@ -141,9 +141,7 @@ public class ProductCard {
 		this.release = new Release( version, releaseDate );
 
 		try {
-			Log.write( Log.DEBUG, "Icon URI: " + iconUri );
 			if( iconUri != null ) this.iconUri = UriUtil.resolve( base, new URI( iconUri ) );
-			Log.write( Log.DEBUG, "Icon URI: " + this.iconUri );
 		} catch( URISyntaxException exception ) {
 			Log.write( exception );
 		}
