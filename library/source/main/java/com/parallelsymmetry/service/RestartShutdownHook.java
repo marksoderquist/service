@@ -19,6 +19,7 @@ public class RestartShutdownHook extends Thread {
 	private Service service;
 
 	public RestartShutdownHook( Service service, String... programCommands ) {
+		super( "RestartHook" );
 		this.service = service;
 
 		builder = new ProcessBuilder( OperatingSystem.isWindows() ? "javaw" : "java" );
@@ -51,7 +52,7 @@ public class RestartShutdownHook extends Thread {
 		for( String command : programCommands ) {
 			builder.command().add( command );
 		}
-		
+
 		builder.command().add( ServiceFlag.RESTART_DELAY );
 
 		Log.write( Log.DEBUG, TextUtil.toString( builder.command(), " " ) );
@@ -61,11 +62,18 @@ public class RestartShutdownHook extends Thread {
 	public void run() {
 		if( builder == null ) return;
 
+		Thread[] threads = new Thread[Thread.activeCount() * 2];
+		Thread.enumerate( threads );
+		for( Thread thread : threads ) {
+			if( thread == null ) continue;
+			boolean daemon = thread.isDaemon();
+			System.out.println( "Active " + ( daemon ? "daemon" : "thread" ) + ": " + thread.getName() );
+		}
+
 		try {
 			builder.start();
 		} catch( IOException exception ) {
 			service.error( exception );
 		}
 	}
-
 }

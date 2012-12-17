@@ -504,7 +504,7 @@ public abstract class Service extends Agent implements Product {
 				//			}
 				
 				// If restart was requested, delay for a moment.
-				if( parameters.isSet( ServiceFlag.RESTART_DELAY ) ) ThreadUtil.pause( 500 );
+				if( parameters.isSet( ServiceFlag.RESTART_DELAY ) ) ThreadUtil.pause( 0 );
 
 				// Set the locale.
 				if( parameters.isSet( LOCALE ) ) setLocale( parameters );
