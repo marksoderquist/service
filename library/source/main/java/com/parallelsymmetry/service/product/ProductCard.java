@@ -98,7 +98,7 @@ public class ProductCard {
 		this.artifact = artifact;
 	}
 
-	public ProductCard update( URI base, Descriptor descriptor ) throws ProductCardException {
+	private ProductCard update( URI base, Descriptor descriptor ) throws ProductCardException {
 		if( descriptor == null ) throw new ProductCardException( "Descriptor cannot be null." );
 		this.descriptor = descriptor;
 
@@ -141,7 +141,9 @@ public class ProductCard {
 		this.release = new Release( version, releaseDate );
 
 		try {
+			Log.write( Log.DEBUG, "Icon URI: " + iconUri );
 			if( iconUri != null ) this.iconUri = UriUtil.resolve( base, new URI( iconUri ) );
+			Log.write( Log.DEBUG, "Icon URI: " + this.iconUri );
 		} catch( URISyntaxException exception ) {
 			Log.write( exception );
 		}
@@ -219,12 +221,10 @@ public class ProductCard {
 	}
 
 	public URI getIconUri() {
-		// TODO ProductCard.getIcon() get the icon from the icon cache.
 		return iconUri;
 	}
 
 	public void setIconUri( URI uri ) {
-		// TODO ProductCard.setIcon() set the icon in the icon cache.
 		this.iconUri = uri;
 	}
 
