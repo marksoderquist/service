@@ -45,6 +45,7 @@ import com.parallelsymmetry.utility.OperatingSystem;
 import com.parallelsymmetry.utility.Parameters;
 import com.parallelsymmetry.utility.Release;
 import com.parallelsymmetry.utility.TextUtil;
+import com.parallelsymmetry.utility.ThreadUtil;
 import com.parallelsymmetry.utility.agent.Agent;
 import com.parallelsymmetry.utility.agent.ServerAgent;
 import com.parallelsymmetry.utility.agent.Worker;
@@ -501,6 +502,9 @@ public abstract class Service extends Agent implements Product {
 				//					Log.write( exception );
 				//				}
 				//			}
+				
+				// If restart was requested, delay for a moment.
+				if( parameters.isSet( ServiceFlag.RESTART_DELAY ) ) ThreadUtil.pause( 500 );
 
 				// Set the locale.
 				if( parameters.isSet( LOCALE ) ) setLocale( parameters );
@@ -524,7 +528,7 @@ public abstract class Service extends Agent implements Product {
 				stopAndWait();
 				return;
 			} else if( parameters.isTrue( ServiceFlag.RESTART ) ) {
-				restart();
+				serviceRestart();
 				return;
 			} else if( parameters.isTrue( ServiceFlag.STATUS ) ) {
 				printStatus();

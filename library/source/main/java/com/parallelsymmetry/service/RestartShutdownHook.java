@@ -51,6 +51,8 @@ public class RestartShutdownHook extends Thread {
 		for( String command : programCommands ) {
 			builder.command().add( command );
 		}
+		
+		builder.command().add( ServiceFlag.RESTART_DELAY );
 
 		Log.write( Log.DEBUG, TextUtil.toString( builder.command(), " " ) );
 	}
