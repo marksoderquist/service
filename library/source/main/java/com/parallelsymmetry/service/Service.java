@@ -528,7 +528,7 @@ public abstract class Service extends Agent implements Product {
 				stopAndWait();
 				return;
 			} else if( parameters.isTrue( ServiceFlag.RESTART ) ) {
-				serviceRestart();
+				restart();
 				return;
 			} else if( parameters.isTrue( ServiceFlag.STATUS ) ) {
 				printStatus();
