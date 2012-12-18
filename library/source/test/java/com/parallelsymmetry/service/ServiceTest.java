@@ -34,7 +34,7 @@ public class ServiceTest extends BaseTestCase {
 		super.setUp();
 		service = new MockService();
 		service.call( ServiceFlag.EXECMODE, ServiceFlagValue.TEST, ServiceFlag.SETTINGS_RESET, ServiceFlag.STOP );
-		service.getProductManager().setCheckOption( ProductManager.CheckOption.DISABLED );
+		service.getProductManager().setCheckOption( ProductManager.CheckOption.MANUAL );
 	}
 
 	@Override
@@ -252,14 +252,14 @@ public class ServiceTest extends BaseTestCase {
 		//System.out.println( "...testPassParameters()..." );
 		String name1 = "Mock Service 1";
 		MockService service1 = new MockService( name1 );
-		service1.getProductManager().setCheckOption( ProductManager.CheckOption.DISABLED );
+		service1.getProductManager().setCheckOption( ProductManager.CheckOption.MANUAL );
 		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false ) );
 		assertCommandLineHeader( name1, parser1 );
 		assertTrue( "Service should be running and is not.", service1.isRunning() );
 
 		String name2 = "Mock Service 2";
 		MockService service2 = new MockService( name2 );
-		service2.getProductManager().setCheckOption( ProductManager.CheckOption.DISABLED );
+		service2.getProductManager().setCheckOption( ProductManager.CheckOption.MANUAL );
 		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.INFO, false ) );
 
 		service2.waitForShutdown( TIMEOUT, TIMEUNIT );
@@ -283,7 +283,7 @@ public class ServiceTest extends BaseTestCase {
 		//Log.write( "...testPassStatus()..." );
 		String name1 = "Mock Service 1";
 		MockService service1 = new MockService( name1 );
-		service1.getProductManager().setCheckOption( ProductManager.CheckOption.DISABLED );
+		service1.getProductManager().setCheckOption( ProductManager.CheckOption.MANUAL );
 		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false, ServiceFlag.STATUS, LogFlag.LOG_LEVEL, Log.NONE.toString() ) );
 		assertCommandLineHeader( name1, parser1 );
 
@@ -299,7 +299,7 @@ public class ServiceTest extends BaseTestCase {
 
 		String name2 = "Mock Service 2";
 		MockService service2 = new MockService( name2 );
-		service2.getProductManager().setCheckOption( ProductManager.CheckOption.DISABLED );
+		service2.getProductManager().setCheckOption( ProductManager.CheckOption.MANUAL );
 		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.INFO, false, ServiceFlag.STATUS, LogFlag.LOG_LEVEL, Log.NONE.toString() ) );
 		service2.waitForShutdown( TIMEOUT, TIMEUNIT );
 		assertCommandLineHeader( name2, parser2 );
@@ -327,7 +327,7 @@ public class ServiceTest extends BaseTestCase {
 		service.waitForStartup( TIMEOUT, TIMEUNIT );
 		assertTrue( "Service should be running and is not.", service.isRunning() );
 
-		assertEquals( "Product manager should be disabled and is not.", ProductManager.CheckOption.DISABLED, service.getProductManager().getCheckOption() );
+		assertEquals( "Product manager should be disabled and is not.", ProductManager.CheckOption.MANUAL, service.getProductManager().getCheckOption() );
 	}
 
 	private List<String> parseCommandLineOutput( String output ) {

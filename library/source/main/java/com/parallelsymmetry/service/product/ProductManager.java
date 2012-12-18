@@ -64,7 +64,7 @@ import com.parallelsymmetry.utility.setting.Settings;
 public class ProductManager extends Agent implements Persistent {
 
 	public enum CheckOption {
-		DISABLED, MANUAL, STARTUP, INTERVAL, SCHEDULE
+		MANUAL, STARTUP, INTERVAL, SCHEDULE
 	}
 
 	public enum FoundOption {
@@ -160,7 +160,7 @@ public class ProductManager extends Agent implements Persistent {
 		setEnabled( service.getCard(), true );
 
 		// Default options.
-		checkOption = CheckOption.DISABLED;
+		checkOption = CheckOption.MANUAL;
 		foundOption = FoundOption.STAGE;
 		applyOption = ApplyOption.RESTART;
 
@@ -356,8 +356,6 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	public void checkForUpdates() {
-		if( !isEnabled() ) return;
-
 		try {
 			Log.write( Log.TRACE, "Checking for updates..." );
 			int stagedUpdateCount = service.getProductManager().stagePostedUpdates();
@@ -379,7 +377,6 @@ public class ProductManager extends Agent implements Persistent {
 	 */
 	public Set<ProductCard> getPostedUpdates() throws Exception {
 		Set<ProductCard> newPacks = new HashSet<ProductCard>();
-		if( !isEnabled() ) return newPacks;
 
 		Set<ProductCard> oldPacks = getProductCards();
 		Map<ProductCard, DescriptorDownloadTask> tasks = new HashMap<ProductCard, DescriptorDownloadTask>();
@@ -445,7 +442,6 @@ public class ProductManager extends Agent implements Persistent {
 	 * @throws Exception
 	 */
 	public int stagePostedUpdates() throws Exception {
-		if( !isEnabled() ) return 0;
 		return stageSelectedUpdates( getPostedUpdates() );
 	}
 
@@ -569,6 +565,36 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	/**
+	 * Apply updates. If updates are found then the method returns the number of
+	 * updates applied.
+	 * 
+	 * @return The number of updates applied.
+	 */
+	public final int updateProduct() {
+		if( service.getHomeFolder() == null ) {
+			Log.write( Log.WARN, "Program not executed from updatable location." );
+			return 0;
+		}
+
+		Log.write( Log.DEBUG, "Checking for staged updates..." );
+
+		// If updates are staged, apply them.
+		int result = 0;
+		int updateCount = getStagedUpdateCount();
+		if( updateCount > 0 ) {
+			Log.write( "Staged updates detected: ", updateCount );
+			try {
+				result = applyStagedUpdates();
+			} catch( Exception exception ) {
+				Log.write( exception );
+			}
+		} else {
+			Log.write( Log.TRACE, "No staged updates detected." );
+		}
+		return result;
+	}
+
+	/**
 	 * Launch the update program to apply the staged updates. This method is
 	 * generally called when the program starts and, if the update program is
 	 * successfully started, the program should be terminated to allow for the
@@ -577,7 +603,8 @@ public class ProductManager extends Agent implements Persistent {
 	 * @throws Exception
 	 */
 	public int applyStagedUpdates() throws Exception {
-		if( !isEnabled() || updates.size() == 0 ) return 0;
+		if( service.getParameters().isSet( ServiceFlag.NOUPDATE ) ) return 0;
+		if( getStagedUpdateCount() == 0 ) return 0;
 
 		Log.write( Log.DEBUG, "Starting update process..." );
 		// Copy the updater to a temporary location.
@@ -664,12 +691,12 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Store the update count because the collection will be cleared.
 		int count = updates.size();
-		
+
 		clearStagedUpdates();
 
 		return count;
 	}
-	
+
 	public void clearStagedUpdates() {
 		// Remove the updates settings.
 		updates.clear();
@@ -791,7 +818,7 @@ public class ProductManager extends Agent implements Persistent {
 		}
 		this.updates = updatesMap;
 
-		this.checkOption = CheckOption.valueOf( settings.get( CHECK, CheckOption.DISABLED.name() ) );
+		this.checkOption = CheckOption.valueOf( settings.get( CHECK, CheckOption.MANUAL.name() ) );
 		this.foundOption = FoundOption.valueOf( settings.get( FOUND, FoundOption.STAGE.name() ) );
 		this.applyOption = ApplyOption.valueOf( settings.get( APPLY, ApplyOption.RESTART.name() ) );
 	}
@@ -824,12 +851,6 @@ public class ProductManager extends Agent implements Persistent {
 	@Override
 	protected void startAgent() throws Exception {
 		cleanRemovedProducts();
-
-		// Disable updates if the NOUPDATE flag is set.
-		if( service.getParameters().isSet( ServiceFlag.NOUPDATE ) ) {
-			checkOption = CheckOption.DISABLED;
-			return;
-		}
 
 		// Create the update check timer.
 		timer = new Timer();
@@ -954,10 +975,6 @@ public class ProductManager extends Agent implements Persistent {
 
 			loaders.remove( module.getClass().getClassLoader() );
 		}
-	}
-
-	private boolean isEnabled() {
-		return checkOption != CheckOption.DISABLED;
 	}
 
 	private void cleanRemovedProducts() {

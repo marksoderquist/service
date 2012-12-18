@@ -84,12 +84,6 @@ public class ProductManagerTest extends BaseServiceTest {
 
 	@Test
 	public void testGetCheckOption() {
-		assertEquals( CheckOption.DISABLED, manager.getCheckOption() );
-	}
-
-	@Test
-	public void testSetCheckOption() {
-		manager.setCheckOption( CheckOption.MANUAL );
 		assertEquals( CheckOption.MANUAL, manager.getCheckOption() );
 	}
 
@@ -198,7 +192,7 @@ public class ProductManagerTest extends BaseServiceTest {
 			assertEquals( ProductManagerEvent.Type.PRODUCT_STAGED, watcher.getEvents().get( 0 ).getType() );
 		} finally {
 			// Disable the update manager.
-			manager.setCheckOption( ProductManager.CheckOption.DISABLED );
+			manager.setCheckOption( ProductManager.CheckOption.MANUAL );
 		}
 	}
 

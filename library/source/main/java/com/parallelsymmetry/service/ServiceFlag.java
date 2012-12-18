@@ -14,8 +14,6 @@ public interface ServiceFlag extends CommonFlag {
 
 	public static final String RESTART = "-restart";
 
-	public static final String RESTART_DELAY = "-restart.delay";
-
 	public static final String STOP = "-stop";
 
 	public static final String SETTINGS_RESET = "-settings.reset";

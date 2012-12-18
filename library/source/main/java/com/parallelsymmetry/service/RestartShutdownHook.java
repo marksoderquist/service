@@ -53,22 +53,12 @@ public class RestartShutdownHook extends Thread {
 			builder.command().add( command );
 		}
 
-		builder.command().add( ServiceFlag.RESTART_DELAY );
-
-		Log.write( Log.DEBUG, TextUtil.toString( builder.command(), " " ) );
+		Log.write( Log.DEBUG, "Restart command: ", TextUtil.toString( builder.command(), " " ) );
 	}
 
 	@Override
 	public void run() {
 		if( builder == null ) return;
-
-		Thread[] threads = new Thread[Thread.activeCount() * 2];
-		Thread.enumerate( threads );
-		for( Thread thread : threads ) {
-			if( thread == null ) continue;
-			boolean daemon = thread.isDaemon();
-			System.out.println( "Active " + ( daemon ? "daemon" : "thread" ) + ": " + thread.getName() );
-		}
 
 		try {
 			builder.start();
@@ -76,4 +66,5 @@ public class RestartShutdownHook extends Thread {
 			service.error( exception );
 		}
 	}
+
 }

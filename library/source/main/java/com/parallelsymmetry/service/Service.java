@@ -45,7 +45,6 @@ import com.parallelsymmetry.utility.OperatingSystem;
 import com.parallelsymmetry.utility.Parameters;
 import com.parallelsymmetry.utility.Release;
 import com.parallelsymmetry.utility.TextUtil;
-import com.parallelsymmetry.utility.ThreadUtil;
 import com.parallelsymmetry.utility.agent.Agent;
 import com.parallelsymmetry.utility.agent.ServerAgent;
 import com.parallelsymmetry.utility.agent.Worker;
@@ -503,9 +502,6 @@ public abstract class Service extends Agent implements Product {
 				//				}
 				//			}
 				
-				// If restart was requested, delay for a moment.
-				if( parameters.isSet( ServiceFlag.RESTART_DELAY ) ) ThreadUtil.pause( 0 );
-
 				// Set the locale.
 				if( parameters.isSet( LOCALE ) ) setLocale( parameters );
 
@@ -541,8 +537,8 @@ public abstract class Service extends Agent implements Product {
 			}
 
 			// This logic is not trivial, the nested if statements help clarify it.
-			if( !peer & !parameters.isSet( ServiceFlag.NOUPDATE ) & productManager.getCheckOption() != ProductManager.CheckOption.DISABLED ) {
-				int updateResult = update();
+			if( !peer & !parameters.isSet( ServiceFlag.NOUPDATE ) ) {
+				int updateResult = productManager.updateProduct();
 
 				if( updateResult > 0 ) {
 					// The program should be allowed, but not forced, to exit at this point.
@@ -800,36 +796,6 @@ public abstract class Service extends Agent implements Product {
 		}
 
 		return exists;
-	}
-
-	/**
-	 * Apply updates. If updates are found then the method returns the number of
-	 * updates applied.
-	 * 
-	 * @return The number of updates applied.
-	 */
-	private final int update() {
-		if( home == null ) {
-			Log.write( Log.WARN, "Program not executed from updatable location." );
-			return 0;
-		}
-
-		Log.write( Log.DEBUG, "Checking for staged updates..." );
-
-		// If updates are staged, apply them.
-		int result = 0;
-		int updateCount = productManager.getStagedUpdateCount();
-		if( updateCount > 0 ) {
-			Log.write( "Staged updates detected: ", updateCount );
-			try {
-				result = productManager.applyStagedUpdates();
-			} catch( Exception exception ) {
-				Log.write( exception );
-			}
-		} else {
-			Log.write( Log.TRACE, "No staged updates detected." );
-		}
-		return result;
 	}
 
 	/**
