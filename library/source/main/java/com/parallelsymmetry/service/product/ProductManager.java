@@ -356,6 +356,8 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	public void checkForUpdates() {
+		if( !isEnabled() ) return;
+
 		try {
 			Log.write( Log.TRACE, "Checking for updates..." );
 			int stagedUpdateCount = service.getProductManager().stagePostedUpdates();
@@ -377,6 +379,7 @@ public class ProductManager extends Agent implements Persistent {
 	 */
 	public Set<ProductCard> getPostedUpdates() throws Exception {
 		Set<ProductCard> newPacks = new HashSet<ProductCard>();
+		if( !isEnabled() ) return newPacks;
 
 		Set<ProductCard> oldPacks = getProductCards();
 		Map<ProductCard, DescriptorDownloadTask> tasks = new HashMap<ProductCard, DescriptorDownloadTask>();
@@ -442,6 +445,7 @@ public class ProductManager extends Agent implements Persistent {
 	 * @throws Exception
 	 */
 	public int stagePostedUpdates() throws Exception {
+		if( !isEnabled() ) return 0;
 		return stageSelectedUpdates( getPostedUpdates() );
 	}
 
@@ -603,9 +607,8 @@ public class ProductManager extends Agent implements Persistent {
 	 * @throws Exception
 	 */
 	public int applyStagedUpdates() throws Exception {
-		if( service.getParameters().isSet( ServiceFlag.NOUPDATE ) ) return 0;
-		if( getStagedUpdateCount() == 0 ) return 0;
-
+		if( !isEnabled() || getStagedUpdateCount() == 0 ) return 0;
+		
 		Log.write( Log.DEBUG, "Starting update process..." );
 		// Copy the updater to a temporary location.
 		File updaterSource = updater;
@@ -846,6 +849,10 @@ public class ProductManager extends Agent implements Persistent {
 		}
 
 		return map;
+	}
+
+	protected boolean isEnabled() {
+		return !service.getParameters().isSet( ServiceFlag.NOUPDATE );
 	}
 
 	@Override
