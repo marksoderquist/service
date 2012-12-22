@@ -37,8 +37,6 @@ import com.parallelsymmetry.service.product.ProductCard;
 import com.parallelsymmetry.service.product.ProductCardException;
 import com.parallelsymmetry.service.product.ProductManager;
 import com.parallelsymmetry.service.product.ProductModule;
-import com.parallelsymmetry.utility.BundleKey;
-import com.parallelsymmetry.utility.Bundles;
 import com.parallelsymmetry.utility.Descriptor;
 import com.parallelsymmetry.utility.FileUtil;
 import com.parallelsymmetry.utility.OperatingSystem;
@@ -442,6 +440,17 @@ public abstract class Service extends Agent implements Product {
 		Log.write( getName() + " stopped." );
 	}
 
+	protected final boolean isProgramUpdated() {
+		// Get the previous release.
+		Release that = Release.decode( settings.get( "/service/release", null ) );
+	
+		// Set the current release.
+		settings.put( "/service/release", Release.encode( this.getCard().getRelease() ) );
+	
+		// Return the result.
+		return that == null ? false : this.getCard().getRelease().compareTo( that ) > 0;
+	}
+
 	private static void setLocale( Parameters parameters ) {
 		String locale = parameters.get( LOCALE );
 
@@ -554,24 +563,10 @@ public abstract class Service extends Agent implements Product {
 
 			// Process parameters.
 			process( parameters );
-
-			// If the program was updated notify the user.
-			if( programUpdated() ) notify( Bundles.getString( BundleKey.MESSAGES, "program.updated" ) );
 		} catch( Exception exception ) {
 			Log.write( exception );
 			return;
 		}
-	}
-
-	private final boolean programUpdated() {
-		// Get the previous release.
-		Release that = Release.decode( settings.get( "/service/release", null ) );
-
-		// Set the current release.
-		settings.put( "/service/release", Release.encode( this.getCard().getRelease() ) );
-
-		// Return the result.
-		return that == null ? false : this.getCard().getRelease().compareTo( that ) > 0;
 	}
 
 	private final boolean checkJava( Parameters parameters ) {
