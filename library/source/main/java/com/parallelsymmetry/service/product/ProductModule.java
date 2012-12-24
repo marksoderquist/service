@@ -4,12 +4,12 @@ import com.parallelsymmetry.service.Service;
 
 public abstract class ProductModule implements Product, Comparable<ProductModule> {
 	
-	protected Service program;
+	protected Service service;
 
 	protected ProductCard card;
 
-	public ProductModule( Service program, ProductCard card ) {
-		this.program = program;
+	public ProductModule( Service service, ProductCard card ) {
+		this.service = service;
 		this.card = card;
 	}
 
