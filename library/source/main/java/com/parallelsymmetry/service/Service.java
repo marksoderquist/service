@@ -314,7 +314,21 @@ public abstract class Service extends Agent implements Product {
 
 	public String[] error( String title, Object message, Throwable throwable ) {
 		String[] messages = null;
-		if( message == null && throwable != null ) message = throwable.getMessage();
+
+		if( message == null && throwable != null ) {
+			StringBuilder builder = new StringBuilder();
+
+			builder.append( "<html>" );
+			builder.append( throwable.getClass().getName() );
+			builder.append( ":" );
+			builder.append( "<br/>" );
+			builder.append( "<br/>" );
+			builder.append( throwable.getMessage() );
+			builder.append( "</html>" );
+
+			message = builder.toString();
+		}
+
 		if( message != null ) {
 			messages = new String[1];
 			messages[0] = message.toString();
@@ -443,10 +457,10 @@ public abstract class Service extends Agent implements Product {
 	protected final boolean isProgramUpdated() {
 		// Get the previous release.
 		Release that = Release.decode( settings.get( "/service/release", null ) );
-	
+
 		// Set the current release.
 		settings.put( "/service/release", Release.encode( this.getCard().getRelease() ) );
-	
+
 		// Return the result.
 		return that == null ? false : this.getCard().getRelease().compareTo( that ) > 0;
 	}
@@ -510,7 +524,7 @@ public abstract class Service extends Agent implements Product {
 				//					Log.write( exception );
 				//				}
 				//			}
-				
+
 				// Set the locale.
 				if( parameters.isSet( LOCALE ) ) setLocale( parameters );
 
