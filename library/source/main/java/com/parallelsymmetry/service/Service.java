@@ -39,6 +39,7 @@ import com.parallelsymmetry.service.product.ProductManager;
 import com.parallelsymmetry.service.product.ProductModule;
 import com.parallelsymmetry.utility.Descriptor;
 import com.parallelsymmetry.utility.FileUtil;
+import com.parallelsymmetry.utility.JavaUtil;
 import com.parallelsymmetry.utility.OperatingSystem;
 import com.parallelsymmetry.utility.Parameters;
 import com.parallelsymmetry.utility.Release;
@@ -741,6 +742,16 @@ public abstract class Service extends Agent implements Product {
 		}
 
 		Log.write( Log.TRACE, "Java: " + System.getProperty( "java.runtime.version" ) );
+
+		Log.write( Log.DEBUG, "Classpath: " );
+		try {
+			List<URI> uris = JavaUtil.parseClasspath( System.getProperty( "java.class.path" ) );
+			for( URI uri : uris ) {
+				Log.write( Log.DEBUG, "  ", uri );
+			}
+		} catch( URISyntaxException exception ) {
+			Log.write( exception );
+		}
 	}
 
 	private final void printStatus() {
