@@ -1086,7 +1086,7 @@ public class ProductManager extends Agent implements Persistent {
 	 */
 	private ProductModule loadClasspathModule( ProductCard card, URI codebase, ClassLoader parent ) throws Exception {
 		ClassLoader loader = new ModuleClassLoader( codebase, new URL[0], parent );
-		ProductModule module = loadModule( card, loader, 'C', false, false );
+		ProductModule module = loadModule( card, loader, "CP", false, false );
 		return module;
 	}
 
@@ -1108,7 +1108,7 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Create the class loader.
 		ClassLoader loader = new ModuleClassLoader( codebase, new URL[] { jarfile.toURI().toURL() }, parent );
-		return loadModule( card, loader, 'S', true, true );
+		return loadModule( card, loader, "SM", true, true );
 	}
 
 	/**
@@ -1134,10 +1134,10 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Create the class loader.
 		ClassLoader loader = new ModuleClassLoader( moduleFolderUri, urls.toArray( new URL[urls.size()] ), parent );
-		return loadModule( card, loader, 'X', true, true );
+		return loadModule( card, loader, "LX", true, true );
 	}
 
-	private ProductModule loadModule( ProductCard card, ClassLoader loader, char source, boolean updatable, boolean removable ) throws Exception {
+	private ProductModule loadModule( ProductCard card, ClassLoader loader, String source, boolean updatable, boolean removable ) throws Exception {
 		// Ignore included products.
 		if( includedProducts.contains( card.getProductKey() ) ) return null;
 
@@ -1154,14 +1154,14 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Load the module.
 		try {
-			Log.write( Log.DEBUG, "Loading " + source + " module: " + card.getProductKey() );
+			Log.write( Log.DEBUG, "Loading ", source, " module: ", card.getProductKey() );
 			Class<?> moduleClass = loader.loadClass( className );
 			Constructor<?> constructor = moduleClass.getConstructor( Service.class, ProductCard.class );
 			module = (ProductModule)constructor.newInstance( service, card );
 			registerModule( module, updatable, removable );
-			Log.write( Log.TRACE, source + " module loaded:  " + card.getProductKey() );
+			Log.write( Log.TRACE, source, " module loaded:  ", card.getProductKey() );
 		} catch( Throwable throwable ) {
-			Log.write( Log.WARN, source + " module failed:  " + card.getProductKey() + " (" + className + ")" );
+			Log.write( Log.WARN, source, " module failed:  ", card.getProductKey(), " (", className, ")" );
 			Log.write( Log.TRACE, throwable );
 			return null;
 		}
