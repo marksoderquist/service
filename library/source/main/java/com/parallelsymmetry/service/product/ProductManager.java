@@ -103,6 +103,8 @@ public class ProductManager extends Agent implements Persistent {
 
 	private static final String PRODUCT_ENABLED_KEY = "enabled";
 
+	private static final int POSTED_UPDATE_CACHE_TIMEOUT = 60000;
+
 	private Service service;
 
 	private Set<ProductCatalog> catalogs;
@@ -133,6 +135,10 @@ public class ProductManager extends Agent implements Persistent {
 
 	private Set<String> includedProducts;
 
+	private Set<ProductCard> postedUpdateCache;
+
+	private long postedUpdateCacheTime;
+
 	private Timer timer;
 
 	private UpdateCheckTask task;
@@ -152,6 +158,8 @@ public class ProductManager extends Agent implements Persistent {
 		includedProducts = new HashSet<String>();
 		includedProducts.add( service.getCard().getProductKey() );
 		includedProducts.add( "com.parallelsymmetry.updater" );
+
+		postedUpdateCache = new CopyOnWriteArraySet<ProductCard>();
 
 		// Add service product.
 		registerProduct( service.getCard() );
@@ -370,6 +378,10 @@ public class ProductManager extends Agent implements Persistent {
 		}
 	}
 
+	public Set<ProductCard> getPostedUpdates() throws Exception {
+		return getPostedUpdates( true );
+	}
+
 	/**
 	 * Gets the set of posted product updates. If there are no posted updates
 	 * found an empty set is returned.
@@ -377,9 +389,15 @@ public class ProductManager extends Agent implements Persistent {
 	 * @return The set of posted updates.
 	 * @throws Exception
 	 */
-	public Set<ProductCard> getPostedUpdates() throws Exception {
+	public Set<ProductCard> getPostedUpdates( boolean force ) throws Exception {
 		Set<ProductCard> newPacks = new HashSet<ProductCard>();
 		if( !isEnabled() ) return newPacks;
+
+		if( force == false && System.currentTimeMillis() - postedUpdateCacheTime < POSTED_UPDATE_CACHE_TIMEOUT ) {
+			return new HashSet<ProductCard>( postedUpdateCache );
+		}
+
+		// FIXME Cache the discovered updates for a short period of time (1-5 mins.)
 
 		Set<ProductCard> oldPacks = getProductCards();
 		Map<ProductCard, DescriptorDownloadTask> tasks = new HashMap<ProductCard, DescriptorDownloadTask>();
@@ -426,6 +444,8 @@ public class ProductManager extends Agent implements Persistent {
 
 		// If there are no updates and there is an exception, throw it.
 		if( newPacks.size() == 0 && exception != null ) throw exception;
+
+		postedUpdateCache = new CopyOnWriteArraySet<ProductCard>( newPacks );
 
 		return newPacks;
 	}
@@ -608,7 +628,7 @@ public class ProductManager extends Agent implements Persistent {
 	 */
 	public int applyStagedUpdates() throws Exception {
 		if( !isEnabled() || getStagedUpdateCount() == 0 ) return 0;
-		
+
 		Log.write( Log.DEBUG, "Starting update process..." );
 		// Copy the updater to a temporary location.
 		File updaterSource = updater;
