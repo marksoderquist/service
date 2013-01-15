@@ -21,7 +21,6 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import com.parallelsymmetry.service.ProductManagerListener;
 import com.parallelsymmetry.service.Service;
 import com.parallelsymmetry.service.ServiceFlag;
 import com.parallelsymmetry.service.product.ProductManagerEvent.Type;
@@ -155,17 +154,14 @@ public class ProductManager extends Agent implements Persistent {
 		productStates = new ConcurrentHashMap<String, ProductState>();
 		listeners = new CopyOnWriteArraySet<ProductManagerListener>();
 
+		// Register included products.
 		includedProducts = new HashSet<String>();
 		includedProducts.add( service.getCard().getProductKey() );
+		// FIXME The product key should come from a product card. Need to fix updater first.
 		includedProducts.add( "com.parallelsymmetry.updater" );
 
+		// Create the posted update cache.
 		postedUpdateCache = new CopyOnWriteArraySet<ProductCard>();
-
-		// Add service product.
-		registerProduct( service.getCard() );
-		setUpdatable( service.getCard(), true );
-		setRemovable( service.getCard(), false );
-		setEnabled( service.getCard(), true );
 
 		// Default options.
 		checkOption = CheckOption.MANUAL;
@@ -313,7 +309,12 @@ public class ProductManager extends Agent implements Persistent {
 
 		setEnabledImpl( card, enabled );
 
-		getProductSettings( card ).putBoolean( PRODUCT_ENABLED_KEY, enabled );
+		Settings settings = getProductSettings( card );
+		settings.putBoolean( PRODUCT_ENABLED_KEY, enabled );
+		settings.flush();
+		Log.write( Log.ERROR, "Set enabled: ", settings.getPath(), ": ", enabled );
+
+		
 		fireProductManagerEvent( new ProductManagerEvent( this, enabled ? Type.PRODUCT_ENABLED : Type.PRODUCT_DISABLED, card ) );
 	}
 
@@ -390,52 +391,52 @@ public class ProductManager extends Agent implements Persistent {
 	 * @throws Exception
 	 */
 	public Set<ProductCard> getPostedUpdates( boolean force ) throws Exception {
-		Set<ProductCard> newPacks = new HashSet<ProductCard>();
-		if( !isEnabled() ) return newPacks;
+		Set<ProductCard> newCards = new HashSet<ProductCard>();
+		if( !isEnabled() ) return newCards;
 
+		// If the posted update cache is still valid return the updates in the cache.
 		if( force == false && System.currentTimeMillis() - postedUpdateCacheTime < POSTED_UPDATE_CACHE_TIMEOUT ) {
 			return new HashSet<ProductCard>( postedUpdateCache );
 		}
 
-		// FIXME Cache the discovered updates for a short period of time (1-5 mins.)
-
-		Set<ProductCard> oldPacks = getProductCards();
+		// Download the descriptors for each product.
+		Set<ProductCard> oldCards = getProductCards();
 		Map<ProductCard, DescriptorDownloadTask> tasks = new HashMap<ProductCard, DescriptorDownloadTask>();
-		//Map<ProductCard, Future<Descriptor>> futures = new HashMap<ProductCard, Future<Descriptor>>();
-		for( ProductCard oldPack : oldPacks ) {
-			URI uri = getResolvedUpdateUri( oldPack.getSourceUri() );
+		for( ProductCard oldCard : oldCards ) {
+			URI uri = getResolvedUpdateUri( oldCard.getSourceUri() );
 			if( uri == null ) {
-				Log.write( Log.WARN, "Installed pack does not have source defined: " + oldPack.toString() );
+				Log.write( Log.WARN, "Installed pack does not have source defined: " + oldCard.toString() );
 				continue;
 			} else {
 				Log.write( Log.DEBUG, "Installed pack source: " + uri );
 			}
 
-			tasks.put( oldPack, new DescriptorDownloadTask( uri ) );
-			service.getTaskManager().submit( tasks.get( oldPack ) );
+			tasks.put( oldCard, new DescriptorDownloadTask( uri ) );
+			service.getTaskManager().submit( tasks.get( oldCard ) );
 		}
 
+		// Determine what products have posted updates.
 		Exception exception = null;
-		for( ProductCard oldPack : oldPacks ) {
+		for( ProductCard oldCard : oldCards ) {
 			try {
-				DescriptorDownloadTask task = tasks.get( oldPack );
+				DescriptorDownloadTask task = tasks.get( oldCard );
 				if( task == null ) continue;
 
 				Descriptor descriptor = task.get();
-				ProductCard newPack = new ProductCard( task.getUri(), descriptor );
+				ProductCard newCard = new ProductCard( task.getUri(), descriptor );
 
 				// Validate the pack key.
-				if( !oldPack.getProductKey().equals( newPack.getProductKey() ) ) {
-					Log.write( Log.WARN, "Pack mismatch: ", oldPack.getProductKey(), " != ", newPack.getProductKey() );
+				if( !oldCard.getProductKey().equals( newCard.getProductKey() ) ) {
+					Log.write( Log.WARN, "Pack mismatch: ", oldCard.getProductKey(), " != ", newCard.getProductKey() );
 					continue;
 				}
 
-				Log.write( Log.DEBUG, "Old release: ", oldPack.getArtifact(), " ", oldPack.getRelease() );
-				Log.write( Log.DEBUG, "New release: ", newPack.getArtifact(), " ", newPack.getRelease() );
+				Log.write( Log.DEBUG, "Old release: ", oldCard.getArtifact(), " ", oldCard.getRelease() );
+				Log.write( Log.DEBUG, "New release: ", newCard.getArtifact(), " ", newCard.getRelease() );
 
-				if( newPack.getRelease().compareTo( oldPack.getRelease() ) > 0 ) {
-					Log.write( Log.TRACE, "Update found for: " + oldPack.toString() );
-					newPacks.add( newPack );
+				if( newCard.getRelease().compareTo( oldCard.getRelease() ) > 0 ) {
+					Log.write( Log.TRACE, "Update found for: " + oldCard.toString() );
+					newCards.add( newCard );
 				}
 			} catch( Exception workException ) {
 				if( exception == null ) exception = workException;
@@ -443,11 +444,12 @@ public class ProductManager extends Agent implements Persistent {
 		}
 
 		// If there are no updates and there is an exception, throw it.
-		if( newPacks.size() == 0 && exception != null ) throw exception;
+		if( newCards.size() == 0 && exception != null ) throw exception;
 
-		postedUpdateCache = new CopyOnWriteArraySet<ProductCard>( newPacks );
+		// Cache the discovered updates.
+		postedUpdateCache = new CopyOnWriteArraySet<ProductCard>( newCards );
 
-		return newPacks;
+		return newCards;
 	}
 
 	public boolean cacheSelectedUpdates( Set<ProductCard> packs ) throws Exception {
@@ -808,6 +810,16 @@ public class ProductManager extends Agent implements Persistent {
 		return clazz;
 	}
 
+	public void registerProduct( ProductCard card ) {
+		productCards.put( card.getProductKey(), card );
+		productStates.put( card.getProductKey(), new ProductState() );
+	}
+
+	public void unregisterProduct( ProductCard card ) {
+		productCards.remove( card.getProductKey() );
+		productStates.remove( card.getProductKey() );
+	}
+
 	public void addProductManagerListener( ProductManagerListener listener ) {
 		listeners.add( listener );
 	}
@@ -893,16 +905,6 @@ public class ProductManager extends Agent implements Persistent {
 	@Override
 	protected void stopAgent() throws Exception {
 		if( timer != null ) timer.cancel();
-	}
-
-	void registerProduct( ProductCard card ) {
-		productCards.put( card.getProductKey(), card );
-		productStates.put( card.getProductKey(), new ProductState() );
-	}
-
-	void unregisterProduct( ProductCard card ) {
-		productCards.remove( card.getProductKey() );
-		productStates.remove( card.getProductKey() );
 	}
 
 	/**

@@ -18,7 +18,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import com.parallelsymmetry.service.BaseServiceTest;
-import com.parallelsymmetry.service.ProductManagerListener;
 import com.parallelsymmetry.service.product.ProductCard;
 import com.parallelsymmetry.service.product.ProductManager;
 import com.parallelsymmetry.service.product.ProductManagerEvent;
