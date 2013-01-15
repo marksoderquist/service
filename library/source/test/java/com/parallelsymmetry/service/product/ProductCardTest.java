@@ -4,9 +4,9 @@ import java.io.File;
 import java.net.URI;
 import java.net.URL;
 import java.util.Date;
+import java.util.List;
 
 import com.parallelsymmetry.service.BaseTestCase;
-import com.parallelsymmetry.service.product.ProductCard;
 import com.parallelsymmetry.utility.DateUtil;
 import com.parallelsymmetry.utility.Descriptor;
 import com.parallelsymmetry.utility.Release;
@@ -17,9 +17,9 @@ import com.parallelsymmetry.utility.setting.Settings;
 
 public class ProductCardTest extends BaseTestCase {
 
-	private static final String MOCK_SERVICE = "/META-INF/product.mock.service.xml";
+	private static final String COMPLETE_CARD = "/META-INF/product.card.complete.xml";
 
-	private static final String MINIMAL_CARD = "/META-INF/product.minimal.info.xml";
+	private static final String MINIMAL_CARD = "/META-INF/product.card.minimum.xml";
 
 	public void testAssertDescriptorPaths() {
 		assertEquals( "/product", ProductCard.PRODUCT_PATH );
@@ -38,15 +38,15 @@ public class ProductCardTest extends BaseTestCase {
 	}
 
 	public void testGetKey() throws Exception {
-		assertEquals( "com.parallelsymmetry.mock", loadCard( MOCK_SERVICE ).getProductKey() );
+		assertEquals( "com.parallelsymmetry.mock", loadCard( COMPLETE_CARD ).getProductKey() );
 	}
 
 	public void testGetGroup() throws Exception {
-		assertEquals( "com.parallelsymmetry", loadCard( MOCK_SERVICE ).getGroup() );
+		assertEquals( "com.parallelsymmetry", loadCard( COMPLETE_CARD ).getGroup() );
 	}
 
 	public void testSetGroup() throws Exception {
-		ProductCard card = loadCard( MOCK_SERVICE );
+		ProductCard card = loadCard( COMPLETE_CARD );
 		assertEquals( "com.parallelsymmetry", card.getGroup() );
 		assertEquals( "com.parallelsymmetry.mock", card.getProductKey() );
 
@@ -56,11 +56,11 @@ public class ProductCardTest extends BaseTestCase {
 	}
 
 	public void testGetArtifact() throws Exception {
-		assertEquals( "mock", loadCard( MOCK_SERVICE ).getArtifact() );
+		assertEquals( "mock", loadCard( COMPLETE_CARD ).getArtifact() );
 	}
 
 	public void testSetArtifact() throws Exception {
-		ProductCard card = loadCard( MOCK_SERVICE );
+		ProductCard card = loadCard( COMPLETE_CARD );
 		assertEquals( "com.parallelsymmetry", card.getGroup() );
 		assertEquals( "com.parallelsymmetry.mock", card.getProductKey() );
 
@@ -70,11 +70,11 @@ public class ProductCardTest extends BaseTestCase {
 	}
 
 	public void testGetRelease() throws Exception {
-		assertEquals( "1.0.0 Alpha 00  1973-08-14 22:29:00", loadCard( MOCK_SERVICE ).getRelease().toHumanString() );
+		assertEquals( "1.0.0 Alpha 00  1973-08-14 22:29:00", loadCard( COMPLETE_CARD ).getRelease().toHumanString() );
 	}
 
 	public void testSetRelease() throws Exception {
-		ProductCard card = loadCard( MOCK_SERVICE );
+		ProductCard card = loadCard( COMPLETE_CARD );
 		assertEquals( "com.parallelsymmetry", card.getGroup() );
 		assertEquals( "com.parallelsymmetry.mock", card.getProductKey() );
 
@@ -84,51 +84,59 @@ public class ProductCardTest extends BaseTestCase {
 	}
 
 	public void testGetIcon() throws Exception {
-		assertEquals( new File( "target/sandbox/icon.png" ).toURI(), loadCard( MOCK_SERVICE ).getIconUri() );
+		assertEquals( new File( "target/sandbox/icon.png" ).toURI(), loadCard( COMPLETE_CARD ).getIconUri() );
 	}
 
 	public void testGetName() throws Exception {
-		assertEquals( "Mock Service", loadCard( MOCK_SERVICE ).getName() );
+		assertEquals( "Mock Service", loadCard( COMPLETE_CARD ).getName() );
 	}
 
 	public void testGetProvider() throws Exception {
-		assertEquals( "Parallel Symmetry", loadCard( MOCK_SERVICE ).getProvider() );
+		assertEquals( "Parallel Symmetry", loadCard( COMPLETE_CARD ).getProvider() );
+	}
+
+	public void testContributors() throws Exception {
+		List<String> contributors = loadCard( COMPLETE_CARD ).getContributors();
+		assertEquals( 3, contributors.size() );
+		assertEquals( "Mark", contributors.get( 0 ) );
+		assertEquals( "John", contributors.get( 1 ) );
+		assertEquals( "Mike", contributors.get( 2 ) );
 	}
 
 	public void testGetInceptionYear() throws Exception {
-		assertEquals( 1973, loadCard( MOCK_SERVICE ).getInceptionYear() );
+		assertEquals( 1973, loadCard( COMPLETE_CARD ).getInceptionYear() );
 	}
 
 	public void testGetSummary() throws Exception {
-		assertEquals( "Mock service for testing", loadCard( MOCK_SERVICE ).getSummary() );
+		assertEquals( "Mock service for testing", loadCard( COMPLETE_CARD ).getSummary() );
 	}
 
 	public void testGetDescription() throws Exception {
-		assertEquals( "The Mock Service is used for product development and testing.", loadCard( MOCK_SERVICE ).getDescription() );
+		assertEquals( "The Mock Service is used for product development and testing.", loadCard( COMPLETE_CARD ).getDescription() );
 	}
 
 	public void testGetCopyrightHolder() throws Exception {
-		assertEquals( "Parallel Symmetry", loadCard( MOCK_SERVICE ).getCopyrightHolder() );
+		assertEquals( "Parallel Symmetry", loadCard( COMPLETE_CARD ).getCopyrightHolder() );
 	}
 
 	public void testGetCopyrightNotice() throws Exception {
-		assertEquals( "All rights reserved.", loadCard( MOCK_SERVICE ).getCopyrightNotice() );
+		assertEquals( "All rights reserved.", loadCard( COMPLETE_CARD ).getCopyrightNotice() );
 	}
 
 	public void testGetLicenseUri() throws Exception {
-		assertEquals( URI.create( "http://www.parallelsymmetry.com/legal/software.license.html" ), loadCard( MOCK_SERVICE ).getLicenseUri() );
+		assertEquals( URI.create( "http://www.parallelsymmetry.com/legal/software.license.html" ), loadCard( COMPLETE_CARD ).getLicenseUri() );
 	}
 
 	public void testGetLicenseSummary() throws Exception {
-		assertEquals( "Mock Service comes with ABSOLUTELY NO WARRANTY. This is open software, and you are welcome to redistribute it under certain conditions.", loadCard( MOCK_SERVICE ).getLicenseSummary() );
+		assertEquals( "Mock Service comes with ABSOLUTELY NO WARRANTY. This is open software, and you are welcome to redistribute it under certain conditions.", loadCard( COMPLETE_CARD ).getLicenseSummary() );
 	}
 
 	public void testGetSourceUri() throws Exception {
-		assertEquals( new File( "target/sandbox/update.xml" ).toURI(), loadCard( MOCK_SERVICE ).getSourceUri() );
+		assertEquals( new File( "target/sandbox/update.xml" ).toURI(), loadCard( COMPLETE_CARD ).getSourceUri() );
 	}
 
 	public void testGetInstallFolder() throws Exception {
-		ProductCard card = loadCard( MOCK_SERVICE );
+		ProductCard card = loadCard( COMPLETE_CARD );
 		assertNull( card.getInstallFolder() );
 
 		card.setInstallFolder( new File( "." ) );
@@ -136,7 +144,7 @@ public class ProductCardTest extends BaseTestCase {
 	}
 
 	public void testEquals() throws Exception {
-		URL url = getClass().getResource( MOCK_SERVICE );
+		URL url = getClass().getResource( COMPLETE_CARD );
 		Descriptor descriptor = new Descriptor( url );
 
 		ProductCard card1 = new ProductCard( url.toURI(), descriptor );
@@ -153,9 +161,9 @@ public class ProductCardTest extends BaseTestCase {
 		card2.setArtifact( "card2" );
 		assertFalse( card1.equals( card2 ) );
 	}
-	
+
 	public void testDeepEquals() throws Exception {
-		URL url = getClass().getResource( MOCK_SERVICE );
+		URL url = getClass().getResource( COMPLETE_CARD );
 		Descriptor descriptor = new Descriptor( url );
 
 		ProductCard card1 = new ProductCard( url.toURI(), descriptor );
@@ -164,7 +172,7 @@ public class ProductCardTest extends BaseTestCase {
 	}
 
 	public void testHashCode() throws Exception {
-		URL url = getClass().getResource( MOCK_SERVICE );
+		URL url = getClass().getResource( COMPLETE_CARD );
 		Descriptor descriptor = new Descriptor( url );
 
 		ProductCard card1 = new ProductCard( url.toURI(), descriptor );
@@ -196,6 +204,7 @@ public class ProductCardTest extends BaseTestCase {
 		assertEquals( "mock", card.getName() );
 		assertEquals( null, card.getSummary() );
 		assertEquals( null, card.getDescription() );
+		assertEquals( 0, card.getContributors().size() );
 
 		// Check the copyright information.
 		assertEquals( DateUtil.getCurrentYear(), card.getInceptionYear() );
@@ -211,7 +220,7 @@ public class ProductCardTest extends BaseTestCase {
 	}
 
 	public void testSaveLoadSaveSettings() throws Exception {
-		ProductCard standard = loadCard( MOCK_SERVICE );
+		ProductCard standard = loadCard( COMPLETE_CARD );
 		MockWritableSettingProvider provider = new MockWritableSettingProvider();
 		Settings settings = new Settings();
 		settings.addProvider( provider );

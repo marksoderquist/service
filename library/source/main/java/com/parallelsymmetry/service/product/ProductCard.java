@@ -3,8 +3,12 @@ package com.parallelsymmetry.service.product;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
+
+import org.w3c.dom.Node;
 
 import com.parallelsymmetry.utility.DateUtil;
 import com.parallelsymmetry.utility.Descriptor;
@@ -30,6 +34,8 @@ public class ProductCard {
 	public static final String NAME_PATH = PRODUCT_PATH + "/name";
 
 	public static final String PROVIDER_PATH = PRODUCT_PATH + "/provider";
+
+	public static final String CONTRIBUTORS_PATH = PRODUCT_PATH + "/contributors/name";
 
 	public static final String INCEPTION_YEAR_PATH = PRODUCT_PATH + "/inception";
 
@@ -79,6 +85,8 @@ public class ProductCard {
 
 	private String licenseSummary;
 
+	private List<String> contributors;
+
 	private URI sourceUri;
 
 	private File installFolder;
@@ -92,7 +100,7 @@ public class ProductCard {
 	public ProductCard( URI base, Descriptor descriptor ) throws ProductCardException {
 		update( base, descriptor );
 	}
-	
+
 	public ProductCard( String group, String artifact ) throws ProductCardException {
 		this.group = group;
 		this.artifact = artifact;
@@ -134,28 +142,34 @@ public class ProductCard {
 			// Leave the inception year zero.
 		}
 
+		// Group, artifact and release
 		if( group == null ) throw new ProductCardException( "Product group cannot be null." );
 		if( artifact == null ) throw new ProductCardException( "Product artifact cannot be null." );
 		this.group = group;
 		this.artifact = artifact;
 		this.release = new Release( version, releaseDate );
 
+		// Icon URI
 		try {
 			if( iconUri != null ) this.iconUri = UriUtil.resolve( base, new URI( iconUri ) );
 		} catch( URISyntaxException exception ) {
 			Log.write( exception );
 		}
 
+		// Name provider and inception year
 		this.name = name == null ? artifact : name;
 		this.provider = provider == null ? group : provider;
 		this.inceptionYear = inceptionYear;
 
+		// Summary and description
 		if( summary != null ) this.summary = summary;
 		this.description = description;
 
+		// Copyright holder and notice
 		this.copyrightHolder = holder == null ? provider : holder;
 		if( notice != null ) this.copyrightNotice = notice;
 
+		// License URI
 		try {
 			if( licenseUri != null ) this.licenseUri = UriUtil.resolve( base, new URI( licenseUri ) );
 		} catch( URISyntaxException exception ) {
@@ -163,6 +177,13 @@ public class ProductCard {
 		}
 		if( licenseSummary != null ) this.licenseSummary = licenseSummary;
 
+		// Contributors
+		contributors = new ArrayList<String>();
+		for( Node node : descriptor.getNodes( ProductCard.CONTRIBUTORS_PATH ) ) {
+			contributors.add( node.getTextContent().trim() );
+		}
+
+		// Source URI
 		try {
 			if( sourceUri == null ) {
 				this.sourceUri = base;
@@ -306,6 +327,14 @@ public class ProductCard {
 		this.licenseSummary = summary;
 	}
 
+	public List<String> getContributors() {
+		return new ArrayList<String>( contributors );
+	}
+
+	public void setContributors( List<String> contributors ) {
+		contributors = new ArrayList<String>( contributors );
+	}
+
 	public URI getSourceUri() {
 		return sourceUri;
 	}
@@ -373,7 +402,7 @@ public class ProductCard {
 		ProductCard that = (ProductCard)object;
 		return this.group.equals( that.group ) && this.artifact.equals( that.artifact );
 	}
-	
+
 	public boolean deepEquals( Object object ) {
 		if( !( object instanceof ProductCard ) ) return false;
 		ProductCard that = (ProductCard)object;

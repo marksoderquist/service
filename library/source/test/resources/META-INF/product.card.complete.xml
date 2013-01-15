@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+
+<product version="1">
+	<group>com.parallelsymmetry</group>
+	<artifact>mock</artifact>
+	<version>1.0.0-a-00</version>
+	<timestamp>114215340000</timestamp>
+
+	<icon uri="../../../sandbox/icon.png"/>
+	<name>Mock Service</name>
+	<provider>Parallel Symmetry</provider>
+	
+	<contributors>
+		<name>Mark</name>
+		<name>John</name>
+		<name>Mike</name>
+	</contributors>
+	
+	<summary>Mock service for testing</summary>
+	<description>The Mock Service is used for product development and testing.</description>
+
+	<inception>1973</inception>
+	<copyright>
+		<notice>All rights reserved.</notice>
+	</copyright>
+
+	<license uri="http://www.parallelsymmetry.com/legal/software.license.html">
+		<summary>Mock Service comes with ABSOLUTELY NO WARRANTY. This is open
+			software, and you are welcome to redistribute it under certain conditions.
+		</summary>
+	</license>
+
+	<source uri="../../../sandbox/update.xml"/>
+
+	<resources>
+		<java version="1.6.0_11"/>
+		<pack uri="../../../sandbox/update.jar"/>
+	</resources>
+
+</product>
