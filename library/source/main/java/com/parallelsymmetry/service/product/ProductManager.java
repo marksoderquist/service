@@ -78,7 +78,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	public static final String DEFAULT_PRODUCT_FILE_NAME = "product.xml";
 
-	public static final String PRODUCT_DESCRIPTOR_PATH = "/META-INF/" + DEFAULT_PRODUCT_FILE_NAME;
+	public static final String PRODUCT_DESCRIPTOR_PATH = "META-INF/" + DEFAULT_PRODUCT_FILE_NAME;
 
 	public static final String MODULE_CLASS_NAME_XPATH = ProductCard.PRODUCT_PATH + "/resources/module/@class";
 
@@ -314,7 +314,6 @@ public class ProductManager extends Agent implements Persistent {
 		settings.flush();
 		Log.write( Log.ERROR, "Set enabled: ", settings.getPath(), ": ", enabled );
 
-		
 		fireProductManagerEvent( new ProductManagerEvent( this, enabled ? Type.PRODUCT_ENABLED : Type.PRODUCT_DISABLED, card ) );
 	}
 
@@ -733,16 +732,19 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	public void loadModules( File... folders ) throws Exception {
-		String moduleDescriptorPath = PRODUCT_DESCRIPTOR_PATH.startsWith( "/" ) ? PRODUCT_DESCRIPTOR_PATH.substring( 1 ) : PRODUCT_DESCRIPTOR_PATH;
-
 		ClassLoader parent = getClass().getClassLoader();
 
 		// Look for modules on the classpath.
-		Enumeration<URL> urls = parent.getResources( moduleDescriptorPath );
+		Enumeration<URL> urls = parent.getResources( PRODUCT_DESCRIPTOR_PATH );
 		while( urls.hasMoreElements() ) {
 			URI uri = urls.nextElement().toURI();
+
+			String uriString = uri.toString();
+			int index = uriString.length() - PRODUCT_DESCRIPTOR_PATH.length();
+			URL classpath = new URL( uriString.substring( 0, index ) );
+
 			ProductCard card = new ProductCard( UriUtil.getParent( uri ), new Descriptor( uri ) );
-			loadClasspathModule( card, UriUtil.getParent( uri ), parent );
+			loadClasspathModule( card, classpath, UriUtil.getParent( uri ), parent );
 		}
 
 		// Look for modules in the specified folders.
@@ -1106,8 +1108,8 @@ public class ProductManager extends Agent implements Persistent {
 	 * @return
 	 * @throws Exception
 	 */
-	private ProductModule loadClasspathModule( ProductCard card, URI codebase, ClassLoader parent ) throws Exception {
-		ClassLoader loader = new ModuleClassLoader( codebase, new URL[0], parent );
+	private ProductModule loadClasspathModule( ProductCard card, URL classpath, URI codebase, ClassLoader parent ) throws Exception {
+		ModuleClassLoader loader = new ModuleClassLoader( new URL[] { classpath }, parent, codebase );
 		ProductModule module = loadModule( card, loader, "CP", false, false );
 		return module;
 	}
@@ -1129,7 +1131,7 @@ public class ProductManager extends Agent implements Persistent {
 		card.setInstallFolder( jarfile.getParentFile() );
 
 		// Create the class loader.
-		ClassLoader loader = new ModuleClassLoader( codebase, new URL[] { jarfile.toURI().toURL() }, parent );
+		ModuleClassLoader loader = new ModuleClassLoader( new URL[] { jarfile.toURI().toURL() }, parent, codebase );
 		return loadModule( card, loader, "SM", true, true );
 	}
 
@@ -1155,11 +1157,11 @@ public class ProductManager extends Agent implements Persistent {
 		}
 
 		// Create the class loader.
-		ClassLoader loader = new ModuleClassLoader( moduleFolderUri, urls.toArray( new URL[urls.size()] ), parent );
+		ModuleClassLoader loader = new ModuleClassLoader( urls.toArray( new URL[urls.size()] ), parent, moduleFolderUri );
 		return loadModule( card, loader, "LX", true, true );
 	}
 
-	private ProductModule loadModule( ProductCard card, ClassLoader loader, String source, boolean updatable, boolean removable ) throws Exception {
+	private ProductModule loadModule( ProductCard card, ModuleClassLoader loader, String source, boolean updatable, boolean removable ) throws Exception {
 		// Ignore included products.
 		if( includedProducts.contains( card.getProductKey() ) ) return null;
 
@@ -1214,7 +1216,7 @@ public class ProductManager extends Agent implements Persistent {
 
 		private ClassLoader parent;
 
-		public ModuleClassLoader( URI codebase, URL[] urls, ClassLoader parent ) {
+		public ModuleClassLoader( URL[] urls, ClassLoader parent, URI codebase ) {
 			super( urls, null );
 			this.codebase = codebase;
 			this.parent = parent;
@@ -1222,12 +1224,20 @@ public class ProductManager extends Agent implements Persistent {
 
 		/**
 		 * Change the default class loader behavior to load module classes from the
-		 * parent class loader first then delegate to the module class loader if the
+		 * module class loader first then delegate to the parent class loader if the
 		 * class could not be found.
 		 */
 		@Override
 		public Class<?> loadClass( final String name ) throws ClassNotFoundException {
 			Class<?> type = null;
+
+			if( type == null ) {
+				try {
+					type = super.loadClass( name );
+				} catch( Throwable error ) {
+					// Intentionally ignore exception.
+				}
+			}
 
 			if( type == null ) {
 				try {
@@ -1237,9 +1247,11 @@ public class ProductManager extends Agent implements Persistent {
 				}
 			}
 
-			if( type == null ) type = super.loadClass( name );
-
-			if( type != null ) resolveClass( type );
+			if( type == null ) {
+				throw new ClassNotFoundException( name );
+			} else {
+				resolveClass( type );
+			}
 
 			return type;
 		}
