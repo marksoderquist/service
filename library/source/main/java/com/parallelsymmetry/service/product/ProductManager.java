@@ -756,7 +756,7 @@ public class ProductManager extends Agent implements Persistent {
 			File[] jars = folder.listFiles( FileUtil.JAR_FILE_FILTER );
 			for( File jar : jars ) {
 				Log.write( Log.DEBUG, "Searching for simple module: " + jar.toURI() );
-				URI uri = URI.create( "jar:" + jar.toURI().toASCIIString() + "!" + PRODUCT_DESCRIPTOR_PATH );
+				URI uri = URI.create( "jar:" + jar.toURI().toASCIIString() + "!/" + PRODUCT_DESCRIPTOR_PATH );
 				ProductCard card = new ProductCard( jar.getParentFile().toURI(), new Descriptor( uri ) );
 				loadSimpleModule( card, jar.toURI(), parent );
 			}
@@ -769,7 +769,7 @@ public class ProductManager extends Agent implements Persistent {
 				jars = moduleFolder.listFiles( FileUtil.JAR_FILE_FILTER );
 				for( File jar : jars ) {
 					try {
-						URI uri = URI.create( "jar:" + jar.toURI().toASCIIString() + "!" + PRODUCT_DESCRIPTOR_PATH );
+						URI uri = URI.create( "jar:" + jar.toURI().toASCIIString() + "!/" + PRODUCT_DESCRIPTOR_PATH );
 						ProductCard card = new ProductCard( jar.getParentFile().toURI(), new Descriptor( uri ) );
 						loadComplexModule( card, moduleFolder.toURI(), parent );
 					} catch( FileNotFoundException exception ) {
