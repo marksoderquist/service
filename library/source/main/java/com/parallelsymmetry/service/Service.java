@@ -48,11 +48,13 @@ import com.parallelsymmetry.utility.agent.Agent;
 import com.parallelsymmetry.utility.agent.ServerAgent;
 import com.parallelsymmetry.utility.agent.Worker;
 import com.parallelsymmetry.utility.log.Log;
+import com.parallelsymmetry.utility.setting.BaseSettingProvider;
 import com.parallelsymmetry.utility.setting.DescriptorSettingProvider;
 import com.parallelsymmetry.utility.setting.ParametersSettingProvider;
 import com.parallelsymmetry.utility.setting.PreferencesSettingProvider;
 import com.parallelsymmetry.utility.setting.SettingEvent;
 import com.parallelsymmetry.utility.setting.SettingListener;
+import com.parallelsymmetry.utility.setting.SettingProvider;
 import com.parallelsymmetry.utility.setting.Settings;
 import com.parallelsymmetry.utility.task.Task;
 import com.parallelsymmetry.utility.task.TaskManager;
@@ -88,6 +90,8 @@ public abstract class Service extends Agent implements Product {
 	private Parameters parameters = Parameters.create();
 
 	private String execModePrefix = "";
+	
+	private BaseSettingProvider defaultSettingProvider;
 
 	private Settings settings;
 
@@ -139,7 +143,8 @@ public abstract class Service extends Agent implements Product {
 		settings = new Settings();
 		try {
 			InputStream input = getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH );
-			settings.setDefaultProvider( new DescriptorSettingProvider( new Descriptor( input ) ) );
+			defaultSettingProvider = new BaseSettingProvider( new DescriptorSettingProvider( new Descriptor( input ) ) );
+			settings.setDefaultProvider( defaultSettingProvider );
 			input.close();
 		} catch( Exception exception ) {
 			Log.write( exception );
@@ -188,6 +193,16 @@ public abstract class Service extends Agent implements Product {
 
 	public Settings getSettings() {
 		return settings;
+	}
+	
+	public void addDefaultSettings( SettingProvider provider ) {
+		if( provider == null ) return;
+		defaultSettingProvider.addProvider( provider );
+	}
+
+	public void removeDefaultSettings( SettingProvider provider ) {
+		if( provider == null ) return;
+		defaultSettingProvider.removeProvider( provider );
 	}
 
 	/**
