@@ -195,6 +195,10 @@ public abstract class Service extends Agent implements Product {
 		return settings;
 	}
 	
+	public void setDefaultSettings( SettingProvider provider ) {
+		defaultSettingProvider.setProvider( provider );
+	}
+	
 	public void addDefaultSettings( SettingProvider provider ) {
 		if( provider == null ) return;
 		defaultSettingProvider.addProvider( provider );
