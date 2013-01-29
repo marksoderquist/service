@@ -17,16 +17,13 @@ public class ModuleTest extends BaseTestCase {
 
 	private static final String TEST_MODULE_DESCRIPTOR_PATH = "/META-INF/product.mock.module.xml";
 
-	private Descriptor descriptor;
-
 	private ProductModule module;
 
 	@Override
 	public void setUp() throws Exception {
 		MockService service = new MockService();
 		URL url = getClass().getResource( TEST_MODULE_DESCRIPTOR_PATH );
-		descriptor = new Descriptor( url );
-		module = new MockModule( service, new ProductCard( url.toURI(), descriptor ) );
+		module = new MockModule( service, new ProductCard( url.toURI(), new Descriptor( url ) ) );
 	}
 
 	@Test
@@ -48,11 +45,6 @@ public class ModuleTest extends BaseTestCase {
 	@Test
 	public void testGetClassLoader() throws Exception {
 		assertEquals( getClass().getClassLoader(), module.getClass().getClassLoader() );
-	}
-
-	@Test
-	public void testGetPack() throws Exception {
-		assertEquals( descriptor, module.getCard().getDescriptor() );
 	}
 
 }

@@ -80,8 +80,6 @@ public class ProductManager extends Agent implements Persistent {
 
 	public static final String PRODUCT_DESCRIPTOR_PATH = "META-INF/" + DEFAULT_PRODUCT_FILE_NAME;
 
-	public static final String MODULE_CLASS_NAME_XPATH = ProductCard.PRODUCT_PATH + "/resources/module/@class";
-
 	public static final String UPDATER_JAR_NAME = "updater.jar";
 
 	public static final String UPDATE_FOLDER_NAME = "updates";
@@ -727,6 +725,12 @@ public class ProductManager extends Agent implements Persistent {
 		saveSettings( settings );
 	}
 
+	//	public Settings getModuleSettings( Class<? extends ProductModule> clazz ) {
+	//		ClassLoader loader = clazz.getClassLoader();
+	//		ProductCard card = getProductCard( loader );
+	//		return getProductSettings( card );
+	//	}
+
 	public Settings getProductSettings( ProductCard card ) {
 		return service.getSettings().getNode( PRODUCT_SETTINGS_KEY + "/" + card.getProductKey() );
 	}
@@ -782,6 +786,14 @@ public class ProductManager extends Agent implements Persistent {
 		}
 	}
 
+	/**
+	 * This method is used particularly by the AspectSettingReader to load tool
+	 * classes.
+	 * 
+	 * @param name
+	 * @return
+	 * @throws ClassNotFoundException
+	 */
 	public Class<?> getClassForName( String name ) throws ClassNotFoundException {
 		Class<?> clazz = null;
 
@@ -794,6 +806,11 @@ public class ProductManager extends Agent implements Persistent {
 		// FIXME There is potential for class name/version conflicts with this implementation 
 		// because we simply search through the loaders, regardless of whether the loader is
 		// associated to the product.
+		/*
+		 * FIXME This implementation may return inconsistent results due to the fact
+		 * that the loaders collection is a set and therefore will give undetermined
+		 * iteration order.
+		 */
 		if( clazz == null ) {
 			for( ClassLoader loader : loaders ) {
 				try {
@@ -1170,7 +1187,7 @@ public class ProductManager extends Agent implements Persistent {
 		if( module != null ) return module;
 
 		// Validate class name.
-		String className = card.getDescriptor().getValue( MODULE_CLASS_NAME_XPATH );
+		String className = card.getProductClassName();
 		if( className == null ) return null;
 
 		// Register the product.

@@ -1,12 +1,9 @@
 package com.parallelsymmetry.service.product;
 
 import java.net.URI;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Future;
-
-import org.w3c.dom.Node;
 
 import com.parallelsymmetry.service.task.DescriptorDownloadTask;
 import com.parallelsymmetry.utility.Descriptor;
@@ -26,14 +23,12 @@ public class PackProvider implements ProductResourceProvider {
 	@Override
 	public Set<ProductResource> getResources() throws Exception {
 		URI codebase = card.getSourceUri();
-		Descriptor descriptor = card.getDescriptor();
-
 		Set<ProductResource> resources = new HashSet<ProductResource>();
 
-		// Resolve all the files to download.
-		String[] files = getResources( descriptor, "file/@uri" );
-		String[] packs = getResources( descriptor, "pack/@uri" );
-		String[] jnlps = getResources( descriptor, "jnlp/@uri" );
+		// Determine all the resources that need to be downloaded.
+		String[] files = card.getResourceUris( "file" );
+		String[] packs = card.getResourceUris( "pack" );
+		String[] jnlps = card.getResourceUris( "jnlp" );
 
 		for( String file : files ) {
 			URI uri = codebase.resolve( file );
@@ -50,34 +45,6 @@ public class PackProvider implements ProductResourceProvider {
 		}
 
 		return resources;
-	}
-
-	private String[] getResources( Descriptor descriptor, String path ) {
-		String os = System.getProperty( "os.name" );
-		String arch = System.getProperty( "os.arch" );
-
-		String[] uris = null;
-		Set<String> resources = new HashSet<String>();
-
-		// Determine the resources.
-		Node[] nodes = descriptor.getNodes( ProductCard.RESOURCES_PATH );
-		for( Node node : nodes ) {
-			Descriptor resourcesDescriptor = new Descriptor( node );
-			Node osNameNode = node.getAttributes().getNamedItem( "os" );
-			Node osArchNode = node.getAttributes().getNamedItem( "arch" );
-
-			String osName = osNameNode == null ? null : osNameNode.getTextContent();
-			String osArch = osArchNode == null ? null : osArchNode.getTextContent();
-
-			// Determine what resources should not be included.
-			if( osName != null && !os.startsWith( osName ) ) continue;
-			if( osArch != null && !arch.equals( osArch ) ) continue;
-
-			uris = resourcesDescriptor.getValues( path );
-			if( uris != null ) resources.addAll( Arrays.asList( uris ) );
-		}
-
-		return resources.toArray( new String[resources.size()] );
 	}
 
 }

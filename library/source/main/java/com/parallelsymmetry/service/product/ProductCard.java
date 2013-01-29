@@ -4,9 +4,12 @@ import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.w3c.dom.Node;
 
@@ -54,6 +57,8 @@ public class ProductCard {
 	public static final String RESOURCES_PATH = PRODUCT_PATH + "/resources";
 
 	public static final String SOURCE_URI_PATH = PRODUCT_PATH + "/source/@uri";
+
+	public static final String MODULE_CLASS_NAME_PATH = PRODUCT_PATH + "/resources/module/@class";
 
 	private static final String COPYRIGHT = "(C)";
 
@@ -204,10 +209,6 @@ public class ProductCard {
 		return this;
 	}
 
-	public Descriptor getDescriptor() {
-		return descriptor;
-	}
-
 	public String getProductKey() {
 		return productKey;
 	}
@@ -351,6 +352,14 @@ public class ProductCard {
 		installFolder = file;
 	}
 
+	public String getProductClassName() {
+		return descriptor.getValue( MODULE_CLASS_NAME_PATH );
+	}
+
+	public String[] getResourceUris( String type ) {
+		return getPlatformResourceUris( type );
+	}
+
 	public void loadSettings( Settings settings ) {
 		String iconUri = settings.get( "icon.uri", null );
 		String licenseUri = settings.get( "license.uri", null );
@@ -439,6 +448,36 @@ public class ProductCard {
 		 * effects.
 		 */
 		this.productKey = group + "." + artifact;
+	}
+
+	private String[] getPlatformResourceUris( String path ) {
+		String os = System.getProperty( "os.name" );
+		String arch = System.getProperty( "os.arch" );
+
+		String[] uris = null;
+		Set<String> resources = new HashSet<String>();
+
+		path += "/@uri";
+
+		// Determine the resources.
+		Node[] nodes = descriptor.getNodes( ProductCard.RESOURCES_PATH );
+		for( Node node : nodes ) {
+			Descriptor resourcesDescriptor = new Descriptor( node );
+			Node osNameNode = node.getAttributes().getNamedItem( "os" );
+			Node osArchNode = node.getAttributes().getNamedItem( "arch" );
+
+			String osName = osNameNode == null ? null : osNameNode.getTextContent();
+			String osArch = osArchNode == null ? null : osArchNode.getTextContent();
+
+			// Determine what resources should not be included.
+			if( osName != null && !os.startsWith( osName ) ) continue;
+			if( osArch != null && !arch.equals( osArch ) ) continue;
+
+			uris = resourcesDescriptor.getValues( path );
+			if( uris != null ) resources.addAll( Arrays.asList( uris ) );
+		}
+
+		return resources.toArray( new String[resources.size()] );
 	}
 
 }
