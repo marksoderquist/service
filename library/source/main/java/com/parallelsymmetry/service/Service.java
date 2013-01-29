@@ -90,7 +90,7 @@ public abstract class Service extends Agent implements Product {
 	private Parameters parameters = Parameters.create();
 
 	private String execModePrefix = "";
-	
+
 	private BaseSettingProvider defaultSettingProvider;
 
 	private Settings settings;
@@ -194,11 +194,11 @@ public abstract class Service extends Agent implements Product {
 	public Settings getSettings() {
 		return settings;
 	}
-	
+
 	public void setDefaultSettings( SettingProvider provider ) {
 		defaultSettingProvider.setProvider( provider );
 	}
-	
+
 	public void addDefaultSettings( SettingProvider provider ) {
 		if( provider == null ) return;
 		defaultSettingProvider.addProvider( provider );
@@ -240,34 +240,34 @@ public abstract class Service extends Agent implements Product {
 		// ---------0--------1---------2---------3---------4---------5---------6---------7---------8
 		// ---------12345678901234567890123456789012345678901234567890123456789012345678901234567890
 		if( "true".equals( topic ) ) {
-			Log.write( Log.NONE, "Usage: java -jar <jar file name> [<option>...]" );
-			Log.write( Log.NONE );
+			Log.write( Log.HELP, "Usage: java -jar <jar file name> [<option>...]" );
+			Log.write( Log.HELP );
 
-			Log.write( Log.NONE, "Commands:" );
+			Log.write( Log.HELP, "Commands:" );
 			printHelpCommands();
 
-			Log.write( Log.NONE, "Options:" );
+			Log.write( Log.HELP, "Options:" );
 			printHelpOptions();
 		}
 	}
 
 	public void printHelpCommands() {
-		Log.write( Log.NONE, "  If no command is specified the program is started." );
-		Log.write( Log.NONE );
-		Log.write( Log.NONE, "  -help [topic]    Show help information." );
-		Log.write( Log.NONE, "  -version         Show version and copyright information only." );
-		Log.write( Log.NONE );
-		Log.write( Log.NONE, "  -stop            Stop the program and exit the VM." );
-		Log.write( Log.NONE, "  -status          Print the program status." );
-		Log.write( Log.NONE, "  -restart         Restart the program without exiting VM." );
-		Log.write( Log.NONE, "  -watch           Watch an already running program." );
-		Log.write( Log.NONE );
+		Log.write( Log.HELP, "  If no command is specified the program is started." );
+		Log.write( Log.HELP );
+		Log.write( Log.HELP, "  -help [topic]    Show help information." );
+		Log.write( Log.HELP, "  -version         Show version and copyright information only." );
+		Log.write( Log.HELP );
+		Log.write( Log.HELP, "  -stop            Stop the program and exit the VM." );
+		Log.write( Log.HELP, "  -status          Print the program status." );
+		Log.write( Log.HELP, "  -restart         Restart the program without exiting VM." );
+		Log.write( Log.HELP, "  -watch           Watch an already running program." );
+		Log.write( Log.HELP );
 	}
 
 	public void printHelpOptions() {
-		Log.write( Log.NONE, "  -log.color           Use ANSI color in the console output." );
-		Log.write( Log.NONE, "  -log.level <level>   Change the output log level. Levels are:" );
-		Log.write( Log.NONE, "                       none, error, warn, info, trace, debug, all" );
+		Log.write( Log.HELP, "  -log.color           Use ANSI color in the console output." );
+		Log.write( Log.HELP, "  -log.level <level>   Change the output log level. Levels are:" );
+		Log.write( Log.HELP, "                       none, error, warn, info, trace, debug, all" );
 	}
 
 	public int notify( Object message ) {
@@ -735,7 +735,7 @@ public abstract class Service extends Agent implements Product {
 		productManager.setEnabled( getCard(), true );
 		productManager.setUpdatable( getCard(), true );
 		productManager.setRemovable( getCard(), false );
-		
+
 		// Configure the product manager.
 		productManager.loadSettings( settings.getNode( PRODUCT_MANAGER_SETTINGS_PATH ) );
 		productManager.setUpdaterPath( new File( getHomeFolder(), ProductManager.UPDATER_JAR_NAME ) );
@@ -762,13 +762,13 @@ public abstract class Service extends Agent implements Product {
 	private final void printHeader() {
 		String notice = card.getLicenseSummary();
 
-		Log.write( Log.NONE, TextUtil.pad( 75, '-' ) );
-		Log.write( Log.NONE, getName() + " " + card.getRelease().toHumanString() );
-		Log.write( Log.NONE, card.getCopyright(), " ", card.getCopyrightNotice() );
-		Log.write( Log.NONE );
+		Log.write( Log.HELP, TextUtil.pad( 75, '-' ) );
+		Log.write( Log.HELP, getName() + " " + card.getRelease().toHumanString() );
+		Log.write( Log.HELP, card.getCopyright(), " ", card.getCopyrightNotice() );
+		Log.write( Log.HELP );
 		if( notice != null ) {
-			Log.write( Log.NONE, TextUtil.reline( notice, 75 ) );
-			Log.write( Log.NONE );
+			Log.write( Log.HELP, TextUtil.reline( notice, 75 ) );
+			Log.write( Log.HELP );
 		}
 
 		Log.write( Log.TRACE, "Java: " + System.getProperty( "java.runtime.version" ) );
