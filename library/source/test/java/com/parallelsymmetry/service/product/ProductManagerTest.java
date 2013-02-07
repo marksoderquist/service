@@ -18,9 +18,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import com.parallelsymmetry.service.BaseServiceTest;
-import com.parallelsymmetry.service.product.ProductCard;
-import com.parallelsymmetry.service.product.ProductManager;
-import com.parallelsymmetry.service.product.ProductManagerEvent;
 import com.parallelsymmetry.service.product.ProductManager.ApplyOption;
 import com.parallelsymmetry.service.product.ProductManager.CheckOption;
 import com.parallelsymmetry.service.product.ProductManager.FoundOption;
@@ -136,7 +133,8 @@ public class ProductManagerTest extends BaseServiceTest {
 
 		URI uri = TARGET_PRODUCT_CARD.toURI();
 		ProductCard card = new ProductCard( uri, new Descriptor( uri ) );
-		manager.registerProduct( card );
+		MockModule product = new MockModule( service, card );
+		manager.registerProduct( product );
 		manager.setUpdatable( card, true );
 
 		// Start the service set the update manager for manual checks.
@@ -173,7 +171,8 @@ public class ProductManagerTest extends BaseServiceTest {
 		URI uri = TARGET_PRODUCT_CARD.toURI();
 		ProductCard card = new ProductCard( uri, new Descriptor( uri ) );
 		card.setInstallFolder( SANDBOX );
-		manager.registerProduct( card );
+		MockModule product = new MockModule( service, card );
+		manager.registerProduct( product );
 		manager.setUpdatable( card, true );
 
 		// Modify the update card timestamp.
@@ -224,7 +223,8 @@ public class ProductManagerTest extends BaseServiceTest {
 		assertEquals( 1, watcher.getEvents().size() );
 		assertEquals( ProductManagerEvent.Type.PRODUCT_ENABLED, watcher.getEvents().get( eventIndex++ ).getType() );
 
-		manager.registerProduct( card );
+		MockModule product = new MockModule( service, card );
+		manager.registerProduct( product );
 		assertTrue( manager.isEnabled( card ) );
 
 		manager.setEnabled( card, false );
@@ -248,7 +248,8 @@ public class ProductManagerTest extends BaseServiceTest {
 		manager.setUpdatable( card, false );
 		assertFalse( manager.isUpdatable( card ) );
 
-		manager.registerProduct( card );
+		MockModule product = new MockModule( service, card );
+		manager.registerProduct( product );
 		assertFalse( manager.isUpdatable( card ) );
 
 		manager.setUpdatable( card, true );
@@ -266,7 +267,8 @@ public class ProductManagerTest extends BaseServiceTest {
 
 		assertFalse( manager.isRemovable( card ) );
 
-		manager.registerProduct( card );
+		MockModule product = new MockModule( service, card );
+		manager.registerProduct( product );
 		assertFalse( manager.isRemovable( card ) );
 
 		manager.setRemovable( card, true );
@@ -284,7 +286,8 @@ public class ProductManagerTest extends BaseServiceTest {
 
 		assertFalse( manager.isInstalled( card ) );
 
-		manager.registerProduct( card );
+		MockModule product = new MockModule( service, card );
+		manager.registerProduct( product );
 		assertTrue( manager.isInstalled( card ) );
 
 		manager.uninstallProducts( card );

@@ -124,9 +124,11 @@ public class ProductManager extends Agent implements Persistent {
 
 	private Settings settings;
 
-	private Map<String, ProductUpdate> updates;
+	private Map<String, Product> products;
 
 	private Map<String, ProductCard> productCards;
+
+	private Map<String, ProductUpdate> updates;
 
 	private Map<String, ProductState> productStates;
 
@@ -148,6 +150,7 @@ public class ProductManager extends Agent implements Persistent {
 		modules = new ConcurrentHashMap<String, ProductModule>();
 		loaders = new CopyOnWriteArraySet<ClassLoader>();
 		updates = new ConcurrentHashMap<String, ProductUpdate>();
+		products = new ConcurrentHashMap<String, Product>();
 		productCards = new ConcurrentHashMap<String, ProductCard>();
 		productStates = new ConcurrentHashMap<String, ProductState>();
 		listeners = new CopyOnWriteArraySet<ProductManagerListener>();
@@ -196,6 +199,10 @@ public class ProductManager extends Agent implements Persistent {
 		return new HashSet<ProductModule>( modules.values() );
 	}
 
+	public Product getProduct( String productKey ) {
+		return products.get( productKey );
+	}
+
 	public Set<ProductCard> getProductCards() {
 		return new HashSet<ProductCard>( productCards.values() );
 	}
@@ -237,7 +244,7 @@ public class ProductManager extends Agent implements Persistent {
 		Set<InstalledProduct> removedProducts = new HashSet<InstalledProduct>();
 		for( ProductCard card : cards ) {
 			removedProducts.add( new InstalledProduct( getProductInstallFolder( card ) ) );
-			removeProductImpl( card );
+			removeProductImpl( getProduct( card.getProductKey() ) );
 		}
 
 		Set<InstalledProduct> products = getStoredRemovedProducts();
@@ -731,6 +738,10 @@ public class ProductManager extends Agent implements Persistent {
 	//		return getProductSettings( card );
 	//	}
 
+	public Settings getProductSettings( Product product ) {
+		return getProductSettings( product.getCard() );
+	}
+
 	public Settings getProductSettings( ProductCard card ) {
 		return service.getSettings().getNode( PRODUCT_SETTINGS_KEY + "/" + card.getProductKey() );
 	}
@@ -829,14 +840,18 @@ public class ProductManager extends Agent implements Persistent {
 		return clazz;
 	}
 
-	public void registerProduct( ProductCard card ) {
-		productCards.put( card.getProductKey(), card );
-		productStates.put( card.getProductKey(), new ProductState() );
+	public void registerProduct( Product product ) {
+		String productKey = product.getCard().getProductKey();
+		products.put( productKey, product );
+		productCards.put( productKey, product.getCard() );
+		productStates.put( productKey, new ProductState() );
 	}
 
-	public void unregisterProduct( ProductCard card ) {
-		productCards.remove( card.getProductKey() );
-		productStates.remove( card.getProductKey() );
+	public void unregisterProduct( Product product ) {
+		String productKey = product.getCard().getProductKey();
+		products.remove( productKey );
+		productCards.remove( productKey );
+		productStates.remove( productKey );
 	}
 
 	public void addProductManagerListener( ProductManagerListener listener ) {
@@ -979,7 +994,9 @@ public class ProductManager extends Agent implements Persistent {
 		setEnabled( card, true );
 	}
 
-	private void removeProductImpl( ProductCard card ) {
+	private void removeProductImpl( Product product ) {
+		ProductCard card = product.getCard();
+
 		File installFolder = getProductInstallFolder( card );
 
 		Log.write( Log.TRACE, "Remove product from: " + installFolder );
@@ -991,7 +1008,7 @@ public class ProductManager extends Agent implements Persistent {
 		modules.remove( card.getProductKey() );
 
 		// Remove the product from the manager.
-		unregisterProduct( card );
+		unregisterProduct( product );
 
 		// Remove the product settings.
 		getProductSettings( card ).removeNode();
@@ -1191,7 +1208,7 @@ public class ProductManager extends Agent implements Persistent {
 		if( className == null ) return null;
 
 		// Register the product.
-		registerProduct( card );
+		registerProduct( module );
 
 		// Load the module.
 		try {

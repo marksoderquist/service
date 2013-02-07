@@ -731,7 +731,7 @@ public abstract class Service extends Agent implements Product {
 		ProxySelector.setDefault( new ServiceProxySelector( this ) );
 
 		// Register the product.
-		productManager.registerProduct( getCard() );
+		productManager.registerProduct( this );
 		productManager.setEnabled( getCard(), true );
 		productManager.setUpdatable( getCard(), true );
 		productManager.setRemovable( getCard(), false );
