@@ -200,6 +200,7 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	public Product getProduct( String productKey ) {
+		if( productKey == null ) return null;
 		return products.get( productKey );
 	}
 
