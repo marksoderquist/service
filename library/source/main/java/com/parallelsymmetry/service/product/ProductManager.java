@@ -317,7 +317,7 @@ public class ProductManager extends Agent implements Persistent {
 		Settings settings = getProductSettings( card );
 		settings.putBoolean( PRODUCT_ENABLED_KEY, enabled );
 		settings.flush();
-		Log.write( Log.ERROR, "Set enabled: ", settings.getPath(), ": ", enabled );
+		Log.write( Log.TRACE, "Set enabled: ", settings.getPath(), ": ", enabled );
 
 		fireProductManagerEvent( new ProductManagerEvent( this, enabled ? Type.PRODUCT_ENABLED : Type.PRODUCT_DISABLED, card ) );
 	}
@@ -841,6 +841,7 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	public void registerProduct( Product product ) {
+
 		String productKey = product.getCard().getProductKey();
 		products.put( productKey, product );
 		productCards.put( productKey, product.getCard() );
@@ -1207,9 +1208,6 @@ public class ProductManager extends Agent implements Persistent {
 		String className = card.getProductClassName();
 		if( className == null ) return null;
 
-		// Register the product.
-		registerProduct( module );
-
 		// Load the module.
 		try {
 			Log.write( Log.DEBUG, "Loading ", source, " module: ", card.getProductKey() );
@@ -1229,6 +1227,9 @@ public class ProductManager extends Agent implements Persistent {
 
 	private void registerModule( ProductModule module, boolean updatable, boolean removable ) {
 		ProductCard card = module.getCard();
+
+		// Register the product.
+		registerProduct( module );
 
 		// Add the module to the collection.
 		modules.put( card.getProductKey(), module );
