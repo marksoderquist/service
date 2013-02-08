@@ -200,7 +200,7 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	public Product getProduct( String productKey ) {
-		return products.get( productKey );
+		return productKey == null ? service : products.get( productKey );
 	}
 
 	public Set<ProductCard> getProductCards() {
