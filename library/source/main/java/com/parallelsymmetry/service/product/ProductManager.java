@@ -92,8 +92,6 @@ public class ProductManager extends Agent implements Persistent {
 
 	private static final String CATALOGS_SETTINGS_KEY = "catalogs";
 
-	private static final String PRODUCT_SETTINGS_KEY = "products";
-
 	private static final String REMOVES_SETTINGS_KEY = "removes";
 
 	private static final String UPDATES_SETTINGS_KEY = "updates";
@@ -158,6 +156,7 @@ public class ProductManager extends Agent implements Persistent {
 		// Register included products.
 		includedProducts = new HashSet<String>();
 		includedProducts.add( service.getCard().getProductKey() );
+		
 		// FIXME The product key should come from a product card. Need to fix updater first.
 		includedProducts.add( "com.parallelsymmetry.updater" );
 
@@ -306,7 +305,7 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	public boolean isEnabled( ProductCard card ) {
-		return getProductSettings( card ).getBoolean( PRODUCT_ENABLED_KEY, false );
+		return ProductUtil.getSettings( service, card ).getBoolean( PRODUCT_ENABLED_KEY, false );
 	}
 
 	public void setEnabled( ProductCard card, boolean enabled ) {
@@ -314,7 +313,7 @@ public class ProductManager extends Agent implements Persistent {
 
 		setEnabledImpl( card, enabled );
 
-		Settings settings = getProductSettings( card );
+		Settings settings = ProductUtil.getSettings( service, card );
 		settings.putBoolean( PRODUCT_ENABLED_KEY, enabled );
 		settings.flush();
 		Log.write( Log.TRACE, "Set enabled: ", settings.getPath(), ": ", enabled );
@@ -732,20 +731,6 @@ public class ProductManager extends Agent implements Persistent {
 		saveSettings( settings );
 	}
 
-	//	public Settings getModuleSettings( Class<? extends ProductModule> clazz ) {
-	//		ClassLoader loader = clazz.getClassLoader();
-	//		ProductCard card = getProductCard( loader );
-	//		return getProductSettings( card );
-	//	}
-
-	public Settings getProductSettings( Product product ) {
-		return getProductSettings( product.getCard() );
-	}
-
-	public Settings getProductSettings( ProductCard card ) {
-		return service.getSettings().getNode( PRODUCT_SETTINGS_KEY + "/" + card.getProductKey() );
-	}
-
 	public void loadModules( File... folders ) throws Exception {
 		ClassLoader parent = getClass().getClassLoader();
 
@@ -1012,7 +997,7 @@ public class ProductManager extends Agent implements Persistent {
 		unregisterProduct( product );
 
 		// Remove the product settings.
-		getProductSettings( card ).removeNode();
+		ProductUtil.getSettings( service, product ).removeNode();
 
 		// Notify listeners of remove.
 		fireProductManagerEvent( new ProductManagerEvent( this, Type.PRODUCT_REMOVED, card ) );
