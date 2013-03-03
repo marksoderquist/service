@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URLConnection;
+import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -46,7 +47,12 @@ public class DownloadTask extends Task<Download> {
 		URLConnection connection = uri.toURL().openConnection();
 		connection.setUseCaches( false );
 
-		connection.connect();
+		try {
+			connection.connect();
+		} catch( UnknownHostException exception ) {
+			Log.write( Log.WARN, "Host not found: " + uri.toString() );
+			return null;
+		}
 
 		int length = connection.getContentLength();
 		String encoding = connection.getContentEncoding();
