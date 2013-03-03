@@ -28,8 +28,12 @@ public class ProductUtil {
 		return service.getSettings().getNode( getSettingsPath( card ) );
 	}
 
-	public static final void setDefaultSettings( Service service, Product product, SettingProvider provider ) {
-		service.getSettings().setDefaultProvider( provider, getSettingsPath( product ) );
+	public static final void addSettingsProvider( Service service, Product product, SettingProvider provider ) {
+		service.getSettings().addProvider( provider, getSettingsPath( product ) );
+	}
+	
+	public static final void removeSettingsProvider( Service service, Product product, SettingProvider provider ) {
+		service.getSettings().removeProvider( provider );
 	}
 
 	private static final String getSettingsPath( Product product ) {
