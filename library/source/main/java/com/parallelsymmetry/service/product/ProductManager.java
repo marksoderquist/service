@@ -106,8 +106,6 @@ public class ProductManager extends Agent implements Persistent {
 
 	private Map<String, ProductModule> modules;
 
-	private Set<ClassLoader> loaders;
-
 	private File homeProductFolder;
 
 	private File userProductFolder;
@@ -146,7 +144,6 @@ public class ProductManager extends Agent implements Persistent {
 		this.service = service;
 		catalogs = new CopyOnWriteArraySet<ProductCatalog>();
 		modules = new ConcurrentHashMap<String, ProductModule>();
-		loaders = new CopyOnWriteArraySet<ClassLoader>();
 		updates = new ConcurrentHashMap<String, ProductUpdate>();
 		products = new ConcurrentHashMap<String, Product>();
 		productCards = new ConcurrentHashMap<String, ProductCard>();
@@ -156,7 +153,7 @@ public class ProductManager extends Agent implements Persistent {
 		// Register included products.
 		includedProducts = new HashSet<String>();
 		includedProducts.add( service.getCard().getProductKey() );
-		
+
 		// FIXME The product key should come from a product card. Need to fix updater first.
 		includedProducts.add( "com.parallelsymmetry.updater" );
 
@@ -786,41 +783,23 @@ public class ProductManager extends Agent implements Persistent {
 	 * This method is used particularly by the AspectSettingReader to load tool
 	 * classes.
 	 * 
+	 * @param product
 	 * @param name
 	 * @return
 	 * @throws ClassNotFoundException
 	 */
-	public Class<?> getClassForName( String name ) throws ClassNotFoundException {
+	public Class<?> getClassForName( Product product, String name ) {
 		Class<?> clazz = null;
 
-		try {
-			clazz = Class.forName( name );
-		} catch( ClassNotFoundException exception ) {
-			// Intentionally ignore exception.
-		}
-
-		// FIXME There is potential for class name/version conflicts with this implementation 
-		// because we simply search through the loaders, regardless of whether the loader is
-		// associated to the product.
-		/*
-		 * FIXME This implementation may return inconsistent results due to the fact
-		 * that the loaders collection is a set and therefore will give undetermined
-		 * iteration order.
-		 */
 		if( clazz == null ) {
-			for( ClassLoader loader : loaders ) {
-				try {
-					clazz = Class.forName( name, true, loader );
-				} catch( NoClassDefFoundError error ) {
-					// Intentionally ignore exception.
-				} catch( ClassNotFoundException exception ) {
-					// Intentionally ignore exception.
-				}
-				if( clazz != null ) break;
+			try {
+				clazz = Class.forName( name, true, product.getClass().getClassLoader() );
+			} catch( NoClassDefFoundError error ) {
+				// Intentionally ignore exception.
+			} catch( ClassNotFoundException exception ) {
+				// Intentionally ignore exception.
 			}
 		}
-
-		if( clazz == null ) throw new ClassNotFoundException( name );
 
 		return clazz;
 	}
@@ -1008,7 +987,7 @@ public class ProductManager extends Agent implements Persistent {
 		if( module == null ) return;
 
 		if( enabled ) {
-			loaders.add( module.getClass().getClassLoader() );
+			//loaders.add( module.getClass().getClassLoader() );
 
 			try {
 				module.register();
@@ -1024,7 +1003,7 @@ public class ProductManager extends Agent implements Persistent {
 				Log.write( throwable );
 			}
 
-			loaders.remove( module.getClass().getClassLoader() );
+			//loaders.remove( module.getClass().getClassLoader() );
 		}
 	}
 
