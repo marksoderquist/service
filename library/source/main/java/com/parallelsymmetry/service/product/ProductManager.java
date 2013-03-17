@@ -1230,24 +1230,26 @@ public class ProductManager extends Agent implements Persistent {
 		public Class<?> loadClass( final String name ) throws ClassNotFoundException {
 			Class<?> type = null;
 
+			ClassNotFoundException exception = null;
+
 			if( type == null ) {
 				try {
 					type = super.loadClass( name );
-				} catch( Throwable error ) {
-					// Intentionally ignore exception.
+				} catch( ClassNotFoundException cnf ) {
+					exception = cnf;
 				}
 			}
 
 			if( type == null ) {
 				try {
 					type = parent.loadClass( name );
-				} catch( Throwable error ) {
-					// Intentionally ignore exception.
+				} catch( ClassNotFoundException cnf ) {
+					exception = cnf;
 				}
 			}
 
 			if( type == null ) {
-				throw new ClassNotFoundException( name );
+				throw ( exception == null ? new ClassNotFoundException( name ) : exception );
 			} else {
 				resolveClass( type );
 			}
