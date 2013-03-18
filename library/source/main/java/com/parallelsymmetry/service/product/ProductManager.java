@@ -654,6 +654,7 @@ public class ProductManager extends Agent implements Persistent {
 		builder.command().add( updaterTarget.toString() );
 
 		// If file logging is enabled append the update process to the log.
+		// FIXME A - Specify where to put the updater log: service.getProgramDataFolder()
 		Parameters parameters = service.getParameters();
 		if( parameters.isSet( LogFlag.LOG_FILE ) ) {
 			builder.command().add( LogFlag.LOG_FILE );
