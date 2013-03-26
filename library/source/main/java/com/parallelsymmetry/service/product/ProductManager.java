@@ -653,14 +653,10 @@ public class ProductManager extends Agent implements Persistent {
 		builder.command().add( "-jar" );
 		builder.command().add( updaterTarget.toString() );
 
-		// If file logging is enabled append the update process to the log.
-		// FIXME A - Specify where to put the updater log: service.getProgramDataFolder()
-		Parameters parameters = service.getParameters();
-		if( parameters.isSet( LogFlag.LOG_FILE ) ) {
-			builder.command().add( LogFlag.LOG_FILE );
-			builder.command().add( new File( parameters.get( LogFlag.LOG_FILE ) ).getAbsolutePath() );
-			if( parameters.isTrue( LogFlag.LOG_FILE_APPEND ) ) builder.command().add( LogFlag.LOG_FILE_APPEND );
-		}
+		// Specify where to put the updater log.
+		builder.command().add( LogFlag.LOG_FILE );
+		builder.command().add( new File( service.getProgramDataFolder(), "updater.log" ).getAbsolutePath() );
+		builder.command().add( LogFlag.LOG_FILE_APPEND );
 
 		// Add the updates.
 		builder.command().add( UpdaterFlag.UPDATE );
@@ -709,7 +705,7 @@ public class ProductManager extends Agent implements Persistent {
 		if( elevate ) OperatingSystem.elevateProcessBuilder( builder );
 
 		// Print the process commands.
-		Log.write( Log.DEBUG, "Launching: " + TextUtil.toString( builder.command(), " " ) );
+		Log.write( Log.DEBUG, "Launch updater: " + TextUtil.toString( builder.command(), " " ) );
 
 		// Start the process.
 		builder.start();
