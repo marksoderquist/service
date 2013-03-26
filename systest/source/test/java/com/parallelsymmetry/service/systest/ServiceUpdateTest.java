@@ -20,7 +20,7 @@ public class ServiceUpdateTest extends BaseTestCase {
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
-		Log.setLevel( Log.NONE );
+		Log.setLevel( Log.INFO );
 	}
 
 	/*
@@ -43,13 +43,20 @@ public class ServiceUpdateTest extends BaseTestCase {
 		Log.write( "Resetting service settings..." );
 		service.call( ServiceFlag.EXECMODE, ServiceFlagValue.TEST, ServiceFlag.SETTINGS_RESET, ServiceFlag.STOP );
 
+		// Configure file locations.
+		File verifyLogFile = new File( INSTALL, "verify.log" );
+		File updateLogFile = new File( service.getProgramDataFolder(), "updater.log" );
+
+		// Remove old log file.
+		assertTrue( FileUtil.delete( updateLogFile ) );
+
 		// Configure the service update settings.
 		Settings updateSettings = service.getSettings().getNode( Service.PRODUCT_MANAGER_SETTINGS_PATH );
 		updateSettings.put( "check", "STARTUP" );
 		updateSettings.flush();
 
 		// Start the service that detects the update, stages the update, and restarts.
-		Log.write( Log.ERROR, "Executing update..." );
+		Log.write( Log.ERROR, "Executing update and waiting for results..." );
 		executeUpdate();
 
 		// Because the stage process should restart the application immediately 
@@ -57,25 +64,37 @@ public class ServiceUpdateTest extends BaseTestCase {
 		// terminate and for the auto terminate timeout also.
 		Thread.sleep( PROCESS_EXECUTE_TIME + VerifyService.AUTO_TERMINATE_TIMEOUT );
 
-		Log.write( Log.ERROR, "Verifying results..." );
+		Log.write( Log.ERROR, "Verifying update results..." );
 
-		String applyLog = FileUtil.load( new File( INSTALL, "verify.log" ) );
+		// Load the verify service log file.
+		assertTrue( "Verify log file not found: " + verifyLogFile, verifyLogFile.exists() );
+		String applyLog = FileUtil.load( verifyLogFile );
 		List<String> applyLogLines = TextUtil.getLines( applyLog );
 
-		// Check the service log for correct entries.
-		int serviceIndex = 0;
-		assertTrue( "Updates not detected", ( serviceIndex = findLine( applyLogLines, UPDATES_DETECTED, serviceIndex ) ) >= 0 );
-		assertTrue( "Program exit not detected", ( serviceIndex = findLine( applyLogLines, PROGRAM_EXITING, serviceIndex ) ) >= 0 );
+		// Load the updater log file.
+		assertTrue( "Updater log file not found: " + updateLogFile, updateLogFile.exists() );
+		String updateLog = FileUtil.load( updateLogFile );
+		List<String> updateLogLines = TextUtil.getLines( updateLog );
 
-		// Check the updater log for correct entries.
-		File update = new File( service.getProgramDataFolder(), ProductManager.UPDATE_FOLDER_NAME + "/" + service.getProductManager().getStagedUpdateFileName( service.getCard() ) );
+		try {
+			// Check the service log for correct entries.
+			int serviceIndex = 0;
+			assertTrue( "Updates not detected", ( serviceIndex = findLine( applyLogLines, UPDATES_DETECTED, serviceIndex ) ) >= 0 );
+			assertTrue( "Program exit not detected", ( serviceIndex = findLine( applyLogLines, PROGRAM_EXITING, serviceIndex ) ) >= 0 );
 
-		Log.write( Log.TRACE, "Looking for: " + "[I] Successful update: " + update.getCanonicalPath() );
-		assertEquals( "Update apply not detected", 1, countLines( applyLogLines, "[I] Successful update: " + update.getCanonicalPath() ) );
+			// Check the updater log for correct entries.
+			File update = new File( service.getProgramDataFolder(), ProductManager.UPDATE_FOLDER_NAME + "/" + service.getProductManager().getStagedUpdateFileName( service.getCard() ) );
 
-		// Check the verify service log for correct entries.
-		assertTrue( "Service start not detected", ( serviceIndex = findLine( applyLogLines, SERVICE_STARTED, serviceIndex ) ) >= 0 );
-		assertTrue( "Service stop not detected", ( serviceIndex = findLine( applyLogLines, SERVICE_STOPPED, serviceIndex ) ) >= 0 );
+			Log.write( Log.TRACE, "Looking for: " + "[I] Successful update: " + update.getCanonicalPath() );
+			assertEquals( "Update apply not detected", 1, countLines( updateLogLines, "[I] Successful update: " + update.getCanonicalPath() ) );
+
+			// Check the verify service log for correct entries.
+			assertTrue( "Service start not detected", ( serviceIndex = findLine( applyLogLines, SERVICE_STARTED, serviceIndex ) ) >= 0 );
+			assertTrue( "Service stop not detected", ( serviceIndex = findLine( applyLogLines, SERVICE_STOPPED, serviceIndex ) ) >= 0 );
+		} catch( AssertionError error ) {
+			System.out.println( applyLog );
+			throw error;
+		}
 
 		// Verify the file codes.
 		for( String library : libraries ) {
