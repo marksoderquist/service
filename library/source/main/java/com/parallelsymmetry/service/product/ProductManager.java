@@ -776,31 +776,6 @@ public class ProductManager extends Agent implements Persistent {
 		}
 	}
 
-	/**
-	 * This method is used particularly by the AspectSettingReader to load tool
-	 * classes.
-	 * 
-	 * @param product
-	 * @param name
-	 * @return
-	 * @throws ClassNotFoundException
-	 */
-	public Class<?> getClassForName( Product product, String name ) {
-		Class<?> clazz = null;
-
-		if( clazz == null ) {
-			try {
-				clazz = Class.forName( name, true, product.getClass().getClassLoader() );
-			} catch( NoClassDefFoundError error ) {
-				// Intentionally ignore exception.
-			} catch( ClassNotFoundException exception ) {
-				// Intentionally ignore exception.
-			}
-		}
-
-		return clazz;
-	}
-
 	public void registerProduct( Product product ) {
 
 		String productKey = product.getCard().getProductKey();
