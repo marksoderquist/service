@@ -63,12 +63,6 @@ public abstract class Service extends Agent implements Product {
 
 	public static final String PRODUCT_INSTALL_FOLDER_NAME = "products";
 
-	public static final String MANAGER_SETTINGS_ROOT = "/manager";
-
-	public static final String TASK_MANAGER_SETTINGS_PATH = MANAGER_SETTINGS_ROOT + "/task";
-
-	public static final String PRODUCT_MANAGER_SETTINGS_PATH = MANAGER_SETTINGS_ROOT + "/product";
-
 	private static final String DEFAULT_DESCRIPTOR_PATH = "/META-INF/product.xml";
 
 	private static final String DEFAULT_SETTINGS_PATH = "/META-INF/settings.xml";
@@ -427,7 +421,7 @@ public abstract class Service extends Agent implements Product {
 		peerServer.startAndWait();
 
 		// Start the task manager.
-		taskManager.loadSettings( settings.getNode( TASK_MANAGER_SETTINGS_PATH ) );
+		taskManager.loadSettings( settings.getNode( ServiceSettingsPath.TASK_MANAGER_SETTINGS_PATH ) );
 		taskManager.startAndWait();
 
 		// Start the product manager.
@@ -466,7 +460,7 @@ public abstract class Service extends Agent implements Product {
 		productManager.stopAndWait();
 
 		taskManager.stopAndWait();
-		taskManager.saveSettings( settings.getNode( TASK_MANAGER_SETTINGS_PATH ) );
+		taskManager.saveSettings( settings.getNode( ServiceSettingsPath.TASK_MANAGER_SETTINGS_PATH ) );
 
 		peerServer.stopAndWait();
 
@@ -737,7 +731,7 @@ public abstract class Service extends Agent implements Product {
 		productManager.setRemovable( getCard(), false );
 
 		// Configure the product manager.
-		productManager.loadSettings( settings.getNode( PRODUCT_MANAGER_SETTINGS_PATH ) );
+		productManager.loadSettings( settings.getNode( ServiceSettingsPath.PRODUCT_MANAGER_SETTINGS_PATH ) );
 		productManager.setUpdaterPath( new File( getHomeFolder(), ProductManager.UPDATER_JAR_NAME ) );
 	}
 

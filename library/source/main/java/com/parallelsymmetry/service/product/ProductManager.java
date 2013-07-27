@@ -23,6 +23,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import com.parallelsymmetry.service.Service;
 import com.parallelsymmetry.service.ServiceFlag;
+import com.parallelsymmetry.service.ServiceSettingsPath;
 import com.parallelsymmetry.service.product.ProductManagerEvent.Type;
 import com.parallelsymmetry.service.task.DescriptorDownloadTask;
 import com.parallelsymmetry.service.task.DownloadTask;
@@ -165,7 +166,7 @@ public class ProductManager extends Agent implements Persistent {
 		foundOption = FoundOption.STAGE;
 		applyOption = ApplyOption.RESTART;
 
-		service.getSettings().addSettingListener( Service.PRODUCT_MANAGER_SETTINGS_PATH, new SettingChangeHandler() );
+		service.getSettings().addSettingListener( ServiceSettingsPath.PRODUCT_MANAGER_SETTINGS_PATH, new SettingChangeHandler() );
 	}
 
 	public int getCatalogCount() {

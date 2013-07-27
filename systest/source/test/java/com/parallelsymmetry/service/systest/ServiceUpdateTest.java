@@ -3,11 +3,10 @@ package com.parallelsymmetry.service.systest;
 import java.io.File;
 import java.util.List;
 
-import com.parallelsymmetry.service.Service;
 import com.parallelsymmetry.service.ServiceFlag;
 import com.parallelsymmetry.service.ServiceFlagValue;
+import com.parallelsymmetry.service.ServiceSettingsPath;
 import com.parallelsymmetry.service.product.ProductManager;
-import com.parallelsymmetry.service.systest.VerifyService;
 import com.parallelsymmetry.utility.FileUtil;
 import com.parallelsymmetry.utility.TextUtil;
 import com.parallelsymmetry.utility.log.Log;
@@ -51,7 +50,7 @@ public class ServiceUpdateTest extends BaseTestCase {
 		assertTrue( FileUtil.delete( updateLogFile ) );
 
 		// Configure the service update settings.
-		Settings updateSettings = service.getSettings().getNode( Service.PRODUCT_MANAGER_SETTINGS_PATH );
+		Settings updateSettings = service.getSettings().getNode( ServiceSettingsPath.PRODUCT_MANAGER_SETTINGS_PATH );
 		updateSettings.put( "check", "STARTUP" );
 		updateSettings.flush();
 
