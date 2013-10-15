@@ -637,8 +637,10 @@ public class ProductManager extends Agent implements Persistent {
 		File updaterSource = updater;
 		File updaterTarget = new File( FileUtil.TEMP_FOLDER, service.getCard().getArtifact() + "-updater.jar" );
 
-		if( updaterSource == null || !updaterSource.exists() ) throw new RuntimeException( "Update library not found: " + updaterSource );
-		if( !FileUtil.copy( updaterSource, updaterTarget ) ) throw new RuntimeException( "Update library not staged: " + updaterTarget );
+		if( updaterSource == null || !updaterSource.exists() ) throw new RuntimeException( "Update library not found: "
+			+ updaterSource );
+		if( !FileUtil.copy( updaterSource, updaterTarget ) ) throw new RuntimeException( "Update library not staged: "
+			+ updaterTarget );
 
 		// Check if process elevation is necessary.
 		boolean elevate = false;
@@ -806,7 +808,7 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Load the product catalogs.
 		Set<ProductCatalog> catalogsSet = new CopyOnWriteArraySet<ProductCatalog>();
-		Set<Settings> catalogsSettings = settings.getNodeSet( CATALOGS_SETTINGS_KEY, this.catalogs );
+		Set<Settings> catalogsSettings = settings.getChildNodes( CATALOGS_SETTINGS_KEY );
 		for( Settings catalogSettings : catalogsSettings ) {
 			ProductCatalog catalog = new ProductCatalog();
 			catalog.loadSettings( catalogSettings );
@@ -997,7 +999,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	private Set<InstalledProduct> getStoredRemovedProducts() {
 		Set<InstalledProduct> products = new HashSet<InstalledProduct>();
-		Set<Settings> productSettings = service.getSettings().getNodeSet( REMOVES_SETTINGS_KEY, new HashSet<InstalledProduct>() );
+		Set<Settings> productSettings = service.getSettings().getChildNodes( REMOVES_SETTINGS_KEY );
 		for( Settings settings : productSettings ) {
 			InstalledProduct product = new InstalledProduct();
 			product.loadSettings( settings );
