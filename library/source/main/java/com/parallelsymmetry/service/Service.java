@@ -529,6 +529,8 @@ public abstract class Service extends Agent implements Product {
 	private final void processParameters( Parameters parameters, boolean peer ) {
 		if( this.parameters == null ) this.parameters = parameters;
 
+		configureExecMode( parameters );
+
 		Log.write( Log.DEBUG, "Processing parameters: " + parameters.toString() );
 		PerformanceCheck.writeTimeAfterStart( "Service.processParameters() start" );
 
@@ -628,7 +630,17 @@ public abstract class Service extends Agent implements Product {
 
 	private final void configureOnce( Parameters parameters ) {
 		if( isRunning() ) return;
+		
+		configureArtifact( parameters );
 
+		configureHome( parameters );
+
+		configureSettings( parameters );
+
+		configureServices( parameters );
+	}
+	
+	private final void configureExecMode( Parameters parameters ) {
 		if( parameters.isSet( ServiceFlag.EXECMODE ) ) {
 			if( ServiceFlagValue.TEST.equals( parameters.get( ServiceFlag.EXECMODE ) )
 				&& !card.getArtifact().startsWith( TEST_PREFIX ) ) {
@@ -638,14 +650,6 @@ public abstract class Service extends Agent implements Product {
 				execModePrefix = DEVL_PREFIX;
 			}
 		}
-
-		configureArtifact( parameters );
-
-		configureHome( parameters );
-
-		configureSettings( parameters );
-
-		configureServices( parameters );
 	}
 
 	private final void configureArtifact( Parameters parameters ) {
