@@ -67,9 +67,9 @@ public abstract class Service extends Agent implements Product {
 
 	public static final String PRODUCT_INSTALL_FOLDER_NAME = "products";
 
-	private static final String DEFAULT_DESCRIPTOR_PATH = "/META-INF/product.xml";
+	protected static final String DEFAULT_PRODUCT_PATH = "/META-INF/product.xml";
 
-	private static final String DEFAULT_SETTINGS_PATH = "/META-INF/settings.xml";
+	protected static final String DEFAULT_SETTINGS_PATH = "/META-INF/settings.xml";
 
 	private static final String JAVA_VERSION_MINIMUM = "1.6";
 
@@ -389,7 +389,7 @@ public abstract class Service extends Agent implements Product {
 	}
 
 	protected URI getDescriptorUri() throws URISyntaxException {
-		URL url = getClass().getResource( DEFAULT_DESCRIPTOR_PATH );
+		URL url = getClass().getResource( DEFAULT_PRODUCT_PATH );
 		return url == null ? null : url.toURI();
 	}
 
