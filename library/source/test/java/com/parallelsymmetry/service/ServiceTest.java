@@ -386,6 +386,7 @@ public class ServiceTest extends BaseTestCase {
 		while( noticeLines.more() ) {
 			assertEquals( noticeLines.next(), parser.next() );
 		}
+		assertEquals( TextUtil.pad( 75, '-' ), parser.next() );
 		assertEquals( "", parser.next() );
 	}
 
