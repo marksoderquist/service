@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -42,12 +43,15 @@ import com.parallelsymmetry.utility.FileUtil;
 import com.parallelsymmetry.utility.JavaUtil;
 import com.parallelsymmetry.utility.OperatingSystem;
 import com.parallelsymmetry.utility.Parameters;
+import com.parallelsymmetry.utility.PerformanceCheck;
 import com.parallelsymmetry.utility.Release;
 import com.parallelsymmetry.utility.TextUtil;
 import com.parallelsymmetry.utility.agent.Agent;
 import com.parallelsymmetry.utility.agent.ServerAgent;
 import com.parallelsymmetry.utility.agent.Worker;
+import com.parallelsymmetry.utility.log.DefaultFormatter;
 import com.parallelsymmetry.utility.log.Log;
+import com.parallelsymmetry.utility.log.LogFlag;
 import com.parallelsymmetry.utility.setting.BaseSettingProvider;
 import com.parallelsymmetry.utility.setting.DescriptorSettingProvider;
 import com.parallelsymmetry.utility.setting.ParametersSettingProvider;
@@ -101,12 +105,14 @@ public abstract class Service extends Agent implements Product {
 
 	private File home;
 
+	private String logFilePattern;
+
 	private PeerServer peerServer;
 
 	private TaskManager taskManager;
 
 	protected ProductManager productManager;
-
+	
 	/**
 	 * Construct the service with the default descriptor path.
 	 */
@@ -415,10 +421,13 @@ public abstract class Service extends Agent implements Product {
 	@Override
 	protected final void startAgent() throws Exception {
 		Log.write( Log.DEBUG, getName() + " starting..." );
+		PerformanceCheck.writeTimeAfterStart( "Service.startAgent() start" );
+
 		Runtime.getRuntime().addShutdownHook( shutdownHook );
 
 		// Start the peer server.
 		peerServer.startAndWait();
+		PerformanceCheck.writeTimeAfterStart( "Service.startAgent() peer server" );
 
 		// Start the task manager.
 		taskManager.loadSettings( settings.getNode( ServiceSettingsPath.TASK_MANAGER_SETTINGS_PATH ) );
@@ -438,7 +447,8 @@ public abstract class Service extends Agent implements Product {
 		Log.write( getName() + " started." );
 
 		// Check for updates.
-		if( !parameters.isSet( ServiceFlag.NOUPDATECHECK ) && productManager.getCheckOption() == ProductManager.CheckOption.STARTUP ) productManager.checkForUpdates();
+		if( !parameters.isSet( ServiceFlag.NOUPDATECHECK )
+			&& productManager.getCheckOption() == ProductManager.CheckOption.STARTUP ) productManager.checkForUpdates();
 	}
 
 	/**
@@ -520,6 +530,7 @@ public abstract class Service extends Agent implements Product {
 		if( this.parameters == null ) this.parameters = parameters;
 
 		Log.write( Log.DEBUG, "Processing parameters: " + parameters.toString() );
+		PerformanceCheck.writeTimeAfterStart( "Service.processParameters() start" );
 
 		try {
 			// Initialize logging.
@@ -527,21 +538,24 @@ public abstract class Service extends Agent implements Product {
 				Log.config( parameters );
 
 				// TODO Fix log file name collision when two instances run.
-				//			if( !parameters.isSet( LogFlag.LOG_FILE ) ) {
-				//				try {
-				//					File folder = getProgramDataFolder();
-				//					String pattern = new File( folder, "program.log" ).getCanonicalPath().replace( '\\', '/' );
-				//					folder.mkdirs();
-				//
-				//					FileHandler handler = new FileHandler( pattern, parameters.isTrue( LogFlag.LOG_FILE_APPEND ) );
-				//					handler.setLevel( Log.getLevel() );
-				//					if( parameters.isSet( LogFlag.LOG_FILE_LEVEL ) ) handler.setLevel( Log.parseLevel( parameters.get( LogFlag.LOG_FILE_LEVEL ) ) );
-				//					handler.setFormatter( new DefaultFormatter() );
-				//					Log.addHandler( handler );
-				//				} catch( IOException exception ) {
-				//					Log.write( exception );
-				//				}
-				//			}
+				if( !parameters.isSet( LogFlag.LOG_FILE ) ) {
+					try {
+						File folder = getProgramDataFolder();
+						folder.mkdirs();
+
+						logFilePattern = new File( folder, "program.log" ).getCanonicalPath();
+						FileHandler handler = new FileHandler( logFilePattern, parameters.isTrue( LogFlag.LOG_FILE_APPEND ) );
+						handler.setLevel( Log.getLevel() );
+						if( parameters.isSet( LogFlag.LOG_FILE_LEVEL ) ) handler.setLevel( Log.parseLevel( parameters.get( LogFlag.LOG_FILE_LEVEL ) ) );
+						
+						DefaultFormatter formatter = new DefaultFormatter();
+						formatter.setShowDate( true );
+						handler.setFormatter( formatter );
+						Log.addHandler( handler );
+					} catch( IOException exception ) {
+						Log.write( exception );
+					}
+				}
 
 				// Set the locale.
 				if( parameters.isSet( LOCALE ) ) setLocale( parameters );
@@ -556,6 +570,7 @@ public abstract class Service extends Agent implements Product {
 
 				// Check for existing peer.
 				if( peerExists( parameters ) ) return;
+				PerformanceCheck.writeTimeAfterStart( "Service.processParameters() no peer" );
 			}
 
 			// If the watch parameter is set then exit before doing anything else.
@@ -615,20 +630,28 @@ public abstract class Service extends Agent implements Product {
 		if( isRunning() ) return;
 
 		if( parameters.isSet( ServiceFlag.EXECMODE ) ) {
-			if( ServiceFlagValue.TEST.equals( parameters.get( ServiceFlag.EXECMODE ) ) && !card.getArtifact().startsWith( TEST_PREFIX ) ) {
+			if( ServiceFlagValue.TEST.equals( parameters.get( ServiceFlag.EXECMODE ) )
+				&& !card.getArtifact().startsWith( TEST_PREFIX ) ) {
 				execModePrefix = TEST_PREFIX;
-			} else if( ServiceFlagValue.DEVL.equals( parameters.get( ServiceFlag.EXECMODE ) ) && !card.getArtifact().startsWith( DEVL_PREFIX ) ) {
+			} else if( ServiceFlagValue.DEVL.equals( parameters.get( ServiceFlag.EXECMODE ) )
+				&& !card.getArtifact().startsWith( DEVL_PREFIX ) ) {
 				execModePrefix = DEVL_PREFIX;
 			}
 		}
 
-		configureHome( parameters );
-
 		configureArtifact( parameters );
+
+		configureHome( parameters );
 
 		configureSettings( parameters );
 
 		configureServices( parameters );
+	}
+
+	private final void configureArtifact( Parameters parameters ) {
+		// Set the artifact name if specified.
+		if( parameters.isSet( ServiceFlag.ARTIFACT ) ) card.setArtifact( parameters.get( ServiceFlag.ARTIFACT ) );
+		Log.write( Log.TRACE, "Card: ", card.getProductKey() );
 	}
 
 	/**
@@ -662,7 +685,9 @@ public abstract class Service extends Agent implements Product {
 				home.mkdirs();
 
 				// Copy the updater library.
-				File updaterSource = new File( System.getProperty( "user.dir" ), "../updater/target/updater-" + card.getRelease().getVersion() + ".jar" ).getCanonicalFile();
+				File updaterSource = new File( System.getProperty( "user.dir" ), "../updater/target/updater-"
+					+ card.getRelease().getVersion()
+					+ ".jar" ).getCanonicalFile();
 				File updaterTarget = new File( home, "updater.jar" ).getCanonicalFile();
 				FileUtil.copy( updaterSource, updaterTarget );
 				Log.write( Log.DEBUG, "Updater copied: " + updaterSource );
@@ -678,14 +703,9 @@ public abstract class Service extends Agent implements Product {
 		}
 
 		Log.write( Log.TRACE, "Home: ", home );
+		Log.write( Log.TRACE, "Log : ", logFilePattern );
 
 		card.setInstallFolder( home );
-	}
-
-	private final void configureArtifact( Parameters parameters ) {
-		// Set the artifact name if specified.
-		if( parameters.isSet( ServiceFlag.ARTIFACT ) ) card.setArtifact( parameters.get( ServiceFlag.ARTIFACT ) );
-		Log.write( Log.TRACE, "Card: ", card.getProductKey() );
 	}
 
 	private final void configureSettings( Parameters parameters ) {
@@ -698,7 +718,10 @@ public abstract class Service extends Agent implements Product {
 
 		// Add the preferences settings provider.
 		String preferencesPath = "/" + card.getGroup() + "." + card.getArtifact();
-		if( parameters.isSet( ServiceFlag.EXECMODE ) ) preferencesPath = "/" + card.getGroup() + execModePrefix + card.getArtifact();
+		if( parameters.isSet( ServiceFlag.EXECMODE ) ) preferencesPath = "/"
+			+ card.getGroup()
+			+ execModePrefix
+			+ card.getArtifact();
 		Preferences preferences = Preferences.userRoot().node( preferencesPath );
 		if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
 		Log.write( Log.DEBUG, "Preferences path: " + preferencesPath );
@@ -759,11 +782,12 @@ public abstract class Service extends Agent implements Product {
 		Log.write( Log.HELP, TextUtil.pad( 75, '-' ) );
 		Log.write( Log.HELP, getName() + " " + card.getRelease().toHumanString() );
 		Log.write( Log.HELP, card.getCopyright(), " ", card.getCopyrightNotice() );
-		Log.write( Log.HELP );
 		if( notice != null ) {
-			Log.write( Log.HELP, TextUtil.reline( notice, 75 ) );
 			Log.write( Log.HELP );
+			Log.write( Log.HELP, TextUtil.reline( notice, 75 ) );
 		}
+		Log.write( Log.HELP, TextUtil.pad( 75, '-' ) );
+		Log.write( Log.HELP );
 
 		Log.write( Log.TRACE, "Java: " + System.getProperty( "java.runtime.version" ) );
 
@@ -1126,7 +1150,9 @@ public abstract class Service extends Agent implements Product {
 
 		@Override
 		public void settingChanged( SettingEvent event ) {
-			if( "/network".equals( event.getNodePath() ) & "enableipv6".equals( event.getKey() ) | "preferipv6".equals( event.getKey() ) ) {
+			if( "/network".equals( event.getNodePath() )
+				& "enableipv6".equals( event.getKey() )
+				| "preferipv6".equals( event.getKey() ) ) {
 				service.configureNetworkSettings();
 			}
 		}
