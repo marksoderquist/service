@@ -112,7 +112,7 @@ public abstract class Service extends Agent implements Product {
 	private TaskManager taskManager;
 
 	protected ProductManager productManager;
-	
+
 	/**
 	 * Construct the service with the default descriptor path.
 	 */
@@ -216,20 +216,36 @@ public abstract class Service extends Agent implements Product {
 	 * 
 	 * @return
 	 */
-	public File getHomeFolder() {
+	public final File getHomeFolder() {
 		return home;
 	}
 
-	public TaskManager getTaskManager() {
+	/**
+	 * Get the program data folder. This is the location where the program should
+	 * be able to store files that are specific to the program. This path is
+	 * operating system specific and can be different between different versions
+	 * of operating system.
+	 * <p>
+	 * Note: This folder is shared by multiple instances of the program.
+	 * <p>
+	 * Examples:
+	 * <ul>
+	 * <li>Windows 7: C:\Users\&lt;user&gt;\AppData\Roaming\&lt;program name&gt;</li>
+	 * <li>Linux: /home/&lt;user&gt;/.&lt;program id&gt;</li>
+	 * </ul>
+	 * 
+	 * @return The program data folder.
+	 */
+	public final File getProgramDataFolder() {
+		return OperatingSystem.getUserProgramDataFolder( execModePrefix + card.getArtifact(), execModePrefix + getName() );
+	}
+
+	public final TaskManager getTaskManager() {
 		return taskManager;
 	}
 
-	public ProductManager getProductManager() {
+	public final ProductManager getProductManager() {
 		return productManager;
-	}
-
-	public File getProgramDataFolder() {
-		return OperatingSystem.getUserProgramDataFolder( execModePrefix + card.getArtifact(), execModePrefix + getName() );
 	}
 
 	public void printHelp() {
@@ -549,7 +565,7 @@ public abstract class Service extends Agent implements Product {
 						FileHandler handler = new FileHandler( logFilePattern, parameters.isTrue( LogFlag.LOG_FILE_APPEND ) );
 						handler.setLevel( Log.getLevel() );
 						if( parameters.isSet( LogFlag.LOG_FILE_LEVEL ) ) handler.setLevel( Log.parseLevel( parameters.get( LogFlag.LOG_FILE_LEVEL ) ) );
-						
+
 						DefaultFormatter formatter = new DefaultFormatter();
 						formatter.setShowDate( true );
 						handler.setFormatter( formatter );
@@ -630,7 +646,7 @@ public abstract class Service extends Agent implements Product {
 
 	private final void configureOnce( Parameters parameters ) {
 		if( isRunning() ) return;
-		
+
 		configureArtifact( parameters );
 
 		configureHome( parameters );
@@ -639,7 +655,7 @@ public abstract class Service extends Agent implements Product {
 
 		configureServices( parameters );
 	}
-	
+
 	private final void configureExecMode( Parameters parameters ) {
 		if( parameters.isSet( ServiceFlag.EXECMODE ) ) {
 			if( ServiceFlagValue.TEST.equals( parameters.get( ServiceFlag.EXECMODE ) )
