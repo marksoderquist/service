@@ -660,6 +660,7 @@ public class ProductManager extends Agent implements Persistent {
 		// Specify where to put the updater log.
 		builder.command().add( LogFlag.LOG_FILE );
 		builder.command().add( new File( service.getProgramDataFolder(), "updater.log" ).getAbsolutePath() );
+		builder.command().add( LogFlag.LOG_DATE );
 		builder.command().add( LogFlag.LOG_FILE_APPEND );
 
 		// Add the updates.
