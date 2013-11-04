@@ -24,7 +24,6 @@ import org.w3c.dom.Node;
 
 import com.parallelsymmetry.service.ServiceFlag;
 import com.parallelsymmetry.service.ServiceFlagValue;
-import com.parallelsymmetry.service.product.ProductCard;
 import com.parallelsymmetry.utility.ConsoleReader;
 import com.parallelsymmetry.utility.FileUtil;
 import com.parallelsymmetry.utility.IoUtil;
@@ -32,6 +31,7 @@ import com.parallelsymmetry.utility.TextUtil;
 import com.parallelsymmetry.utility.XmlUtil;
 import com.parallelsymmetry.utility.log.Log;
 import com.parallelsymmetry.utility.log.LogFlag;
+import com.parallelsymmetry.utility.product.ProductCard;
 
 public abstract class BaseTestCase extends TestCase {
 
