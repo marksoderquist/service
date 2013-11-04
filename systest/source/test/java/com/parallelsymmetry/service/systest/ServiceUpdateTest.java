@@ -2,6 +2,7 @@ package com.parallelsymmetry.service.systest;
 
 import java.io.File;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import com.parallelsymmetry.service.ServiceFlag;
 import com.parallelsymmetry.service.ServiceFlagValue;
@@ -10,6 +11,7 @@ import com.parallelsymmetry.service.product.ProductManager;
 import com.parallelsymmetry.utility.FileUtil;
 import com.parallelsymmetry.utility.TextUtil;
 import com.parallelsymmetry.utility.log.Log;
+import com.parallelsymmetry.utility.log.LogFlag;
 import com.parallelsymmetry.utility.setting.Settings;
 
 public class ServiceUpdateTest extends BaseTestCase {
@@ -19,7 +21,7 @@ public class ServiceUpdateTest extends BaseTestCase {
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
-		Log.setLevel( Log.INFO );
+		Log.setLevel( Log.TRACE );
 	}
 
 	/*
@@ -40,7 +42,8 @@ public class ServiceUpdateTest extends BaseTestCase {
 
 		// Reset the preferences but don't start the service.
 		Log.write( "Resetting service settings..." );
-		service.call( ServiceFlag.EXECMODE, ServiceFlagValue.TEST, ServiceFlag.SETTINGS_RESET, ServiceFlag.STOP );
+		service.call( ServiceFlag.EXECMODE, ServiceFlagValue.TEST, ServiceFlag.SETTINGS_RESET, LogFlag.LOG_DATE, ServiceFlag.STOP );
+		Log.setShowDate( false );
 
 		// Configure file locations.
 		File verifyLogFile = new File( INSTALL, "verify.log" );
@@ -84,8 +87,13 @@ public class ServiceUpdateTest extends BaseTestCase {
 			// Check the updater log for correct entries.
 			File update = new File( service.getProgramDataFolder(), ProductManager.UPDATE_FOLDER_NAME + "/" + service.getProductManager().getStagedUpdateFileName( service.getCard() ) );
 
-			Log.write( Log.TRACE, "Looking for: " + "[I] Successful update: " + update.getCanonicalPath() );
-			assertEquals( "Update apply not detected", 1, countLines( updateLogLines, "[I] Successful update: " + update.getCanonicalPath() ) );
+			Log.write( Log.TRACE, "Looking for: " + "[I] <timestamp> Successful update: " + update.getCanonicalPath() );
+			try {
+				assertEquals( "Update success not detected", 1, countLines( updateLogLines, "\\[I\\] " + TIMESTAMP + " Successful update: " + Pattern.quote( update.getCanonicalPath() ) ) );
+			} catch( AssertionError error ) {
+				Log.write( Log.ERROR, updateLog );
+				throw error;
+			}
 
 			// Check the verify service log for correct entries.
 			assertTrue( "Service start not detected", ( serviceIndex = findLine( applyLogLines, SERVICE_STARTED, serviceIndex ) ) >= 0 );

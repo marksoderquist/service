@@ -35,15 +35,17 @@ import com.parallelsymmetry.utility.product.ProductCard;
 
 public abstract class BaseTestCase extends TestCase {
 
-	protected static final String PROGRAM_EXITING = "[I] Program exiting to apply updates.";
+	protected static final String TIMESTAMP = "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]";
 
-	protected static final String UPDATES_DETECTED = "[I] Staged updates detected: 1";
+	protected static final String PROGRAM_EXITING = "\\[I\\] " + TIMESTAMP + " Program exiting to apply updates.";
 
-	protected static final String SERVICE_STARTED = "[I] Verify Service started.";
+	protected static final String UPDATES_DETECTED = "\\[I\\] " + TIMESTAMP + " Staged updates detected: 1";
 
-	protected static final String SERVICE_STOPPED = "[I] Verify Service stopped.";
+	protected static final String SERVICE_STARTED = "\\[I\\] " + TIMESTAMP + " Verify Service started.";
 
-	protected static final String AUTO_TERMINATION = "[I] " + VerifyService.AUTO_TERMINATION_MESSAGE;
+	protected static final String SERVICE_STOPPED = "\\[I\\] " + TIMESTAMP + " Verify Service stopped.";
+
+	protected static final String AUTO_TERMINATION = "\\[I\\] " + TIMESTAMP + " " + VerifyService.AUTO_TERMINATION_MESSAGE;
 
 	protected static final String VERIFY_TXT = "verify.txt";
 
@@ -195,6 +197,7 @@ public abstract class BaseTestCase extends TestCase {
 		builder.command().add( ServiceFlagValue.TEST );
 		builder.command().add( LogFlag.LOG_LEVEL );
 		builder.command().add( logLevel.getName() );
+		builder.command().add( LogFlag.LOG_DATE );
 		builder.command().add( LogFlag.LOG_FILE );
 		builder.command().add( "verify.log" );
 		builder.command().add( LogFlag.LOG_FILE_LEVEL );
@@ -216,7 +219,7 @@ public abstract class BaseTestCase extends TestCase {
 		int result = 0;
 
 		for( String line : lines ) {
-			if( line.equals( pattern ) ) result++;
+			if( line.matches( pattern ) ) result++;
 		}
 
 		return result;
@@ -224,8 +227,9 @@ public abstract class BaseTestCase extends TestCase {
 
 	protected int findLine( List<String> lines, String pattern, int start ) {
 		int count = lines.size();
+
 		for( int index = start; index < count; index++ ) {
-			if( lines.get( index ).equals( pattern ) ) return index;
+			if( lines.get( index ).matches( pattern ) ) return index;
 		}
 
 		return -1;
