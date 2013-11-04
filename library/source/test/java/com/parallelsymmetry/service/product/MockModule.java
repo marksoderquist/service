@@ -1,8 +1,8 @@
 package com.parallelsymmetry.service.product;
 
 import com.parallelsymmetry.service.Service;
-import com.parallelsymmetry.service.product.ProductCard;
 import com.parallelsymmetry.service.product.ProductModule;
+import com.parallelsymmetry.utility.product.ProductCard;
 
 public class MockModule extends ProductModule {
 

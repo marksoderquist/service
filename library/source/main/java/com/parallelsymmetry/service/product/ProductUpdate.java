@@ -2,6 +2,7 @@ package com.parallelsymmetry.service.product;
 
 import java.io.File;
 
+import com.parallelsymmetry.utility.product.ProductCard;
 import com.parallelsymmetry.utility.setting.Persistent;
 import com.parallelsymmetry.utility.setting.Settings;
 

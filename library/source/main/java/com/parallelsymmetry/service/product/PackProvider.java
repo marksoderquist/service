@@ -7,6 +7,7 @@ import java.util.concurrent.Future;
 
 import com.parallelsymmetry.service.task.DescriptorDownloadTask;
 import com.parallelsymmetry.utility.Descriptor;
+import com.parallelsymmetry.utility.product.ProductCard;
 import com.parallelsymmetry.utility.task.TaskManager;
 
 public class PackProvider implements ProductResourceProvider {

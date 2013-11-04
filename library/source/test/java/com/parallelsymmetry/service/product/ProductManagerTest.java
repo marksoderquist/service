@@ -24,6 +24,7 @@ import com.parallelsymmetry.service.product.ProductManager.FoundOption;
 import com.parallelsymmetry.utility.Descriptor;
 import com.parallelsymmetry.utility.FileUtil;
 import com.parallelsymmetry.utility.XmlUtil;
+import com.parallelsymmetry.utility.product.ProductCard;
 
 public class ProductManagerTest extends BaseServiceTest {
 
@@ -203,7 +204,7 @@ public class ProductManagerTest extends BaseServiceTest {
 		Set<ProductCard> cards = manager.getStagedUpdates();
 		assertEquals( 1, cards.size() );
 
-		ProductCardTest.assertEquals( card, cards.iterator().next() );
+		assertTrue( card.deepEquals( cards.iterator().next() ) );
 	}
 
 	@Test

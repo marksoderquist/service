@@ -38,6 +38,7 @@ import com.parallelsymmetry.utility.UriUtil;
 import com.parallelsymmetry.utility.agent.Agent;
 import com.parallelsymmetry.utility.log.Log;
 import com.parallelsymmetry.utility.log.LogFlag;
+import com.parallelsymmetry.utility.product.ProductCard;
 import com.parallelsymmetry.utility.setting.Persistent;
 import com.parallelsymmetry.utility.setting.SettingEvent;
 import com.parallelsymmetry.utility.setting.SettingListener;

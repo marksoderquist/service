@@ -34,8 +34,6 @@ import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
 import com.parallelsymmetry.service.product.Product;
-import com.parallelsymmetry.service.product.ProductCard;
-import com.parallelsymmetry.service.product.ProductCardException;
 import com.parallelsymmetry.service.product.ProductManager;
 import com.parallelsymmetry.service.product.ProductModule;
 import com.parallelsymmetry.utility.Descriptor;
@@ -52,6 +50,8 @@ import com.parallelsymmetry.utility.agent.Worker;
 import com.parallelsymmetry.utility.log.DefaultFormatter;
 import com.parallelsymmetry.utility.log.Log;
 import com.parallelsymmetry.utility.log.LogFlag;
+import com.parallelsymmetry.utility.product.ProductCard;
+import com.parallelsymmetry.utility.product.ProductCardException;
 import com.parallelsymmetry.utility.setting.BaseSettingProvider;
 import com.parallelsymmetry.utility.setting.DescriptorSettingProvider;
 import com.parallelsymmetry.utility.setting.ParametersSettingProvider;

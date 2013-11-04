@@ -6,12 +6,12 @@ import org.junit.Test;
 
 import com.parallelsymmetry.service.BaseTestCase;
 import com.parallelsymmetry.service.MockService;
-import com.parallelsymmetry.service.product.ProductCard;
 import com.parallelsymmetry.service.product.ProductModule;
 import com.parallelsymmetry.utility.DateUtil;
 import com.parallelsymmetry.utility.Descriptor;
 import com.parallelsymmetry.utility.Release;
 import com.parallelsymmetry.utility.Version;
+import com.parallelsymmetry.utility.product.ProductCard;
 
 public class ModuleTest extends BaseTestCase {
 

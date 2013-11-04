@@ -2,6 +2,8 @@ package com.parallelsymmetry.service.product;
 
 import java.util.EventObject;
 
+import com.parallelsymmetry.utility.product.ProductCard;
+
 public class ProductManagerEvent extends EventObject {
 
 	public static enum Type {

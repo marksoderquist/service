@@ -5,8 +5,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.parallelsymmetry.service.BaseServiceTest;
-import com.parallelsymmetry.service.product.ProductCard;
 import com.parallelsymmetry.service.product.ProductUpdate;
+import com.parallelsymmetry.utility.product.ProductCard;
 
 public class ProductUpdateTest extends BaseServiceTest {
 
