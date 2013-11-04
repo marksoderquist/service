@@ -797,14 +797,14 @@ public abstract class Service extends Agent implements Product {
 	}
 
 	private final void printHeader() {
-		String notice = card.getLicenseSummary();
+		String summary = card.getLicenseSummary();
 
 		Log.write( Log.HELP, TextUtil.pad( 75, '-' ) );
 		Log.write( Log.HELP, getName() + " " + card.getRelease().toHumanString() );
 		Log.write( Log.HELP, card.getCopyright(), " ", card.getCopyrightNotice() );
-		if( notice != null ) {
+		if( summary != null ) {
 			Log.write( Log.HELP );
-			Log.write( Log.HELP, TextUtil.reline( notice, 75 ) );
+			Log.write( Log.HELP, TextUtil.reline( summary, 75 ) );
 		}
 		Log.write( Log.HELP, TextUtil.pad( 75, '-' ) );
 		Log.write( Log.HELP );
