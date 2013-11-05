@@ -1051,6 +1051,8 @@ public class ProductManager extends Agent implements Persistent {
 				for( ProductResource resource : resources ) {
 					URI uri = getResolvedUpdateUri( resource.getUri() );
 					Log.write( Log.DEBUG, "Resource source: " + uri );
+
+					// Submit task to download resource.
 					resource.setFuture( service.getTaskManager().submit( new DownloadTask( uri ) ) );
 				}
 
@@ -1060,12 +1062,15 @@ public class ProductManager extends Agent implements Persistent {
 			}
 		}
 
-		// Download all resources.
+		// Wait for all resources to be downloaded.
 		for( ProductCard card : cards ) {
 			for( ProductResource resource : productResources.get( card ) ) {
 				try {
 					resource.waitFor();
 					Log.write( Log.DEBUG, "Resource target: " + resource.getLocalFile() );
+
+					// TODO Verify resources are secure by checking digital signatures.
+					// Reference: http://docs.oracle.com/javase/6/docs/technotes/guides/security/crypto/HowToImplAProvider.html#CheckJARFile
 				} catch( Exception exception ) {
 					Log.write( exception );
 				}
