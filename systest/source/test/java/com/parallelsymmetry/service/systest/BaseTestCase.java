@@ -215,26 +215,6 @@ public abstract class BaseTestCase extends TestCase {
 		assertEquals( "Verify Service process exit code", 0, process.waitFor() );
 	}
 
-	protected int countLines( List<String> lines, String pattern ) {
-		int result = 0;
-
-		for( String line : lines ) {
-			if( line.matches( pattern ) ) result++;
-		}
-
-		return result;
-	}
-
-	protected int findLine( List<String> lines, String pattern, int start ) {
-		int count = lines.size();
-
-		for( int index = start; index < count; index++ ) {
-			if( lines.get( index ).matches( pattern ) ) return index;
-		}
-
-		return -1;
-	}
-
 	protected Long getVerifyCode( File file ) throws Exception {
 		ZipFile zip = null;
 		try {

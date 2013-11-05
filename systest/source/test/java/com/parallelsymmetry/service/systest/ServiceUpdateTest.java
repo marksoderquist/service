@@ -81,23 +81,23 @@ public class ServiceUpdateTest extends BaseTestCase {
 		try {
 			// Check the service log for correct entries.
 			int serviceIndex = 0;
-			assertTrue( "Updates not detected", ( serviceIndex = findLine( applyLogLines, UPDATES_DETECTED, serviceIndex ) ) >= 0 );
-			assertTrue( "Program exit not detected", ( serviceIndex = findLine( applyLogLines, PROGRAM_EXITING, serviceIndex ) ) >= 0 );
+			assertTrue( "Updates not detected", ( serviceIndex = TextUtil.findLineIndex( applyLogLines, UPDATES_DETECTED, serviceIndex ) ) >= 0 );
+			assertTrue( "Program exit not detected", ( serviceIndex = TextUtil.findLineIndex( applyLogLines, PROGRAM_EXITING, serviceIndex ) ) >= 0 );
 
 			// Check the updater log for correct entries.
 			File update = new File( service.getProgramDataFolder(), ProductManager.UPDATE_FOLDER_NAME + "/" + service.getProductManager().getStagedUpdateFileName( service.getCard() ) );
 
 			Log.write( Log.TRACE, "Looking for: " + "[I] <timestamp> Successful update: " + update.getCanonicalPath() );
 			try {
-				assertEquals( "Update success not detected", 1, countLines( updateLogLines, "\\[I\\] " + TIMESTAMP + " Successful update: " + Pattern.quote( update.getCanonicalPath() ) ) );
+				assertEquals( "Update success not detected", 1, TextUtil.countLines( updateLogLines, "\\[I\\] " + TIMESTAMP + " Successful update: " + Pattern.quote( update.getCanonicalPath() ) ) );
 			} catch( AssertionError error ) {
 				Log.write( Log.ERROR, updateLog );
 				throw error;
 			}
 
 			// Check the verify service log for correct entries.
-			assertTrue( "Service start not detected", ( serviceIndex = findLine( applyLogLines, SERVICE_STARTED, serviceIndex ) ) >= 0 );
-			assertTrue( "Service stop not detected", ( serviceIndex = findLine( applyLogLines, SERVICE_STOPPED, serviceIndex ) ) >= 0 );
+			assertTrue( "Service start not detected", ( serviceIndex = TextUtil.findLineIndex( applyLogLines, SERVICE_STARTED, serviceIndex ) ) >= 0 );
+			assertTrue( "Service stop not detected", ( serviceIndex = TextUtil.findLineIndex( applyLogLines, SERVICE_STOPPED, serviceIndex ) ) >= 0 );
 		} catch( AssertionError error ) {
 			System.out.println( applyLog );
 			throw error;
