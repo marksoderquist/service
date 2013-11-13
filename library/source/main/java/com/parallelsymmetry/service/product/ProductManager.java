@@ -397,7 +397,7 @@ public class ProductManager extends Agent implements Persistent {
 		if( !isEnabled() ) return newCards;
 
 		// If the posted update cache is still valid return the updates in the cache.
-		if( force == false && System.currentTimeMillis() - postedUpdateCacheTime < POSTED_UPDATE_CACHE_TIMEOUT ) {
+		if( force == false && System.currentTimeMillis() - postedUpdateCacheTime > POSTED_UPDATE_CACHE_TIMEOUT ) {
 			return new HashSet<ProductCard>( postedUpdateCache );
 		}
 
