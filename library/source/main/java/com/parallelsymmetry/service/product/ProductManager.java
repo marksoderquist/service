@@ -367,6 +367,7 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	public void checkForUpdates() {
+		Log.write( "ProductManager enabled: " + isEnabled() );
 		if( !isEnabled() ) return;
 
 		try {
@@ -397,9 +398,8 @@ public class ProductManager extends Agent implements Persistent {
 		if( !isEnabled() ) return newCards;
 
 		// If the posted update cache is still valid return the updates in the cache.
-		if( force == false && System.currentTimeMillis() - postedUpdateCacheTime > POSTED_UPDATE_CACHE_TIMEOUT ) {
-			return new HashSet<ProductCard>( postedUpdateCache );
-		}
+		long postedCacheAge = System.currentTimeMillis() - postedUpdateCacheTime;
+		if( force == false && postedCacheAge < POSTED_UPDATE_CACHE_TIMEOUT ) return new HashSet<ProductCard>( postedUpdateCache );
 
 		// Download the descriptors for each product.
 		Set<ProductCard> oldCards = getProductCards();
@@ -449,6 +449,7 @@ public class ProductManager extends Agent implements Persistent {
 		if( newCards.size() == 0 && exception != null ) throw exception;
 
 		// Cache the discovered updates.
+		postedUpdateCacheTime = System.currentTimeMillis();
 		postedUpdateCache = new CopyOnWriteArraySet<ProductCard>( newCards );
 
 		return newCards;
