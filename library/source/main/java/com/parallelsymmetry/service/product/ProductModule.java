@@ -23,6 +23,11 @@ public abstract class ProductModule implements Product, Comparable<ProductModule
 	public ProductCard getCard() {
 		return card;
 	}
+	
+	@Override
+	public Service getService() {
+		return service;
+	}
 
 	/**
 	 * Called by the program to register a module instance. This method is called

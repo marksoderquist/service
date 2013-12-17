@@ -17,13 +17,20 @@ public class ProductModuleTest extends BaseTestCase {
 
 	private static final String TEST_MODULE_DESCRIPTOR_PATH = "/META-INF/product.mock.module.xml";
 
+	private MockService service;
+
 	private ProductModule module;
 
 	@Override
 	public void setUp() throws Exception {
-		MockService service = new MockService();
+		service = new MockService();
 		URL url = getClass().getResource( TEST_MODULE_DESCRIPTOR_PATH );
 		module = new MockModule( service, new ProductCard( url.toURI(), new Descriptor( url ) ) );
+	}
+	
+	@Test
+	public void testGetService() throws Exception {
+		assertEquals( service, module.getService() );
 	}
 
 	@Test

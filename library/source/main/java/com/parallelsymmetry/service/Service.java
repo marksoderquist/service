@@ -186,6 +186,11 @@ public abstract class Service extends Agent implements Product {
 	public ProductCard getCard() {
 		return card;
 	}
+	
+	@Override
+	public Service getService() {
+		return this;
+	}
 
 	public Parameters getParameters() {
 		return parameters;
