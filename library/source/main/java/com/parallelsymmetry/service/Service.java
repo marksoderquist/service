@@ -33,9 +33,9 @@ import javax.swing.Icon;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
-import com.parallelsymmetry.service.product.Product;
 import com.parallelsymmetry.service.product.ProductManager;
 import com.parallelsymmetry.service.product.ProductModule;
+import com.parallelsymmetry.service.product.ServiceProduct;
 import com.parallelsymmetry.utility.Descriptor;
 import com.parallelsymmetry.utility.FileUtil;
 import com.parallelsymmetry.utility.JavaUtil;
@@ -63,7 +63,7 @@ import com.parallelsymmetry.utility.setting.Settings;
 import com.parallelsymmetry.utility.task.Task;
 import com.parallelsymmetry.utility.task.TaskManager;
 
-public abstract class Service extends Agent implements Product {
+public abstract class Service extends Agent implements ServiceProduct {
 
 	public static final String PRODUCT_INSTALL_FOLDER_NAME = "products";
 
@@ -186,7 +186,7 @@ public abstract class Service extends Agent implements Product {
 	public ProductCard getCard() {
 		return card;
 	}
-	
+
 	@Override
 	public Service getService() {
 		return this;
@@ -468,8 +468,7 @@ public abstract class Service extends Agent implements Product {
 		Log.write( getName() + " started." );
 
 		// Check for updates.
-		if( !parameters.isSet( ServiceFlag.NOUPDATECHECK )
-			&& productManager.getCheckOption() == ProductManager.CheckOption.STARTUP ) {
+		if( !parameters.isSet( ServiceFlag.NOUPDATECHECK ) && productManager.getCheckOption() == ProductManager.CheckOption.STARTUP ) {
 			productManager.checkForUpdates();
 		}
 	}
@@ -665,11 +664,9 @@ public abstract class Service extends Agent implements Product {
 
 	private final void configureExecMode( Parameters parameters ) {
 		if( parameters.isSet( ServiceFlag.EXECMODE ) ) {
-			if( ServiceFlagValue.TEST.equals( parameters.get( ServiceFlag.EXECMODE ) )
-				&& !card.getArtifact().startsWith( TEST_PREFIX ) ) {
+			if( ServiceFlagValue.TEST.equals( parameters.get( ServiceFlag.EXECMODE ) ) && !card.getArtifact().startsWith( TEST_PREFIX ) ) {
 				execModePrefix = TEST_PREFIX;
-			} else if( ServiceFlagValue.DEVL.equals( parameters.get( ServiceFlag.EXECMODE ) )
-				&& !card.getArtifact().startsWith( DEVL_PREFIX ) ) {
+			} else if( ServiceFlagValue.DEVL.equals( parameters.get( ServiceFlag.EXECMODE ) ) && !card.getArtifact().startsWith( DEVL_PREFIX ) ) {
 				execModePrefix = DEVL_PREFIX;
 			}
 		}
@@ -712,9 +709,7 @@ public abstract class Service extends Agent implements Product {
 				home.mkdirs();
 
 				// Copy the updater library.
-				File updaterSource = new File( System.getProperty( "user.dir" ), "../updater/target/updater-"
-					+ card.getRelease().getVersion()
-					+ ".jar" ).getCanonicalFile();
+				File updaterSource = new File( System.getProperty( "user.dir" ), "../updater/target/updater-" + card.getRelease().getVersion() + ".jar" ).getCanonicalFile();
 				File updaterTarget = new File( home, "updater.jar" ).getCanonicalFile();
 				FileUtil.copy( updaterSource, updaterTarget );
 				Log.write( Log.DEBUG, "Updater copied: " + updaterSource );
@@ -745,10 +740,7 @@ public abstract class Service extends Agent implements Product {
 
 		// Add the preferences settings provider.
 		String preferencesPath = "/" + card.getGroup() + "." + card.getArtifact();
-		if( parameters.isSet( ServiceFlag.EXECMODE ) ) preferencesPath = "/"
-			+ card.getGroup()
-			+ execModePrefix
-			+ card.getArtifact();
+		if( parameters.isSet( ServiceFlag.EXECMODE ) ) preferencesPath = "/" + card.getGroup() + execModePrefix + card.getArtifact();
 		Preferences preferences = Preferences.userRoot().node( preferencesPath );
 		if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
 		Log.write( Log.DEBUG, "Preferences path: " + preferencesPath );
@@ -1177,9 +1169,7 @@ public abstract class Service extends Agent implements Product {
 
 		@Override
 		public void settingChanged( SettingEvent event ) {
-			if( "/network".equals( event.getNodePath() )
-				& "enableipv6".equals( event.getKey() )
-				| "preferipv6".equals( event.getKey() ) ) {
+			if( "/network".equals( event.getNodePath() ) & "enableipv6".equals( event.getKey() ) | "preferipv6".equals( event.getKey() ) ) {
 				service.configureNetworkSettings();
 			}
 		}

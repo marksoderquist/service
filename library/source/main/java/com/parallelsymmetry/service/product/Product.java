@@ -7,6 +7,4 @@ public interface Product {
 
 	ProductCard getCard();
 	
-	Service getService();
-
 }
