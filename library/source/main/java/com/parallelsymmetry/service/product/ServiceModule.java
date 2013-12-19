@@ -3,13 +3,13 @@ package com.parallelsymmetry.service.product;
 import com.parallelsymmetry.service.Service;
 import com.parallelsymmetry.utility.product.ProductCard;
 
-public abstract class ProductModule implements ServiceProduct, Comparable<ProductModule> {
+public abstract class ServiceModule implements ServiceProduct, Comparable<ServiceModule> {
 	
 	protected Service service;
 
 	protected ProductCard card;
 
-	public ProductModule( Service service, ProductCard card ) {
+	public ServiceModule( Service service, ProductCard card ) {
 		this.service = service;
 		this.card = card;
 	}
@@ -54,7 +54,7 @@ public abstract class ProductModule implements ServiceProduct, Comparable<Produc
 	public abstract void unregister();
 
 	@Override
-	public int compareTo( ProductModule that ) {
+	public int compareTo( ServiceModule that ) {
 		return this.card.getArtifact().compareTo( that.card.getArtifact() );
 	}
 

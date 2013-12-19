@@ -1,10 +1,10 @@
 package com.parallelsymmetry.service.product;
 
 import com.parallelsymmetry.service.Service;
-import com.parallelsymmetry.service.product.ProductModule;
+import com.parallelsymmetry.service.product.ServiceModule;
 import com.parallelsymmetry.utility.product.ProductCard;
 
-public class MockModule extends ProductModule {
+public class MockModule extends ServiceModule {
 
 	public MockModule( Service service, ProductCard card ) {
 		super( service, card );

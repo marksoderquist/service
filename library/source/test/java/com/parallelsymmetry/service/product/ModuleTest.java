@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import com.parallelsymmetry.service.BaseTestCase;
 import com.parallelsymmetry.service.MockService;
-import com.parallelsymmetry.service.product.ProductModule;
+import com.parallelsymmetry.service.product.ServiceModule;
 import com.parallelsymmetry.utility.DateUtil;
 import com.parallelsymmetry.utility.Descriptor;
 import com.parallelsymmetry.utility.Release;
@@ -17,7 +17,7 @@ public class ModuleTest extends BaseTestCase {
 
 	private static final String TEST_MODULE_DESCRIPTOR_PATH = "/META-INF/product.mock.module.xml";
 
-	private ProductModule module;
+	private ServiceModule module;
 
 	@Override
 	public void setUp() throws Exception {

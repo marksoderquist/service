@@ -106,7 +106,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	private Set<ProductCatalog> catalogs;
 
-	private Map<String, ProductModule> modules;
+	private Map<String, ServiceModule> modules;
 
 	private File homeProductFolder;
 
@@ -145,7 +145,7 @@ public class ProductManager extends Agent implements Persistent {
 	public ProductManager( Service service ) {
 		this.service = service;
 		catalogs = new CopyOnWriteArraySet<ProductCatalog>();
-		modules = new ConcurrentHashMap<String, ProductModule>();
+		modules = new ConcurrentHashMap<String, ServiceModule>();
 		updates = new ConcurrentHashMap<String, ProductUpdate>();
 		products = new ConcurrentHashMap<String, Product>();
 		productCards = new ConcurrentHashMap<String, ProductCard>();
@@ -193,8 +193,8 @@ public class ProductManager extends Agent implements Persistent {
 		return new HashSet<ProductCatalog>( catalogs );
 	}
 
-	public Set<ProductModule> getModules() {
-		return new HashSet<ProductModule>( modules.values() );
+	public Set<ServiceModule> getModules() {
+		return new HashSet<ServiceModule>( modules.values() );
 	}
 
 	public Product getProduct( String productKey ) {
@@ -961,7 +961,7 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	private void setEnabledImpl( ProductCard card, boolean enabled ) {
-		ProductModule module = modules.get( card.getProductKey() );
+		ServiceModule module = modules.get( card.getProductKey() );
 		if( module == null ) return;
 
 		if( enabled ) {
@@ -1090,9 +1090,9 @@ public class ProductManager extends Agent implements Persistent {
 	 * @return
 	 * @throws Exception
 	 */
-	private ProductModule loadClasspathModule( ProductCard card, URL classpath, URI codebase, ClassLoader parent ) throws Exception {
+	private ServiceModule loadClasspathModule( ProductCard card, URL classpath, URI codebase, ClassLoader parent ) throws Exception {
 		ModuleClassLoader loader = new ModuleClassLoader( new URL[] { classpath }, parent, codebase );
-		ProductModule module = loadModule( card, loader, "CP", false, false );
+		ServiceModule module = loadModule( card, loader, "CP", false, false );
 		return module;
 	}
 
@@ -1105,7 +1105,7 @@ public class ProductManager extends Agent implements Persistent {
 	 * @return
 	 * @throws Exception
 	 */
-	private ProductModule loadSimpleModule( ProductCard card, URI jarUri, ClassLoader parent ) throws Exception {
+	private ServiceModule loadSimpleModule( ProductCard card, URI jarUri, ClassLoader parent ) throws Exception {
 		URI codebase = UriUtil.getParent( jarUri );
 
 		// Get the jar file.
@@ -1126,7 +1126,7 @@ public class ProductManager extends Agent implements Persistent {
 	 * @return
 	 * @throws Exception
 	 */
-	private ProductModule loadComplexModule( ProductCard card, URI moduleFolderUri, ClassLoader parent ) throws Exception {
+	private ServiceModule loadComplexModule( ProductCard card, URI moduleFolderUri, ClassLoader parent ) throws Exception {
 		// Get the folder to load from.
 		File folder = new File( moduleFolderUri );
 		card.setInstallFolder( folder );
@@ -1143,12 +1143,12 @@ public class ProductManager extends Agent implements Persistent {
 		return loadModule( card, loader, "LX", true, true );
 	}
 
-	private ProductModule loadModule( ProductCard card, ModuleClassLoader loader, String source, boolean updatable, boolean removable ) throws Exception {
+	private ServiceModule loadModule( ProductCard card, ModuleClassLoader loader, String source, boolean updatable, boolean removable ) throws Exception {
 		// Ignore included products.
 		if( includedProducts.contains( card.getProductKey() ) ) return null;
 
 		// Check if module is already loaded.
-		ProductModule module = modules.get( card.getProductKey() );
+		ServiceModule module = modules.get( card.getProductKey() );
 		if( module != null ) return module;
 
 		// Validate class name.
@@ -1160,7 +1160,7 @@ public class ProductManager extends Agent implements Persistent {
 			Log.write( Log.DEBUG, "Loading ", source, " module: ", card.getProductKey() );
 			Class<?> moduleClass = loader.loadClass( className );
 			Constructor<?> constructor = moduleClass.getConstructor( Service.class, ProductCard.class );
-			module = (ProductModule)constructor.newInstance( service, card );
+			module = (ServiceModule)constructor.newInstance( service, card );
 			registerModule( module, updatable, removable );
 			Log.write( Log.TRACE, source, " module loaded:  ", card.getProductKey() );
 		} catch( Throwable throwable ) {
@@ -1172,7 +1172,7 @@ public class ProductManager extends Agent implements Persistent {
 		return module;
 	}
 
-	private void registerModule( ProductModule module, boolean updatable, boolean removable ) {
+	private void registerModule( ServiceModule module, boolean updatable, boolean removable ) {
 		ProductCard card = module.getCard();
 
 		// Register the product.

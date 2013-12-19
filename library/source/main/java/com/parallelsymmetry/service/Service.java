@@ -34,7 +34,7 @@ import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
 import com.parallelsymmetry.service.product.ProductManager;
-import com.parallelsymmetry.service.product.ProductModule;
+import com.parallelsymmetry.service.product.ServiceModule;
 import com.parallelsymmetry.service.product.ServiceProduct;
 import com.parallelsymmetry.utility.Descriptor;
 import com.parallelsymmetry.utility.FileUtil;
@@ -890,7 +890,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 	 * needed while the workareas are being generated.
 	 */
 	private void registerAllModules() {
-		for( ProductModule module : productManager.getModules() ) {
+		for( ServiceModule module : productManager.getModules() ) {
 			try {
 				if( getProductManager().isEnabled( module.getCard() ) ) module.register();
 			} catch( Throwable throwable ) {
@@ -904,7 +904,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 	 * registered modules.
 	 */
 	private void createAllModules() {
-		for( ProductModule module : productManager.getModules() ) {
+		for( ServiceModule module : productManager.getModules() ) {
 			try {
 				if( getProductManager().isEnabled( module.getCard() ) ) module.create();
 			} catch( Throwable throwable ) {
@@ -918,7 +918,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 	 * application frame, workareas, and other registered modules.
 	 */
 	private void destroyAllModules() {
-		for( ProductModule module : productManager.getModules() ) {
+		for( ServiceModule module : productManager.getModules() ) {
 			try {
 				if( getProductManager().isEnabled( module.getCard() ) ) module.destroy();
 			} catch( Throwable throwable ) {
@@ -932,7 +932,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 	 * that may have been allocated during program operation.
 	 */
 	private void unregisterAllModules() {
-		for( ProductModule module : productManager.getModules() ) {
+		for( ServiceModule module : productManager.getModules() ) {
 			try {
 				if( getProductManager().isEnabled( module.getCard() ) ) module.unregister();
 			} catch( Throwable throwable ) {
