@@ -12,12 +12,12 @@ public class ProductUtil {
 
 	private static final String PRODUCT_SETTINGS_KEY = "products";
 
-	public static final String getString( Product product, String path, String name ) {
-		return Bundles.getString( product.getClass().getClassLoader(), path, name );
+	public static final String getString( Product product, String bundleKey, String name ) {
+		return Bundles.getString( product.getClass().getClassLoader(), bundleKey, name );
 	}
 
-	public static final String getString( Product product, String path, String name, Object... arguments ) {
-		String pattern = Bundles.getString( product.getClass().getClassLoader(), path, name );
+	public static final String getString( Product product, String bundleKey, String name, Object... arguments ) {
+		String pattern = Bundles.getString( product.getClass().getClassLoader(), bundleKey, name );
 		return MessageFormat.format( pattern, arguments );
 	}
 
