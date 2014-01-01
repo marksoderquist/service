@@ -21,6 +21,12 @@ public class ProductUtil {
 		return MessageFormat.format( pattern, arguments );
 	}
 
+	public static final Settings getSettings( ServiceProduct product ) {
+		return product.getService().getSettings().getNode( getSettingsPath( product ) );
+	}
+
+	@Deprecated
+	// FIXME Remove deprecated references.
 	public static final Settings getSettings( Service service, Product product ) {
 		return service.getSettings().getNode( getSettingsPath( product ) );
 	}
