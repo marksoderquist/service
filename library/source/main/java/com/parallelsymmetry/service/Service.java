@@ -795,7 +795,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 		}
 	}
 
-	private final void printHeader() {
+	protected void printHeader() {
 		String summary = card.getLicenseSummary();
 
 		Log.write( Log.HELP, TextUtil.pad( 75, '-' ) );
