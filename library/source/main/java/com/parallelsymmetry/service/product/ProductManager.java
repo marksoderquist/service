@@ -122,7 +122,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	private Settings settings;
 
-	private Map<String, Product> products;
+	private Map<String, ServiceProduct> products;
 
 	private Map<String, ProductCard> productCards;
 
@@ -147,7 +147,7 @@ public class ProductManager extends Agent implements Persistent {
 		catalogs = new CopyOnWriteArraySet<ProductCatalog>();
 		modules = new ConcurrentHashMap<String, ServiceModule>();
 		updates = new ConcurrentHashMap<String, ProductUpdate>();
-		products = new ConcurrentHashMap<String, Product>();
+		products = new ConcurrentHashMap<String, ServiceProduct>();
 		productCards = new ConcurrentHashMap<String, ProductCard>();
 		productStates = new ConcurrentHashMap<String, ProductState>();
 		listeners = new CopyOnWriteArraySet<ProductManagerListener>();
@@ -197,7 +197,7 @@ public class ProductManager extends Agent implements Persistent {
 		return new HashSet<ServiceModule>( modules.values() );
 	}
 
-	public Product getProduct( String productKey ) {
+	public ServiceProduct getProduct( String productKey ) {
 		return productKey == null ? service : products.get( productKey );
 	}
 
@@ -639,10 +639,8 @@ public class ProductManager extends Agent implements Persistent {
 		File updaterSource = updater;
 		File updaterTarget = new File( FileUtil.TEMP_FOLDER, service.getCard().getArtifact() + "-updater.jar" );
 
-		if( updaterSource == null || !updaterSource.exists() ) throw new RuntimeException( "Update library not found: "
-			+ updaterSource );
-		if( !FileUtil.copy( updaterSource, updaterTarget ) ) throw new RuntimeException( "Update library not staged: "
-			+ updaterTarget );
+		if( updaterSource == null || !updaterSource.exists() ) throw new RuntimeException( "Update library not found: " + updaterSource );
+		if( !FileUtil.copy( updaterSource, updaterTarget ) ) throw new RuntimeException( "Update library not staged: " + updaterTarget );
 
 		// Check if process elevation is necessary.
 		boolean elevate = false;
@@ -782,7 +780,7 @@ public class ProductManager extends Agent implements Persistent {
 		}
 	}
 
-	public void registerProduct( Product product ) {
+	public void registerProduct( ServiceProduct product ) {
 
 		String productKey = product.getCard().getProductKey();
 		products.put( productKey, product );
@@ -790,7 +788,7 @@ public class ProductManager extends Agent implements Persistent {
 		productStates.put( productKey, new ProductState() );
 	}
 
-	public void unregisterProduct( Product product ) {
+	public void unregisterProduct( ServiceProduct product ) {
 		String productKey = product.getCard().getProductKey();
 		products.remove( productKey );
 		productCards.remove( productKey );
@@ -937,7 +935,7 @@ public class ProductManager extends Agent implements Persistent {
 		setEnabled( card, true );
 	}
 
-	private void removeProductImpl( Product product ) {
+	private void removeProductImpl( ServiceProduct product ) {
 		ProductCard card = product.getCard();
 
 		File installFolder = getProductInstallFolder( card );
@@ -954,7 +952,7 @@ public class ProductManager extends Agent implements Persistent {
 		unregisterProduct( product );
 
 		// Remove the product settings.
-		ProductUtil.getSettings( service, product ).removeNode();
+		ProductUtil.getSettings( product ).removeNode();
 
 		// Notify listeners of remove.
 		fireProductManagerEvent( new ProductManagerEvent( this, Type.PRODUCT_REMOVED, card ) );
@@ -1159,7 +1157,10 @@ public class ProductManager extends Agent implements Persistent {
 		try {
 			Log.write( Log.DEBUG, "Loading ", source, " module: ", card.getProductKey() );
 			Class<?> moduleClass = loader.loadClass( className );
-			Constructor<?> constructor = moduleClass.getConstructor( Service.class, ProductCard.class );
+			//Constructor<?> constructor = moduleClass.getConstructor( Service.class, ProductCard.class );
+
+			Constructor<?> constructor = findConstructor( moduleClass );
+
 			module = (ServiceModule)constructor.newInstance( service, card );
 			registerModule( module, updatable, removable );
 			Log.write( Log.TRACE, source, " module loaded:  ", card.getProductKey() );
@@ -1170,6 +1171,22 @@ public class ProductManager extends Agent implements Persistent {
 		}
 
 		return module;
+	}
+
+	private Constructor<?> findConstructor( Class<?> moduleClass ) throws NoSuchMethodException, SecurityException {
+		Constructor<?> result = null;
+
+		// Look for a constructor that has assignable parameters.
+		Constructor<?>[] constructors = moduleClass.getConstructors();
+		for( Constructor<?> constructor : constructors ) {
+			Class<?>[] types = constructor.getParameterTypes();
+			if( types.length == 2 && Service.class.isAssignableFrom( types[0] ) && ProductCard.class.isAssignableFrom( types[1] ) ) {
+				result = constructor;
+				break;
+			}
+		}
+
+		return result;
 	}
 
 	private void registerModule( ServiceModule module, boolean updatable, boolean removable ) {

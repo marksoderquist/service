@@ -9,9 +9,9 @@ public abstract class ServiceModule implements ServiceProduct, Comparable<Servic
 
 	protected ProductCard card;
 
-	public ServiceModule( Service service, ProductCard card ) {
+	public ServiceModule( Service service, ProductCard moduleCard ) {
 		this.service = service;
-		this.card = card;
+		this.card = moduleCard;
 	}
 
 	/**
