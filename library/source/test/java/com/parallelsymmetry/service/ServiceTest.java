@@ -9,9 +9,6 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.logging.Level;
 
-import com.parallelsymmetry.service.Service;
-import com.parallelsymmetry.service.ServiceFlag;
-import com.parallelsymmetry.service.ServiceFlagValue;
 import com.parallelsymmetry.service.product.ProductManager;
 import com.parallelsymmetry.utility.DateUtil;
 import com.parallelsymmetry.utility.LineParser;
@@ -129,7 +126,6 @@ public class ServiceTest extends BaseTestCase {
 
 	public void testLaunchWithStart() throws Exception {
 		//Log.write( "...testLaunchWithStart()..." );
-
 		assertFalse( "Service should not be running and is.", service.isRunning() );
 		assertEquals( "Start method was not called the right amount times.", 0, service.getStartCalledCount() );
 		assertEquals( "Stop method was not called the right amount times.", 0, service.getStopCalledCount() );

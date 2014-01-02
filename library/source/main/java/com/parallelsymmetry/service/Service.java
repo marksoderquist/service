@@ -97,6 +97,8 @@ public abstract class Service extends Agent implements ServiceProduct {
 	private ProductCard card;
 
 	private String javaVersionMinimum = JAVA_VERSION_MINIMUM;
+	
+	private int port;
 
 	private Socket socket;
 
@@ -978,7 +980,9 @@ public abstract class Service extends Agent implements ServiceProduct {
 		}
 
 		private final int getServicePortNumber() {
-			return service.getSettings().getInt( ServiceSettingsPath.PRODUCT_PORT, 0 );
+			int result = service.getSettings().getInt( ServiceSettingsPath.PRODUCT_PORT, service.port );
+			if( result < 0 || result > 65535 ) result = service.port;
+			return result;
 		}
 
 		private final void storeServicePortNumber() {
@@ -987,7 +991,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 		}
 
 		private final void resetServicePortNumber() {
-			service.getSettings().putInt( ServiceSettingsPath.PRODUCT_PORT, -1 );
+			service.getSettings().putInt( ServiceSettingsPath.PRODUCT_PORT, service.port );
 			service.getSettings().flush();
 		}
 
