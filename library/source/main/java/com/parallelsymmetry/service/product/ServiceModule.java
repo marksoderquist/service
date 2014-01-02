@@ -1,10 +1,12 @@
 package com.parallelsymmetry.service.product;
 
+import java.io.File;
+
 import com.parallelsymmetry.service.Service;
 import com.parallelsymmetry.utility.product.ProductCard;
 
 public abstract class ServiceModule implements ServiceProduct, Comparable<ServiceModule> {
-	
+
 	protected Service service;
 
 	protected ProductCard card;
@@ -23,7 +25,7 @@ public abstract class ServiceModule implements ServiceProduct, Comparable<Servic
 	public ProductCard getCard() {
 		return card;
 	}
-	
+
 	@Override
 	public Service getService() {
 		return service;
@@ -53,11 +55,25 @@ public abstract class ServiceModule implements ServiceProduct, Comparable<Servic
 	 */
 	public abstract void unregister();
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public File getProductDataFolder() {
+		return new File( service.getProductModuleDataFolder(), card.getProductKey() );
+	}
+
+	/**
+	 * This implementation only compares the product card artifact values.
+	 */
 	@Override
 	public int compareTo( ServiceModule that ) {
 		return this.card.getArtifact().compareTo( that.card.getArtifact() );
 	}
 
+	/**
+	 * This implementation only returns the product card name.
+	 */
 	@Override
 	public String toString() {
 		return card.getName();

@@ -35,7 +35,7 @@ public class MockService extends Service {
 
 	public static final void main( String[] commands ) {
 		Log.setShowDate( true );
-		new MockService().call( commands );
+		new MockService().process( commands );
 	}
 
 	@Override

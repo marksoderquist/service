@@ -20,7 +20,7 @@ public class VerifyService extends Service {
 	public static final void main( String[] commands ) {
 		try {
 			VerifyService service = new VerifyService();
-			service.call( commands );
+			service.process( commands );
 		} catch( Exception exception ) {
 			Log.write( exception );
 		}
@@ -68,7 +68,7 @@ public class VerifyService extends Service {
 		@Override
 		public void run() {
 			Log.write( AUTO_TERMINATION_MESSAGE );
-			call( new String[] { ServiceFlag.STOP } );
+			processInternal( new String[] { ServiceFlag.STOP } );
 		}
 
 	}

@@ -97,7 +97,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 	private ProductCard card;
 
 	private String javaVersionMinimum = JAVA_VERSION_MINIMUM;
-	
+
 	private int port;
 
 	private Socket socket;
@@ -158,13 +158,20 @@ public abstract class Service extends Agent implements ServiceProduct {
 
 	/**
 	 * Process the command line parameters. This method is the entry point for the
-	 * service and is normally called from the main() method of the implementing
+	 * service and should be called from the main() method of the implementing
 	 * class.
 	 * 
-	 * @param commands
+	 * @param commands The command line commands to process.
+	 * @throws RuntimeException if not called from the main() method or the
+	 *           processInternal() method.
 	 */
-	public synchronized void call( String... commands ) {
+	public synchronized void process( String... commands ) {
+		// Check the calling method.
+		String source = Thread.currentThread().getStackTrace()[2].getMethodName();
+		if( !"main".equals( source ) && !"processInternal".equals( source ) ) throw new RuntimeException( "This method should be called directly from the main() method!" );
+
 		try {
+			// Parse the parameters.
 			try {
 				parameters = Parameters.parse( commands, getValidCommandLineFlags() );
 			} catch( InvalidParameterException exception ) {
@@ -173,6 +180,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 				return;
 			}
 
+			// Process the parameters.
 			processParameters( parameters, false );
 		} catch( Throwable programThrowable ) {
 			try {
@@ -181,6 +189,21 @@ public abstract class Service extends Agent implements ServiceProduct {
 				fatalThrowable.printStackTrace();
 			}
 		}
+	}
+
+	/**
+	 * Intended as an entry point for calling the service internally. Particularly
+	 * useful for testing purposes.
+	 * 
+	 * @param commands
+	 * @throws RuntimeException if called directly from the main() method.
+	 */
+	public synchronized void processInternal( String... commands ) {
+		// Check the calling method.
+		if( "main".equals( Thread.currentThread().getStackTrace()[2].getMethodName() ) ) throw new RuntimeException( "This method should not be called directly from the main() method!" );
+
+		// Process the commands.
+		process( commands );
 	}
 
 	@Override
@@ -227,23 +250,17 @@ public abstract class Service extends Agent implements ServiceProduct {
 	}
 
 	/**
-	 * Get the program data folder. This is the location where the program should
-	 * be able to store files that are specific to the program. This path is
-	 * operating system specific and can be different between different versions
-	 * of operating system.
-	 * <p>
-	 * Note: This folder is shared by multiple instances of the program.
-	 * <p>
-	 * Examples:
-	 * <ul>
-	 * <li>Windows 7: C:\Users\&lt;user&gt;\AppData\Roaming\&lt;program name&gt;</li>
-	 * <li>Linux: /home/&lt;user&gt;/.&lt;program id&gt;</li>
-	 * </ul>
-	 * 
-	 * @return The program data folder.
+	 * {@inheritDoc}
 	 */
-	public final File getProgramDataFolder() {
+	@Override
+	public final File getProductDataFolder() {
+		// If this location is changed then data will need to be moved from the old location to the new location.
 		return OperatingSystem.getUserProgramDataFolder( execModePrefix + card.getArtifact(), execModePrefix + getName() );
+	}
+
+	public final File getProductModuleDataFolder() {
+		// If this location is changed then data will need to be moved from the old location to the new location.
+		return new File( getProductDataFolder(), "data" );
 	}
 
 	public final TaskManager getTaskManager() {
@@ -589,7 +606,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 				// TODO Fix log file name collision when two instances run.
 				if( !parameters.isSet( LogFlag.LOG_FILE ) ) {
 					try {
-						File folder = getProgramDataFolder();
+						File folder = getProductDataFolder();
 						folder.mkdirs();
 
 						logFilePattern = new File( folder, "program.log" ).getCanonicalPath();
