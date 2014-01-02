@@ -883,6 +883,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 	 * needed while the workareas are being generated.
 	 */
 	private void registerAllModules() {
+		Log.write( Log.DEBUG, "Registering modules..." );
 		for( ServiceModule module : productManager.getModules() ) {
 			try {
 				if( getProductManager().isEnabled( module.getCard() ) ) module.register();
@@ -897,6 +898,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 	 * registered modules.
 	 */
 	private void createAllModules() {
+		Log.write( Log.DEBUG, "Creating modules..." );
 		for( ServiceModule module : productManager.getModules() ) {
 			try {
 				if( getProductManager().isEnabled( module.getCard() ) ) module.create();
@@ -911,6 +913,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 	 * application frame, workareas, and other registered modules.
 	 */
 	private void destroyAllModules() {
+		Log.write( Log.DEBUG, "Destroying modules..." );
 		for( ServiceModule module : productManager.getModules() ) {
 			try {
 				if( getProductManager().isEnabled( module.getCard() ) ) module.destroy();
@@ -925,6 +928,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 	 * that may have been allocated during program operation.
 	 */
 	private void unregisterAllModules() {
+		Log.write( Log.DEBUG, "Unregistering modules..." );
 		for( ServiceModule module : productManager.getModules() ) {
 			try {
 				if( getProductManager().isEnabled( module.getCard() ) ) module.unregister();
