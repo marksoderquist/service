@@ -409,33 +409,6 @@ public abstract class Service extends Agent implements ServiceProduct {
 		Log.write( Log.INFO, "Restarting..." );
 	}
 
-	protected URI getDescriptorUri() throws URISyntaxException {
-		URL url = getClass().getResource( DEFAULT_PRODUCT_PATH );
-		return url == null ? null : url.toURI();
-	}
-
-	protected abstract void startService( Parameters parameters ) throws Exception;
-
-	protected abstract void process( Parameters parameters ) throws Exception;
-
-	protected abstract void stopService( Parameters parameters ) throws Exception;
-
-	protected boolean requestStop() {
-		getTaskManager().submit( new ShutdownTask( this ) );
-		return true;
-	}
-
-	/**
-	 * Override this method and return a set of valid command line flags if you
-	 * want the service to validate command line flags. By default this method
-	 * returns null and allows any command line flags.
-	 * 
-	 * @return
-	 */
-	protected Set<String> getValidCommandLineFlags() {
-		return null;
-	}
-
 	/**
 	 * This method should only be called through the processParameters() method.
 	 */
@@ -443,30 +416,30 @@ public abstract class Service extends Agent implements ServiceProduct {
 	protected final void startAgent() throws Exception {
 		Log.write( Log.DEBUG, getName() + " starting..." );
 		PerformanceCheck.writeTimeAfterStart( "Service.startAgent() start" );
-
+	
 		Runtime.getRuntime().addShutdownHook( shutdownHook );
-
+	
 		// Start the peer server.
 		peerServer.startAndWait();
 		PerformanceCheck.writeTimeAfterStart( "Service.startAgent() peer server" );
-
+	
 		// Start the task manager.
 		taskManager.loadSettings( settings.getNode( ServiceSettingsPath.TASK_MANAGER_SETTINGS_PATH ) );
 		taskManager.startAndWait();
-
+	
 		// Start the product manager.
 		productManager.startAndWait();
-
+	
 		// Register the modules.
 		registerAllModules();
-
+	
 		startService( parameters );
-
+	
 		// Allocate the modules.
 		createAllModules();
-
+	
 		Log.write( getName() + " started." );
-
+	
 		// Check for updates.
 		if( !parameters.isSet( ServiceFlag.NOUPDATECHECK ) && productManager.getCheckOption() == ProductManager.CheckOption.STARTUP ) {
 			productManager.checkForUpdates();
@@ -480,22 +453,22 @@ public abstract class Service extends Agent implements ServiceProduct {
 	protected final void stopAgent() throws Exception {
 		Log.write( Log.DEBUG, getName() + " stopping..." );
 		if( socket != null ) socket.close();
-
+	
 		// Deallocate the modules.
 		destroyAllModules();
-
+	
 		stopService( parameters );
-
+	
 		// Unregister modules.
 		unregisterAllModules();
-
+	
 		productManager.stopAndWait();
-
+	
 		taskManager.stopAndWait();
 		taskManager.saveSettings( settings.getNode( ServiceSettingsPath.TASK_MANAGER_SETTINGS_PATH ) );
-
+	
 		peerServer.stopAndWait();
-
+	
 		try {
 			Runtime.getRuntime().removeShutdownHook( shutdownHook );
 		} catch( IllegalStateException exception ) {
@@ -504,15 +477,66 @@ public abstract class Service extends Agent implements ServiceProduct {
 		Log.write( getName() + " stopped." );
 	}
 
-	protected final boolean isProgramUpdated() {
-		// Get the previous release.
-		Release that = Release.decode( settings.get( "/service/release", null ) );
+	protected abstract void startService( Parameters parameters ) throws Exception;
 
-		// Set the current release.
-		settings.put( "/service/release", Release.encode( this.getCard().getRelease() ) );
+	protected abstract void process( Parameters parameters ) throws Exception;
 
-		// Return the result.
-		return that == null ? false : this.getCard().getRelease().compareTo( that ) > 0;
+	protected abstract void stopService( Parameters parameters ) throws Exception;
+
+	protected boolean requestStop() {
+		getTaskManager().submit( new ShutdownTask( this ) );
+		return true;
+	}
+
+	protected void printHeader() {
+		String summary = card.getLicenseSummary();
+	
+		printAsciiArt();
+		
+		Log.write( Log.HELP, getName() + " " + card.getRelease().toHumanString() );
+		Log.write( Log.HELP, card.getCopyright(), " ", card.getCopyrightNotice() );
+		if( summary != null ) {
+			Log.write( Log.HELP );
+			Log.write( Log.HELP, TextUtil.reline( summary, 75 ) );
+		}
+		Log.write( Log.HELP, TextUtil.pad( 75, '-' ) );
+		Log.write( Log.HELP );
+	
+		Log.write( Log.TRACE, "Java: " + System.getProperty( "java.runtime.version" ) );
+	
+		Log.write( Log.DEBUG, "Classpath: " );
+		try {
+			List<URI> uris = JavaUtil.parseClasspath( System.getProperty( "java.class.path" ) );
+			for( URI uri : uris ) {
+				Log.write( Log.DEBUG, "  ", uri );
+			}
+		} catch( URISyntaxException exception ) {
+			Log.write( exception );
+		}
+	}
+
+	protected void printAsciiArt() {
+		Log.write( Log.HELP, TextUtil.pad( 75, '-' ) );
+	}
+
+	protected void printStatus() {
+		Log.write( Log.HELP, getName() + " status: " + getStatus() );
+	}
+
+	protected URI getDescriptorUri() throws URISyntaxException {
+		URL url = getClass().getResource( DEFAULT_PRODUCT_PATH );
+		return url == null ? null : url.toURI();
+	}
+
+	/**
+	 * Override this method and return a set of valid command line flags if you
+	 * want the service to validate command line flags. By default this method
+	 * returns null and allows any command line flags.
+	 * 
+	 * @return
+	 */
+	protected Set<String> getValidCommandLineFlags() {
+		return null;
 	}
 
 	private static void setLocale( Parameters parameters ) {
@@ -793,36 +817,6 @@ public abstract class Service extends Agent implements ServiceProduct {
 			System.setProperty( "java.net.preferIPv4Stack", "true" );
 			System.clearProperty( "java.net.preferIPv6Addresses" );
 		}
-	}
-
-	protected void printHeader() {
-		String summary = card.getLicenseSummary();
-
-		Log.write( Log.HELP, TextUtil.pad( 75, '-' ) );
-		Log.write( Log.HELP, getName() + " " + card.getRelease().toHumanString() );
-		Log.write( Log.HELP, card.getCopyright(), " ", card.getCopyrightNotice() );
-		if( summary != null ) {
-			Log.write( Log.HELP );
-			Log.write( Log.HELP, TextUtil.reline( summary, 75 ) );
-		}
-		Log.write( Log.HELP, TextUtil.pad( 75, '-' ) );
-		Log.write( Log.HELP );
-
-		Log.write( Log.TRACE, "Java: " + System.getProperty( "java.runtime.version" ) );
-
-		Log.write( Log.DEBUG, "Classpath: " );
-		try {
-			List<URI> uris = JavaUtil.parseClasspath( System.getProperty( "java.class.path" ) );
-			for( URI uri : uris ) {
-				Log.write( Log.DEBUG, "  ", uri );
-			}
-		} catch( URISyntaxException exception ) {
-			Log.write( exception );
-		}
-	}
-
-	private final void printStatus() {
-		Log.write( getName() + " status: " + getStatus() );
 	}
 
 	private final boolean peerExists( Parameters parameters ) {
