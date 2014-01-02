@@ -42,7 +42,6 @@ import com.parallelsymmetry.utility.JavaUtil;
 import com.parallelsymmetry.utility.OperatingSystem;
 import com.parallelsymmetry.utility.Parameters;
 import com.parallelsymmetry.utility.PerformanceCheck;
-import com.parallelsymmetry.utility.Release;
 import com.parallelsymmetry.utility.TextUtil;
 import com.parallelsymmetry.utility.agent.Agent;
 import com.parallelsymmetry.utility.agent.ServerAgent;
@@ -520,7 +519,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 	}
 
 	protected void printStatus() {
-		Log.write( Log.HELP, getName() + " status: " + getStatus() );
+		Log.write( Log.INFO, getName() + " status: " + getStatus() );
 	}
 
 	protected URI getDescriptorUri() throws URISyntaxException {
