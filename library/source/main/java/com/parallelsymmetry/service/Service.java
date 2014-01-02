@@ -415,30 +415,30 @@ public abstract class Service extends Agent implements ServiceProduct {
 	protected final void startAgent() throws Exception {
 		Log.write( Log.DEBUG, getName() + " starting..." );
 		PerformanceCheck.writeTimeAfterStart( "Service.startAgent() start" );
-	
+
 		Runtime.getRuntime().addShutdownHook( shutdownHook );
-	
+
 		// Start the peer server.
 		peerServer.startAndWait();
 		PerformanceCheck.writeTimeAfterStart( "Service.startAgent() peer server" );
-	
+
 		// Start the task manager.
 		taskManager.loadSettings( settings.getNode( ServiceSettingsPath.TASK_MANAGER_SETTINGS_PATH ) );
 		taskManager.startAndWait();
-	
+
 		// Start the product manager.
 		productManager.startAndWait();
-	
+
 		// Register the modules.
 		registerAllModules();
-	
+
 		startService( parameters );
-	
+
 		// Allocate the modules.
 		createAllModules();
-	
+
 		Log.write( getName() + " started." );
-	
+
 		// Check for updates.
 		if( !parameters.isSet( ServiceFlag.NOUPDATECHECK ) && productManager.getCheckOption() == ProductManager.CheckOption.STARTUP ) {
 			productManager.checkForUpdates();
@@ -452,22 +452,22 @@ public abstract class Service extends Agent implements ServiceProduct {
 	protected final void stopAgent() throws Exception {
 		Log.write( Log.DEBUG, getName() + " stopping..." );
 		if( socket != null ) socket.close();
-	
+
 		// Deallocate the modules.
 		destroyAllModules();
-	
+
 		stopService( parameters );
-	
+
 		// Unregister modules.
 		unregisterAllModules();
-	
+
 		productManager.stopAndWait();
-	
+
 		taskManager.stopAndWait();
 		taskManager.saveSettings( settings.getNode( ServiceSettingsPath.TASK_MANAGER_SETTINGS_PATH ) );
-	
+
 		peerServer.stopAndWait();
-	
+
 		try {
 			Runtime.getRuntime().removeShutdownHook( shutdownHook );
 		} catch( IllegalStateException exception ) {
@@ -489,9 +489,9 @@ public abstract class Service extends Agent implements ServiceProduct {
 
 	protected void printHeader() {
 		String summary = card.getLicenseSummary();
-	
+
 		printAsciiArt();
-		
+
 		Log.write( Log.HELP, getName() + " " + card.getRelease().toHumanString() );
 		Log.write( Log.HELP, card.getCopyright(), " ", card.getCopyrightNotice() );
 		if( summary != null ) {
@@ -500,9 +500,9 @@ public abstract class Service extends Agent implements ServiceProduct {
 		}
 		Log.write( Log.HELP, TextUtil.pad( 75, '-' ) );
 		Log.write( Log.HELP );
-	
+
 		Log.write( Log.TRACE, "Java: " + System.getProperty( "java.runtime.version" ) );
-	
+
 		Log.write( Log.DEBUG, "Classpath: " );
 		try {
 			List<URI> uris = JavaUtil.parseClasspath( System.getProperty( "java.class.path" ) );
@@ -978,16 +978,16 @@ public abstract class Service extends Agent implements ServiceProduct {
 		}
 
 		private final int getServicePortNumber() {
-			return service.getSettings().getInt( "/service/port", 0 );
+			return service.getSettings().getInt( ServiceSettingsPath.PRODUCT_PORT, 0 );
 		}
 
 		private final void storeServicePortNumber() {
-			service.getSettings().putInt( "/service/port", getLocalPort() );
+			service.getSettings().putInt( ServiceSettingsPath.PRODUCT_PORT, getLocalPort() );
 			service.getSettings().flush();
 		}
 
 		private final void resetServicePortNumber() {
-			service.getSettings().put( "/service/port", null );
+			service.getSettings().putInt( ServiceSettingsPath.PRODUCT_PORT, -1 );
 			service.getSettings().flush();
 		}
 
