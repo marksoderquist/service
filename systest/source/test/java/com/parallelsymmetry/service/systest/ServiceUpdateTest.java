@@ -47,7 +47,7 @@ public class ServiceUpdateTest extends BaseTestCase {
 
 		// Configure file locations.
 		File verifyLogFile = new File( INSTALL, "verify.log" );
-		File updateLogFile = new File( service.getProductDataFolder(), "updater.log" );
+		File updateLogFile = new File( service.getDataFolder(), "updater.log" );
 
 		// Remove old log file.
 		assertTrue( FileUtil.delete( updateLogFile ) );
@@ -85,7 +85,7 @@ public class ServiceUpdateTest extends BaseTestCase {
 			assertTrue( "Program exit not detected", ( serviceIndex = TextUtil.findLineIndex( applyLogLines, PROGRAM_EXITING, serviceIndex ) ) >= 0 );
 
 			// Check the updater log for correct entries.
-			File update = new File( service.getProductDataFolder(), ProductManager.UPDATE_FOLDER_NAME + "/" + service.getProductManager().getStagedUpdateFileName( service.getCard() ) );
+			File update = new File( service.getDataFolder(), ProductManager.UPDATE_FOLDER_NAME + "/" + service.getProductManager().getStagedUpdateFileName( service.getCard() ) );
 
 			Log.write( Log.TRACE, "Looking for: " + "[I] <timestamp> Successful update: " + update.getCanonicalPath() );
 			try {

@@ -59,7 +59,7 @@ public abstract class ServiceModule implements ServiceProduct, Comparable<Servic
 	 * {@inheritDoc}
 	 */
 	@Override
-	public File getProductDataFolder() {
+	public File getDataFolder() {
 		return new File( service.getProductModuleDataFolder(), card.getProductKey() );
 	}
 

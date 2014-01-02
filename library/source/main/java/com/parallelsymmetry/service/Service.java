@@ -253,14 +253,19 @@ public abstract class Service extends Agent implements ServiceProduct {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public final File getProductDataFolder() {
+	public final File getDataFolder() {
+		// If this location is changed then data will need to be moved from the old location to the new location.
+		return getServiceDataFolder();
+	}
+	
+	public final File getServiceDataFolder() {
 		// If this location is changed then data will need to be moved from the old location to the new location.
 		return OperatingSystem.getUserProgramDataFolder( execModePrefix + card.getArtifact(), execModePrefix + getName() );
 	}
 
 	public final File getProductModuleDataFolder() {
 		// If this location is changed then data will need to be moved from the old location to the new location.
-		return new File( getProductDataFolder(), "data" );
+		return new File( getServiceDataFolder(), "data" );
 	}
 
 	public final TaskManager getTaskManager() {
@@ -606,7 +611,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 				// TODO Fix log file name collision when two instances run.
 				if( !parameters.isSet( LogFlag.LOG_FILE ) ) {
 					try {
-						File folder = getProductDataFolder();
+						File folder = getDataFolder();
 						folder.mkdirs();
 
 						logFilePattern = new File( folder, "program.log" ).getCanonicalPath();

@@ -475,7 +475,7 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	public File getProductInstallFolder( ProductCard card ) {
-		File installFolder = new File( service.getProductDataFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
+		File installFolder = new File( service.getDataFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
 		return new File( installFolder, card.getGroup() + "." + card.getArtifact() );
 	}
 
@@ -490,7 +490,7 @@ public class ProductManager extends Agent implements Persistent {
 	public int stageSelectedUpdates( Set<ProductCard> updateCards ) throws IOException {
 		if( updateCards.size() == 0 ) return 0;
 
-		File stageFolder = new File( service.getProductDataFolder(), UPDATE_FOLDER_NAME );
+		File stageFolder = new File( service.getDataFolder(), UPDATE_FOLDER_NAME );
 		stageFolder.mkdirs();
 
 		Log.write( Log.TRACE, "Number of packs to stage: " + updateCards.size() );
@@ -658,7 +658,7 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Specify where to put the updater log.
 		builder.command().add( LogFlag.LOG_FILE );
-		builder.command().add( new File( service.getProductDataFolder(), "updater.log" ).getAbsolutePath() );
+		builder.command().add( new File( service.getDataFolder(), "updater.log" ).getAbsolutePath() );
 		builder.command().add( LogFlag.LOG_DATE );
 		builder.command().add( LogFlag.LOG_FILE_APPEND );
 
@@ -871,7 +871,7 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Define the product folders.
 		homeProductFolder = new File( service.getHomeFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
-		userProductFolder = new File( service.getProductDataFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
+		userProductFolder = new File( service.getDataFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
 
 		// Load products.
 		loadModules( new File[] { homeProductFolder, userProductFolder } );

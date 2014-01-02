@@ -24,6 +24,6 @@ public interface Product {
 	 * 
 	 * @return The program data folder.
 	 */
-	File getProductDataFolder();
+	File getDataFolder();
 	
 }

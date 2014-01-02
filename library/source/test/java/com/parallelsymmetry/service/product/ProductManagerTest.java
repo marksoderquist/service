@@ -152,7 +152,7 @@ public class ProductManagerTest extends BaseServiceTest {
 
 	@Test
 	public void testStagePostedUpdates() throws Exception {
-		File stageFolder = new File( service.getProductDataFolder(), ProductManager.UPDATE_FOLDER_NAME );
+		File stageFolder = new File( service.getDataFolder(), ProductManager.UPDATE_FOLDER_NAME );
 		File updateFile = new File( stageFolder, manager.getStagedUpdateFileName( service.getCard() ) );
 
 		// Cleanup from previous run.
