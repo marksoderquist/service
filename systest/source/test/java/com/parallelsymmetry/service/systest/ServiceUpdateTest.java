@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import com.parallelsymmetry.service.Service;
 import com.parallelsymmetry.service.ServiceFlag;
 import com.parallelsymmetry.service.ServiceFlagValue;
 import com.parallelsymmetry.service.ServiceSettingsPath;
@@ -47,7 +48,7 @@ public class ServiceUpdateTest extends BaseTestCase {
 
 		// Configure file locations.
 		File verifyLogFile = new File( INSTALL, "verify.log" );
-		File updateLogFile = new File( service.getDataFolder(), "updater.log" );
+		File updateLogFile = new File( new File( service.getDataFolder(), Service.LOG_FOLDER_NAME ), ProductManager.UPDATER_LOG_NAME );
 
 		// Remove old log file.
 		assertTrue( FileUtil.delete( updateLogFile ) );
