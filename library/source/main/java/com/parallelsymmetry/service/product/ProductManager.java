@@ -27,6 +27,7 @@ import com.parallelsymmetry.service.ServiceSettingsPath;
 import com.parallelsymmetry.service.product.ProductManagerEvent.Type;
 import com.parallelsymmetry.service.task.DescriptorDownloadTask;
 import com.parallelsymmetry.service.task.DownloadTask;
+import com.parallelsymmetry.updater.Updater;
 import com.parallelsymmetry.updater.UpdaterFlag;
 import com.parallelsymmetry.utility.Descriptor;
 import com.parallelsymmetry.utility.FileUtil;
@@ -157,9 +158,7 @@ public class ProductManager extends Agent implements Persistent {
 		// Register included products.
 		includedProducts = new HashSet<String>();
 		includedProducts.add( service.getCard().getProductKey() );
-
-		// FIXME The product key should come from a product card. Need to fix updater first.
-		includedProducts.add( "com.parallelsymmetry.updater" );
+		includedProducts.add( new Updater().getCard().getProductKey() );
 
 		// Create the posted update cache.
 		postedUpdateCache = new CopyOnWriteArraySet<ProductCard>();
