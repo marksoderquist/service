@@ -49,7 +49,7 @@ public class VerifyService extends Service {
 		Level level = Log.getLevel();
 		Log.setLevel( Log.ALL );
 		Log.write( "Sample log messages:" );
-		Log.write( Log.DEVEL, "Devel message." );
+		Log.write( Log.DEVEL, "Development message." );
 		Log.write( Log.ERROR, "Error message." );
 		Log.write( Log.WARN, "Warning message." );
 		Log.write( Log.INFO, "Information message." );
