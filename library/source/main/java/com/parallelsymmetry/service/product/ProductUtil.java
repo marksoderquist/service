@@ -4,6 +4,7 @@ import java.text.MessageFormat;
 
 import com.parallelsymmetry.service.Service;
 import com.parallelsymmetry.utility.Bundles;
+import com.parallelsymmetry.utility.product.Product;
 import com.parallelsymmetry.utility.product.ProductCard;
 import com.parallelsymmetry.utility.setting.SettingProvider;
 import com.parallelsymmetry.utility.setting.Settings;
