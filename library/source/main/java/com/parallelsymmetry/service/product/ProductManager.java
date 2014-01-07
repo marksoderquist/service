@@ -84,6 +84,8 @@ public class ProductManager extends Agent implements Persistent {
 
 	public static final String UPDATER_JAR_NAME = "updater.jar";
 
+	public static final String UPDATER_LOG_NAME = "updater.log";
+
 	public static final String UPDATE_FOLDER_NAME = "updates";
 
 	private static final String CHECK = "check";
@@ -475,7 +477,7 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	public File getProductInstallFolder( ProductCard card ) {
-		File installFolder = new File( service.getDataFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
+		File installFolder = new File( service.getDataFolder(), Service.MODULE_INSTALL_FOLDER_NAME );
 		return new File( installFolder, card.getGroup() + "." + card.getArtifact() );
 	}
 
@@ -639,6 +641,9 @@ public class ProductManager extends Agent implements Persistent {
 		File updaterSource = updater;
 		File updaterTarget = new File( FileUtil.TEMP_FOLDER, service.getCard().getArtifact() + "-updater.jar" );
 
+		File updaterLogFolder = new File( service.getDataFolder(), Service.LOG_FOLDER_NAME );
+		File updaterLogFile = new File( updaterLogFolder, UPDATER_LOG_NAME );
+
 		if( updaterSource == null || !updaterSource.exists() ) throw new RuntimeException( "Update library not found: " + updaterSource );
 		if( !FileUtil.copy( updaterSource, updaterTarget ) ) throw new RuntimeException( "Update library not staged: " + updaterTarget );
 
@@ -658,7 +663,7 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Specify where to put the updater log.
 		builder.command().add( LogFlag.LOG_FILE );
-		builder.command().add( new File( service.getDataFolder(), "updater.log" ).getAbsolutePath() );
+		builder.command().add( updaterLogFile.getAbsolutePath() );
 		builder.command().add( LogFlag.LOG_DATE );
 		builder.command().add( LogFlag.LOG_FILE_APPEND );
 
@@ -870,8 +875,8 @@ public class ProductManager extends Agent implements Persistent {
 		timer = new Timer();
 
 		// Define the product folders.
-		homeProductFolder = new File( service.getHomeFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
-		userProductFolder = new File( service.getDataFolder(), Service.PRODUCT_INSTALL_FOLDER_NAME );
+		homeProductFolder = new File( service.getHomeFolder(), Service.MODULE_INSTALL_FOLDER_NAME );
+		userProductFolder = new File( service.getDataFolder(), Service.MODULE_INSTALL_FOLDER_NAME );
 
 		// Load products.
 		loadModules( new File[] { homeProductFolder, userProductFolder } );

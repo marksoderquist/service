@@ -64,7 +64,11 @@ import com.parallelsymmetry.utility.task.TaskManager;
 
 public abstract class Service extends Agent implements ServiceProduct {
 
-	public static final String PRODUCT_INSTALL_FOLDER_NAME = "products";
+	public static final String MODULE_INSTALL_FOLDER_NAME = "modules";
+
+	public static final String LOG_FOLDER_NAME = "logs";
+
+	public static final String PROGRAM_LOG_PATH = LOG_FOLDER_NAME + "/program.log";
 
 	protected static final String DEFAULT_PRODUCT_PATH = "/META-INF/product.xml";
 
@@ -106,7 +110,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 
 	private File home;
 
-	private String logFilePattern;
+	private File logFilePattern;
 
 	private PeerServer peerServer;
 
@@ -257,7 +261,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 		// If this location is changed then data will need to be moved from the old location to the new location.
 		return getServiceDataFolder();
 	}
-	
+
 	public final File getServiceDataFolder() {
 		// If this location is changed then data will need to be moved from the old location to the new location.
 		return OperatingSystem.getUserProgramDataFolder( execModePrefix + card.getArtifact(), execModePrefix + getName() );
@@ -608,14 +612,13 @@ public abstract class Service extends Agent implements ServiceProduct {
 			if( !peer ) {
 				Log.config( parameters );
 
-				// TODO Fix log file name collision when two instances run.
+				// TODO Fix log file name collision when two non-peer instances run.
 				if( !parameters.isSet( LogFlag.LOG_FILE ) ) {
 					try {
-						File folder = getDataFolder();
-						folder.mkdirs();
+						logFilePattern = new File( getDataFolder(), PROGRAM_LOG_PATH );
+						logFilePattern.getParentFile().mkdirs();
 
-						logFilePattern = new File( folder, "program.log" ).getCanonicalPath();
-						FileHandler handler = new FileHandler( logFilePattern, parameters.isTrue( LogFlag.LOG_FILE_APPEND ) );
+						FileHandler handler = new FileHandler( logFilePattern.getCanonicalPath(), parameters.isTrue( LogFlag.LOG_FILE_APPEND ) );
 						handler.setLevel( Log.getLevel() );
 						if( parameters.isSet( LogFlag.LOG_FILE_LEVEL ) ) handler.setLevel( Log.parseLevel( parameters.get( LogFlag.LOG_FILE_LEVEL ) ) );
 
