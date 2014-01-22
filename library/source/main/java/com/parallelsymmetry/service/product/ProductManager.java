@@ -710,7 +710,7 @@ public class ProductManager extends Agent implements Persistent {
 		builder.command().add( System.getProperty( "user.dir" ) );
 
 		// Configure the builder with elevated privilege commands.
-		if( elevate ) OperatingSystem.elevateProcessBuilder( builder );
+		if( elevate ) OperatingSystem.elevateProcessBuilder( service.getName(), builder );
 
 		// Print the process commands.
 		Log.write( Log.DEBUG, "Launch updater: " + TextUtil.toString( builder.command(), " " ) );
