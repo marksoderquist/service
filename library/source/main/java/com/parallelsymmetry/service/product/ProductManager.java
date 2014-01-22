@@ -665,6 +665,8 @@ public class ProductManager extends Agent implements Persistent {
 		builder.command().add( updaterLogFile.getAbsolutePath() );
 		builder.command().add( LogFlag.LOG_DATE );
 		builder.command().add( LogFlag.LOG_FILE_APPEND );
+		builder.command().add( LogFlag.LOG_LEVEL );
+		builder.command().add( Log.getLevel().getName() );
 
 		// Add the updates.
 		builder.command().add( UpdaterFlag.UPDATE );
