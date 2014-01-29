@@ -184,6 +184,8 @@ public abstract class Service extends Agent implements ServiceProduct {
 				return;
 			}
 
+			configureExecMode( parameters );
+
 			// Process the parameters.
 			processParameters( parameters, false );
 		} catch( Throwable programThrowable ) {
@@ -601,8 +603,6 @@ public abstract class Service extends Agent implements ServiceProduct {
 	 */
 	private final void processParameters( Parameters parameters, boolean peer ) {
 		if( this.parameters == null ) this.parameters = parameters;
-
-		configureExecMode( parameters );
 
 		Log.write( Log.DEBUG, "Processing parameters: " + parameters.toString() );
 		PerformanceCheck.writeTimeAfterStart( "Service.processParameters() start" );
