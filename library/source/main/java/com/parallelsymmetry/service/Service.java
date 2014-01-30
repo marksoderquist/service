@@ -72,7 +72,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 
 	protected static final String DEFAULT_PRODUCT_PATH = "/META-INF/product.xml";
 
-	protected static final String DEFAULT_SETTINGS_PATH = "/META-INF/settings.xml";
+	protected static final String DEFAULT_SETTINGS_PATH = "/settings/default.xml";
 
 	private static final String JAVA_VERSION_MINIMUM = "1.6";
 
@@ -520,7 +520,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 	protected void printHeader() {
 		String summary = card.getLicenseSummary();
 
-		printAsciiArt();
+		printAsciiArtTitle();
 
 		Log.write( Log.HELP, getName() + " " + card.getRelease().toHumanString() );
 		Log.write( Log.HELP, card.getCopyright(), " ", card.getCopyrightNotice() );
@@ -544,7 +544,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 		}
 	}
 
-	protected void printAsciiArt() {
+	protected void printAsciiArtTitle() {
 		Log.write( Log.HELP, TextUtil.pad( 75, '-' ) );
 	}
 
