@@ -146,13 +146,19 @@ public abstract class Service extends Agent implements ServiceProduct {
 
 		// Create the settings object.
 		settings = new Settings();
+		InputStream input = null;
 		try {
-			InputStream input = getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH );
+			input = getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH );
 			defaultSettingProvider = new BaseSettingProvider( new DescriptorSettingProvider( new Descriptor( input ) ) );
 			settings.setDefaultProvider( defaultSettingProvider );
-			input.close();
 		} catch( Exception exception ) {
 			Log.write( exception );
+		} finally {
+			try {
+				input.close();
+			} catch( IOException exception ) {
+				Log.write( exception );
+			}
 		}
 
 		peerServer = new PeerServer( this );
