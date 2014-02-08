@@ -29,7 +29,7 @@ public class ServiceProxySelector extends ProxySelector {
 
 	@Override
 	public List<Proxy> select( URI uri ) {
-		Log.write( Log.DEBUG, "Select proxy for: " + uri );
+		Log.write( Log.DETAIL, "Select proxy for: " + uri );
 
 		List<Proxy> proxies = new ArrayList<Proxy>();
 
