@@ -43,6 +43,7 @@ import com.parallelsymmetry.utility.OperatingSystem;
 import com.parallelsymmetry.utility.Parameters;
 import com.parallelsymmetry.utility.PerformanceCheck;
 import com.parallelsymmetry.utility.TextUtil;
+import com.parallelsymmetry.utility.ThreadUtil;
 import com.parallelsymmetry.utility.agent.Agent;
 import com.parallelsymmetry.utility.agent.ServerAgent;
 import com.parallelsymmetry.utility.agent.Worker;
@@ -498,6 +499,9 @@ public abstract class Service extends Agent implements ServiceProduct {
 		unregisterAllModules();
 
 		productManager.stopAndWait();
+		
+		// Give the program time to wrap up before shutting down the task manager.
+		ThreadUtil.pause( 100 );
 
 		taskManager.stopAndWait();
 		taskManager.saveSettings( settings.getNode( ServiceSettingsPath.TASK_MANAGER_SETTINGS_PATH ) );
