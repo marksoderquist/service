@@ -1095,6 +1095,13 @@ public class ProductManager extends Agent implements Persistent {
 	 * @throws Exception
 	 */
 	private ServiceModule loadClasspathModule( ProductCard card, URL classpath, URI codebase, ClassLoader parent ) throws Exception {
+		String suffix = "target/main/java/";
+		String path = classpath.toString();
+		if( path.endsWith( suffix ) ) {
+			String installFolder = path.substring( 0, path.length() - suffix.length() );
+			card.setInstallFolder( new File( URI.create( installFolder ) ) );
+		}
+
 		ModuleClassLoader loader = new ModuleClassLoader( new URL[] { classpath }, parent, codebase );
 		ServiceModule module = loadModule( card, loader, "CP", false, false );
 		return module;
