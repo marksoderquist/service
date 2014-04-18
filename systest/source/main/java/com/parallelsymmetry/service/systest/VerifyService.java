@@ -41,9 +41,9 @@ public class VerifyService extends Service {
 		// ---------0--------1---------2---------3---------4---------5---------6---------7---------8
 		// ---------12345678901234567890123456789012345678901234567890123456789012345678901234567890
 		Log.write();
-		Log.write( "Welcome to the Verfiy service. The Verfiy service is provided for reference" );
-		Log.write( "purposes only. Please note the Verfiy service automatically stops after five" );
-		Log.write( "seconds regardless of what parameters are specified on the command line." );
+		Log.write( "Welcome to the Verify service. The Verify service is provided for reference" );
+		Log.write( "purposes only. Please note the Verify service automatically stops after " + AUTO_TERMINATE_TIMEOUT );
+		Log.write( "milliseconds regardless of what parameters are specified on the command line." );
 		Log.write();
 
 		Level level = Log.getLevel();

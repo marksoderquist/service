@@ -11,6 +11,10 @@
 	<provider>${project.organization.name}</provider>
 	<inception>${project.inceptionYear}</inception>
 
+	<copyright>
+		<notice>All rights reserved.</notice>
+	</copyright>
+
 	<resources>
 		<java version="1.6" />
 		<pack uri="sandbox/update.jar" />
