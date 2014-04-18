@@ -905,6 +905,10 @@ public class ProductManager extends Agent implements Persistent {
 			if( service.getParameters().isSet( ServiceFlag.NOUPDATECHECK ) ) return;
 
 			switch( checkOption ) {
+				case MANUAL:
+					break;
+				case STARTUP:
+					break;
 				case INTERVAL: {
 					task = new UpdateCheckTask( service );
 					// TODO Schedule the task by interval.
@@ -915,6 +919,8 @@ public class ProductManager extends Agent implements Persistent {
 					// TODO Schedule the task by schedule.
 					break;
 				}
+				default:
+					break;
 			}
 
 			Log.write( Log.DEBUG, "Update task scheduled." );
