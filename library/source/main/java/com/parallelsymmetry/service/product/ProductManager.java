@@ -678,6 +678,8 @@ public class ProductManager extends Agent implements Persistent {
 		// Add the launch parameters.
 		builder.command().add( UpdaterFlag.LAUNCH );
 		builder.command().add( OperatingSystem.getJavaExecutableName() );
+		builder.command().add( UpdaterFlag.LAUNCH_DELAY );
+		builder.command().add( "500" );
 
 		// Add the VM parameters to the commands.
 		RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
