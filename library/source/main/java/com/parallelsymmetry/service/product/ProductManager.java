@@ -676,8 +676,6 @@ public class ProductManager extends Agent implements Persistent {
 		}
 
 		// Add the launch parameters.
-		builder.command().add( UpdaterFlag.LAUNCH_DELAY );
-		builder.command().add( "200" );
 		builder.command().add( UpdaterFlag.LAUNCH );
 		builder.command().add( OperatingSystem.getJavaExecutableName() );
 
