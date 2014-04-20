@@ -20,6 +20,8 @@ public final class ProductResource {
 
 	private File file;
 
+	private Throwable throwable;
+
 	public ProductResource( ProductResource.Type type, URI uri ) {
 		this.type = type;
 		this.uri = uri;
@@ -43,6 +45,14 @@ public final class ProductResource {
 
 	public void setFuture( Future<Download> future ) {
 		this.future = future;
+	}
+
+	public Throwable getThrowable() {
+		return throwable;
+	}
+
+	public void setThrowable( Throwable throwable ) {
+		this.throwable = throwable;
 	}
 
 	@Override

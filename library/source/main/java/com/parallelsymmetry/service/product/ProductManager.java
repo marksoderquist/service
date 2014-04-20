@@ -216,6 +216,8 @@ public class ProductManager extends Agent implements Persistent {
 		// Download the product resources.
 		Map<ProductCard, Set<ProductResource>> productResources = downloadProductResources( cards );
 
+		// TODO All the product resources may not have been successfully downloaded.
+
 		// Install the products.
 		Set<InstalledProduct> installedProducts = new HashSet<InstalledProduct>();
 		for( ProductCard card : cards ) {
@@ -472,7 +474,8 @@ public class ProductManager extends Agent implements Persistent {
 	 */
 	public int stagePostedUpdates() throws Exception {
 		if( !isEnabled() ) return 0;
-		return stageSelectedUpdates( getPostedUpdates() );
+		stageSelectedUpdates( getPostedUpdates() );
+		return updates.size();
 	}
 
 	public File getProductInstallFolder( ProductCard card ) {
@@ -488,8 +491,10 @@ public class ProductManager extends Agent implements Persistent {
 	 * @return true if one or more product packs were staged.
 	 * @throws Exception
 	 */
-	public int stageSelectedUpdates( Set<ProductCard> updateCards ) throws IOException {
-		if( updateCards.size() == 0 ) return 0;
+	public Map<ProductCard, Set<ProductResource>> stageSelectedUpdates( Set<ProductCard> updateCards ) throws IOException {
+		Map<ProductCard, Set<ProductResource>> productResources = new HashMap<ProductCard, Set<ProductResource>>();
+
+		if( updateCards.size() == 0 ) return null;
 
 		File stageFolder = new File( service.getDataFolder(), UPDATE_FOLDER_NAME );
 		stageFolder.mkdirs();
@@ -498,11 +503,15 @@ public class ProductManager extends Agent implements Persistent {
 		Log.write( Log.DEBUG, "Pack stage folder: " + stageFolder );
 
 		// Download the product resources.
-		Map<ProductCard, Set<ProductResource>> productResources = downloadProductResources( updateCards );
+		productResources = downloadProductResources( updateCards );
 
 		// Create an update for each product.
 		for( ProductCard updateCard : updateCards ) {
 			ProductCard productCard = productCards.get( updateCard.getProductKey() );
+
+			// Verify the resources have all been staged successfully.
+			Set<ProductResource> resources = productResources.get( updateCard );
+			if( !validateResources( resources ) ) continue;
 
 			File installFolder = productCard.getInstallFolder();
 			boolean installFolderValid = installFolder != null && installFolder.exists();
@@ -537,7 +546,15 @@ public class ProductManager extends Agent implements Persistent {
 		}
 		saveSettings( settings );
 
-		return updates.size();
+		return productResources;
+	}
+
+	private boolean validateResources( Set<ProductResource> resources ) {
+		for( ProductResource resource : resources ) {
+			if( resource.getThrowable() != null ) return false;
+		}
+
+		return true;
 	}
 
 	public String getStagedUpdateFileName( ProductCard card ) {
@@ -1033,7 +1050,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	private void copyProductResources( Set<ProductResource> resources, File folder ) throws IOException {
 		if( resources == null ) return;
-		
+
 		for( ProductResource resource : resources ) {
 			if( resource.getLocalFile() == null ) continue;
 			switch( resource.getType() ) {
@@ -1074,20 +1091,20 @@ public class ProductManager extends Agent implements Persistent {
 				Log.write( exception );
 			}
 		}
-		
-		// FIXME Failed downloads are not staged correctly.
 
 		// Wait for all resources to be downloaded.
 		for( ProductCard card : cards ) {
-			for( ProductResource resource : productResources.get( card ) ) {
+			Set<ProductResource> resources = productResources.get( card );
+			for( ProductResource resource : resources ) {
 				try {
 					resource.waitFor();
 					Log.write( Log.DEBUG, "Resource target: " + resource.getLocalFile() );
 
 					// TODO Verify resources are secure by checking digital signatures.
 					// Reference: http://docs.oracle.com/javase/6/docs/technotes/guides/security/crypto/HowToImplAProvider.html#CheckJARFile
+
 				} catch( Exception exception ) {
-					productResources.remove( card );
+					resource.setThrowable( exception );
 					Log.write( exception );
 				}
 			}
