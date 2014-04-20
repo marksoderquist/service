@@ -17,7 +17,7 @@ import com.parallelsymmetry.utility.task.Task;
 
 public class DownloadTask extends Task<Download> {
 	
-	public static final int DEFAULT_CONNECTION_TIMEOUT = 10000;
+	public static final int DEFAULT_CONNECTION_TIMEOUT = 5000;
 
 	private URI uri;
 
