@@ -1032,6 +1032,8 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	private void copyProductResources( Set<ProductResource> resources, File folder ) throws IOException {
+		if( resources == null ) return;
+		
 		for( ProductResource resource : resources ) {
 			if( resource.getLocalFile() == null ) continue;
 			switch( resource.getType() ) {
