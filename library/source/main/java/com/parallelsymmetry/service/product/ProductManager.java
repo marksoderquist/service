@@ -1072,6 +1072,8 @@ public class ProductManager extends Agent implements Persistent {
 				Log.write( exception );
 			}
 		}
+		
+		// FIXME Failed downloads are not staged correctly.
 
 		// Wait for all resources to be downloaded.
 		for( ProductCard card : cards ) {
@@ -1083,6 +1085,7 @@ public class ProductManager extends Agent implements Persistent {
 					// TODO Verify resources are secure by checking digital signatures.
 					// Reference: http://docs.oracle.com/javase/6/docs/technotes/guides/security/crypto/HowToImplAProvider.html#CheckJARFile
 				} catch( Exception exception ) {
+					productResources.remove( card );
 					Log.write( exception );
 				}
 			}
