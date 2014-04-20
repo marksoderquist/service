@@ -715,7 +715,7 @@ public class ProductManager extends Agent implements Persistent {
 		if( elevate ) OperatingSystem.elevateProcessBuilder( service.getName(), builder );
 
 		// Print the process commands.
-		Log.write( Log.DEBUG, "Launch updater: " + TextUtil.toString( builder.command(), " " ) );
+		Log.write( Log.INFO, "Launch updater: " + TextUtil.toString( builder.command(), " " ) );
 
 		// Start the process.
 		builder.start();
