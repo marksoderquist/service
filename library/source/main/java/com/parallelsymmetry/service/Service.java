@@ -240,18 +240,6 @@ public abstract class Service extends Agent implements ServiceProduct {
 		defaultSettingProvider.addProvider( provider );
 	}
 
-	public SettingProvider addDefaultSettings( InputStream input ) {
-		DescriptorSettingProvider provider = null;
-		try {
-			Descriptor descriptor = new Descriptor( input );
-			provider = new DescriptorSettingProvider( descriptor );
-		} catch( IOException exception ) {
-			Log.write( exception );
-		}
-		addDefaultSettings( provider );
-		return provider;
-	}
-
 	public void removeDefaultSettings( SettingProvider provider ) {
 		if( provider == null ) return;
 		defaultSettingProvider.removeProvider( provider );
