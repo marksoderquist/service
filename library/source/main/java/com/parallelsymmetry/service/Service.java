@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
@@ -237,6 +238,18 @@ public abstract class Service extends Agent implements ServiceProduct {
 	public void addDefaultSettings( SettingProvider provider ) {
 		if( provider == null ) return;
 		defaultSettingProvider.addProvider( provider );
+	}
+
+	public SettingProvider addDefaultSettings( InputStream input ) {
+		DescriptorSettingProvider provider = null;
+		try {
+			Descriptor descriptor = new Descriptor( input );
+			provider = new DescriptorSettingProvider( descriptor );
+		} catch( IOException exception ) {
+			Log.write( exception );
+		}
+		addDefaultSettings( provider );
+		return provider;
 	}
 
 	public void removeDefaultSettings( SettingProvider provider ) {
