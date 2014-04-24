@@ -4,7 +4,6 @@ import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
@@ -147,19 +146,13 @@ public abstract class Service extends Agent implements ServiceProduct {
 
 		// Create the settings object.
 		settings = new Settings();
-		InputStream input = null;
 		try {
-			input = getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH );
-			defaultSettingProvider = new BaseSettingProvider( new DescriptorSettingProvider( new Descriptor( input ) ) );
+			Descriptor descriptor = new Descriptor( getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH ) );
+			DescriptorSettingProvider settingProvider = new DescriptorSettingProvider( descriptor );
+			defaultSettingProvider = new BaseSettingProvider( settingProvider );
 			settings.setDefaultProvider( defaultSettingProvider );
 		} catch( Exception exception ) {
 			Log.write( exception );
-		} finally {
-			try {
-				input.close();
-			} catch( IOException exception ) {
-				Log.write( exception );
-			}
 		}
 
 		peerServer = new PeerServer( this );
@@ -499,7 +492,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 		unregisterAllModules();
 
 		productManager.stopAndWait();
-		
+
 		// Give the program time to wrap up before shutting down the task manager.
 		ThreadUtil.pause( 100 );
 
