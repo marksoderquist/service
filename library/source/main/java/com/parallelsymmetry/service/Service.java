@@ -1050,10 +1050,8 @@ public abstract class Service extends Agent implements ServiceProduct {
 			// Read the parameters from the input stream.
 			try {
 				input = new ObjectInputStream( socket.getInputStream() );
-
-				Log.write( Log.TRACE, "Parameters read from peer." );
-
 				Parameters parameters = Parameters.parse( (String[])input.readObject() );
+				Log.write( Log.TRACE, "Parameters read from peer: ", parameters );
 
 				// Set up the peer log handler.
 				logHandler = new PeerLogHandler( this, socket.getOutputStream() );
