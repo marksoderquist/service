@@ -8,6 +8,8 @@ public interface ServiceFlag extends CommonFlag {
 
 	public static final String EXECMODE = "-execmode";
 	
+	public static final String LOCALE = "-locale";
+	
 	public static final String NOUPDATE = "-noupdate";
 
 	public static final String NOUPDATECHECK = "-noupdatecheck";

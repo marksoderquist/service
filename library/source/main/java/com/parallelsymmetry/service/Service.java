@@ -4,7 +4,6 @@ import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
@@ -19,6 +18,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.InvalidParameterException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -79,7 +79,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 
 	private static final String PEER_LOGGER_NAME = "peer";
 
-	public static final String LOCALE = "locale";
+	//public static final String LOCALE = "locale";
 
 	public static final String TEST_PREFIX = "$";
 
@@ -569,11 +569,37 @@ public abstract class Service extends Agent implements ServiceProduct {
 	 * @return
 	 */
 	protected Set<String> getValidCommandLineFlags() {
-		return null;
+		Set<String> flags = new HashSet<String>();
+
+		flags.add( LogFlag.LOG_TAG );
+		flags.add( LogFlag.LOG_COLOR );
+		flags.add( LogFlag.LOG_DATE );
+		flags.add( LogFlag.LOG_PREFIX );
+		flags.add( LogFlag.LOG_LEVEL );
+		flags.add( LogFlag.LOG_FILE );
+		flags.add( LogFlag.LOG_FILE_LEVEL );
+		flags.add( LogFlag.LOG_FILE_APPEND );
+
+		flags.add( ServiceFlag.ARTIFACT );
+		flags.add( ServiceFlag.EXECMODE );
+		flags.add( ServiceFlag.HOME );
+		flags.add( ServiceFlag.LOCALE );
+
+		flags.add( ServiceFlag.HELP );
+		flags.add( ServiceFlag.VERSION );
+		flags.add( ServiceFlag.STATUS );
+		flags.add( ServiceFlag.RESTART );
+		flags.add( ServiceFlag.STOP );
+		flags.add( ServiceFlag.WATCH );
+		flags.add( ServiceFlag.SETTINGS_RESET );
+		flags.add( ServiceFlag.NOUPDATE );
+		flags.add( ServiceFlag.NOUPDATECHECK );
+
+		return flags;
 	}
 
 	private static void setLocale( Parameters parameters ) {
-		String locale = parameters.get( LOCALE );
+		String locale = parameters.get( ServiceFlag.LOCALE );
 
 		String[] parts = locale.split( "_" );
 
@@ -608,7 +634,6 @@ public abstract class Service extends Agent implements ServiceProduct {
 	private final void processParameters( Parameters parameters, boolean peer ) {
 		if( this.parameters == null ) this.parameters = parameters;
 
-		Log.write( Log.DEBUG, "Processing parameters: " + parameters.toString() );
 		PerformanceCheck.writeTimeAfterStart( "Service.processParameters() start" );
 
 		try {
@@ -636,10 +661,12 @@ public abstract class Service extends Agent implements ServiceProduct {
 				}
 
 				// Set the locale.
-				if( parameters.isSet( LOCALE ) ) setLocale( parameters );
+				if( parameters.isSet( ServiceFlag.LOCALE ) ) setLocale( parameters );
 
 				// Print the program header.
 				if( !isRunning() ) printHeader();
+
+				Log.write( Log.TRACE, "Processing parameters: " + parameters.toString() );
 
 				// Verify Java environment.
 				if( !checkJava( parameters ) ) return;
