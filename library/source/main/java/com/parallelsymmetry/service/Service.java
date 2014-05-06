@@ -698,20 +698,22 @@ public abstract class Service extends Agent implements ServiceProduct {
 			}
 
 			// This logic is not trivial, the nested if statements help clarify it.
-			if( !peer & !parameters.isSet( ServiceFlag.NOUPDATE ) ) {
-				int updateResult = productManager.updateProduct();
+			if( !peer ) {
+				if( !parameters.isSet( ServiceFlag.NOUPDATE ) ) {
+					int updateResult = productManager.updateProduct();
 
-				if( updateResult > 0 ) {
-					// The program should be allowed, but not forced, to exit at this point.
-					Log.write( "Program exiting to apply updates." );
+					if( updateResult > 0 ) {
+						// The program should be allowed, but not forced, to exit at this point.
+						Log.write( "Program exiting to apply updates." );
 
-					// Do not call System.exit() or Runtime.getRuntime().exit(). Just return.
-					return;
+						// Do not call System.exit() or Runtime.getRuntime().exit(). Just return.
+						return;
+					}
 				}
-			}
 
-			// Start the program.
-			startAndWait();
+				// Start the program.
+				startAndWait();
+			}
 
 			// Process parameters.
 			process( parameters );
