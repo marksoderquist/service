@@ -512,7 +512,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 
 	protected abstract void startService( Parameters parameters ) throws Exception;
 
-	protected abstract void process( Parameters parameters ) throws Exception;
+	protected abstract void process( Parameters parameters, boolean peer ) throws Exception;
 
 	protected abstract void stopService( Parameters parameters ) throws Exception;
 
@@ -716,7 +716,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 			}
 
 			// Process parameters.
-			process( parameters );
+			process( parameters, peer );
 		} catch( Exception exception ) {
 			Log.write( exception );
 			return;

@@ -37,7 +37,7 @@ public class VerifyService extends Service {
 	}
 
 	@Override
-	protected void process( Parameters parameters ) throws Exception {
+	protected void process( Parameters parameters, boolean peer ) throws Exception {
 		// ---------0--------1---------2---------3---------4---------5---------6---------7---------8
 		// ---------12345678901234567890123456789012345678901234567890123456789012345678901234567890
 		Log.write();

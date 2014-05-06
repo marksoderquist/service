@@ -45,7 +45,7 @@ public class MockService extends Service {
 	}
 
 	@Override
-	protected void process( Parameters parameters ) throws Exception {}
+	protected void process( Parameters parameters, boolean peer ) throws Exception {}
 
 	@Override
 	protected void stopService( Parameters parameters ) throws Exception {
