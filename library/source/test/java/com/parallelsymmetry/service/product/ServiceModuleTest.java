@@ -27,7 +27,7 @@ public class ServiceModuleTest extends BaseTestCase {
 		URL url = getClass().getResource( TEST_MODULE_DESCRIPTOR_PATH );
 		module = new MockModule( service, new ProductCard( url.toURI(), new Descriptor( url ) ) );
 	}
-	
+
 	@Test
 	public void testGetService() throws Exception {
 		assertEquals( service, module.getService() );

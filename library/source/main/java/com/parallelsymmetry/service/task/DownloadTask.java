@@ -16,13 +16,13 @@ import com.parallelsymmetry.utility.log.Log;
 import com.parallelsymmetry.utility.task.Task;
 
 public class DownloadTask extends Task<Download> {
-	
+
 	public static final int DEFAULT_CONNECTION_TIMEOUT = 5000;
 
 	private URI uri;
 
 	private File target;
-	
+
 	private int timeout = DEFAULT_CONNECTION_TIMEOUT;
 
 	private Set<DownloadListener> listeners;

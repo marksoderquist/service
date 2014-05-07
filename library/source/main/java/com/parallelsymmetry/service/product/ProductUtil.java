@@ -33,7 +33,7 @@ public class ProductUtil {
 	public static final void addSettingsProvider( Service service, Product product, SettingProvider provider ) {
 		service.getSettings().addProvider( provider, getSettingsPath( product ) );
 	}
-	
+
 	public static final void removeSettingsProvider( Service service, Product product, SettingProvider provider ) {
 		service.getSettings().removeProvider( provider );
 	}
