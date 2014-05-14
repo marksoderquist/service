@@ -73,11 +73,13 @@ public class RestartShutdownHook extends Thread {
 				builder.command().add( value );
 			}
 		}
-		
+
 		// Add the collected URIs.
-		builder.command().add( "--" );
-		for( String uri : uris ) {
-			builder.command().add( uri );
+		if( uris.size() > 0 ) {
+			builder.command().add( "--" );
+			for( String uri : uris ) {
+				builder.command().add( uri );
+			}
 		}
 
 		Log.write( Log.DEVEL, "Restart command: ", TextUtil.toString( builder.command(), " " ) );
