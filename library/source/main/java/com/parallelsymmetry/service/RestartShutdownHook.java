@@ -5,10 +5,14 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.parallelsymmetry.utility.JavaUtil;
 import com.parallelsymmetry.utility.OperatingSystem;
+import com.parallelsymmetry.utility.Parameters;
 import com.parallelsymmetry.utility.TextUtil;
 import com.parallelsymmetry.utility.log.Log;
 
@@ -32,8 +36,8 @@ public class RestartShutdownHook extends Thread {
 		}
 
 		// Add the classpath information.
-		List<URI> uris = JavaUtil.getClasspath();
-		boolean jar = uris.size() == 1 && uris.get( 0 ).getPath().endsWith( ".jar" );
+		List<URI> classpath = JavaUtil.getClasspath();
+		boolean jar = classpath.size() == 1 && classpath.get( 0 ).getPath().endsWith( ".jar" );
 		if( jar ) {
 			builder.command().add( "-jar" );
 		} else {
@@ -42,17 +46,41 @@ public class RestartShutdownHook extends Thread {
 		builder.command().add( runtimeBean.getClassPath() );
 		if( !jar ) builder.command().add( service.getClass().getName() );
 
-		// Add original program commands.
-		for( String command : service.getParameters().getOriginalCommands() ) {
-			if( !builder.command().contains( command ) ) builder.command().add( command );
+		Parameters overrideParameters = Parameters.parse( commands );
+
+		// Collect program flags.
+		Map<String, List<String>> flags = new HashMap<String, List<String>>();
+		for( String name : service.getParameters().getFlags() ) {
+			flags.put( name, service.getParameters().getValues( name ) );
+		}
+		for( String name : overrideParameters.getFlags() ) {
+			flags.put( name, overrideParameters.getValues( name ) );
 		}
 
-		// Add additional program commands.
-		for( String command : commands ) {
-			if( !builder.command().contains( command ) ) builder.command().add( command );
+		// Collect program URIs.
+		List<String> uris = new ArrayList<String>();
+		for( String uri : service.getParameters().getUris() ) {
+			if( !uris.contains( uri ) ) uris.add( uri );
+		}
+		for( String uri : overrideParameters.getUris() ) {
+			if( !uris.contains( uri ) ) uris.add( uri );
 		}
 
-		Log.write( Log.DEBUG, "Restart command: ", TextUtil.toString( builder.command(), " " ) );
+		// Add the collected flags.
+		for( String flag : flags.keySet() ) {
+			builder.command().add( flag );
+			for( String value : flags.get( flag ) ) {
+				builder.command().add( value );
+			}
+		}
+		
+		// Add the collected URIs.
+		builder.command().add( "--" );
+		for( String uri : uris ) {
+			builder.command().add( uri );
+		}
+
+		Log.write( Log.DEVEL, "Restart command: ", TextUtil.toString( builder.command(), " " ) );
 	}
 
 	@Override
