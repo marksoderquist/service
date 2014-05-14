@@ -18,7 +18,7 @@ public class RestartShutdownHook extends Thread {
 
 	private Service service;
 
-	public RestartShutdownHook( Service service, String... programCommands ) {
+	public RestartShutdownHook( Service service, String... commands ) {
 		super( "RestartHook" );
 		this.service = service;
 
@@ -27,9 +27,8 @@ public class RestartShutdownHook extends Thread {
 
 		// Add the VM parameters to the commands.
 		RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
-		List<String> commands = runtimeBean.getInputArguments();
-		for( String command : commands ) {
-			builder.command().add( command );
+		for( String command : runtimeBean.getInputArguments() ) {
+			if( !builder.command().contains( command ) ) builder.command().add( command );
 		}
 
 		// Add the classpath information.
@@ -43,14 +42,14 @@ public class RestartShutdownHook extends Thread {
 		builder.command().add( runtimeBean.getClassPath() );
 		if( !jar ) builder.command().add( service.getClass().getName() );
 
-		// Add the original command line parameters.
+		// Add original program commands.
 		for( String command : service.getParameters().getCommands() ) {
-			builder.command().add( command );
+			if( !builder.command().contains( command ) ) builder.command().add( command );
 		}
 
-		// Add program arguments.
-		for( String command : programCommands ) {
-			builder.command().add( command );
+		// Add additional program commands.
+		for( String command : commands ) {
+			if( !builder.command().contains( command ) ) builder.command().add( command );
 		}
 
 		Log.write( Log.DEBUG, "Restart command: ", TextUtil.toString( builder.command(), " " ) );
