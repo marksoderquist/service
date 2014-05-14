@@ -43,7 +43,7 @@ public class RestartShutdownHook extends Thread {
 		if( !jar ) builder.command().add( service.getClass().getName() );
 
 		// Add original program commands.
-		for( String command : service.getParameters().getCommands() ) {
+		for( String command : service.getParameters().getOriginalCommands() ) {
 			if( !builder.command().contains( command ) ) builder.command().add( command );
 		}
 

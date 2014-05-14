@@ -894,7 +894,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 				Log.write( Log.TRACE, "Connected to peer: " + peer );
 
 				ObjectOutputStream output = new ObjectOutputStream( socket.getOutputStream() );
-				output.writeObject( parameters.getCommands() );
+				output.writeObject( parameters.getOriginalCommands() );
 				output.flush();
 				Log.write( Log.TRACE, "Parameters sent to peer." );
 			} catch( ConnectException exception ) {

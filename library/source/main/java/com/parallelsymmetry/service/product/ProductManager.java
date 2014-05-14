@@ -717,7 +717,7 @@ public class ProductManager extends Agent implements Persistent {
 		builder.command().add( runtimeBean.getClassPath() );
 
 		// Add the original command line parameters.
-		for( String command : service.getParameters().getCommands() ) {
+		for( String command : service.getParameters().getOriginalCommands() ) {
 			if( command.startsWith( Parameters.SINGLE ) ) {
 				builder.command().add( "\\" + command );
 			} else {
