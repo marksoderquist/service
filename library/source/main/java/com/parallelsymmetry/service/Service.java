@@ -69,7 +69,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 
 	public static final String LOG_FOLDER_NAME = "logs";
 
-	public static final String PROGRAM_LOG_PATH = LOG_FOLDER_NAME + "/program.log";
+	public static final String LOG_FILE_PATTERN = "program.%u.log";
 
 	protected static final String DEFAULT_PRODUCT_PATH = "/META-INF/product.xml";
 
@@ -111,7 +111,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 
 	private File home;
 
-	private File logFilePattern;
+	private String logFilePattern;
 
 	private PeerServer peerServer;
 
@@ -644,10 +644,16 @@ public abstract class Service extends Agent implements ServiceProduct {
 				// TODO Fix log file name collision when two non-peer instances run.
 				if( !parameters.isSet( LogFlag.LOG_FILE ) ) {
 					try {
-						logFilePattern = new File( getDataFolder(), PROGRAM_LOG_PATH );
-						logFilePattern.getParentFile().mkdirs();
+						File folder = new File( getDataFolder(), LOG_FOLDER_NAME );
+						folder.getParentFile().mkdirs();
 
-						FileHandler handler = new FileHandler( logFilePattern.getCanonicalPath(), parameters.isTrue( LogFlag.LOG_FILE_APPEND ) );
+						StringBuilder pattern = new StringBuilder( folder.getCanonicalPath() );
+						pattern.append( File.separatorChar );
+						pattern.append( LOG_FILE_PATTERN );
+
+						logFilePattern = pattern.toString();
+
+						FileHandler handler = new FileHandler( logFilePattern, parameters.isTrue( LogFlag.LOG_FILE_APPEND ) );
 						handler.setLevel( Log.getLevel() );
 						if( parameters.isSet( LogFlag.LOG_FILE_LEVEL ) ) handler.setLevel( Log.parseLevel( parameters.get( LogFlag.LOG_FILE_LEVEL ) ) );
 
