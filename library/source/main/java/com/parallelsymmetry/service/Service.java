@@ -34,6 +34,7 @@ import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
 import com.parallelsymmetry.service.product.ProductManager;
+import com.parallelsymmetry.service.product.ProductUtil;
 import com.parallelsymmetry.service.product.ServiceModule;
 import com.parallelsymmetry.service.product.ServiceProduct;
 import com.parallelsymmetry.utility.Descriptor;
@@ -1044,19 +1045,22 @@ public abstract class Service extends Agent implements ServiceProduct {
 		}
 
 		private final int getServicePortNumber() {
-			int result = service.getSettings().getInt( ServiceSettingsPath.PRODUCT_PORT, service.port );
+			Settings productSettings = ProductUtil.getSettings( service );
+			int result = productSettings.getInt( "port", service.port );
 			if( result < 0 || result > 65535 ) result = service.port;
 			return result;
 		}
 
 		private final void storeServicePortNumber() {
-			service.getSettings().putInt( ServiceSettingsPath.PRODUCT_PORT, getLocalPort() );
-			service.getSettings().flush();
+			Settings productSettings = ProductUtil.getSettings( service );
+			productSettings.putInt( "port", getLocalPort() );
+			productSettings.flush();
 		}
 
 		private final void resetServicePortNumber() {
-			service.getSettings().putInt( ServiceSettingsPath.PRODUCT_PORT, service.port );
-			service.getSettings().flush();
+			Settings productSettings = ProductUtil.getSettings( service );
+			productSettings.putInt( "port", service.port );
+			productSettings.flush();
 		}
 
 	}

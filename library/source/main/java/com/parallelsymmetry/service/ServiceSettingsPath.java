@@ -2,11 +2,6 @@ package com.parallelsymmetry.service;
 
 public interface ServiceSettingsPath {
 
-	// Product paths.
-	public static final String PRODUCT_PORT = "/product/port";
-
-	public static final String PRODUCT_RELEASE = "/product/release";
-
 	// Manager paths.
 	public static final String MANAGER_SETTINGS_ROOT = "/manager";
 
