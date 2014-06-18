@@ -25,6 +25,10 @@ public class ProductUtil {
 	public static final Settings getSettings( ServiceProduct product ) {
 		return product.getService().getSettings().getNode( getSettingsPath( product ) );
 	}
+	
+	public static final Settings getSettings( Service service, Product product ) {
+		return service.getSettings().getNode( getSettingsPath( product ) );
+	}
 
 	public static final Settings getSettings( Service service, ProductCard card ) {
 		return service.getSettings().getNode( getSettingsPath( card ) );
