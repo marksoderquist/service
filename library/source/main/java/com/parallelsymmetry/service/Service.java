@@ -1023,9 +1023,10 @@ public abstract class Service extends Agent implements ServiceProduct {
 
 		@Override
 		protected void handleSocket( Socket socket ) throws IOException {
-			String peer = socket.getInetAddress().getHostAddress() + ":" + socket.getPort();
-			Log.write( Log.TRACE, "Peer connected: ", peer );
-			PeerHandler handler = new PeerHandler( peer, service, socket );
+			String peerRemote = socket.getInetAddress().getHostAddress() + ":" + socket.getPort();
+			String peerLocal = socket.getLocalAddress().getHostAddress() + ":" + socket.getLocalPort();
+			Log.write( Log.TRACE, "Peer connected from: ", peerRemote, " to ", peerLocal );
+			PeerHandler handler = new PeerHandler( peerRemote, service, socket );
 			handlers.add( handler );
 			handler.start();
 		}
@@ -1090,7 +1091,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 			try {
 				input = new ObjectInputStream( socket.getInputStream() );
 				Parameters parameters = Parameters.parse( (String[])input.readObject() );
-				Log.write( Log.TRACE, "Parameters read from peer: ", parameters );
+				Log.write( Log.TRACE, "Peer parameters: ", parameters );
 
 				// Set up the peer log handler.
 				logHandler = new PeerLogHandler( this, socket.getOutputStream() );
