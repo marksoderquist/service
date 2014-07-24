@@ -646,7 +646,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 				if( !parameters.isSet( LogFlag.LOG_FILE ) ) {
 					try {
 						File folder = new File( getDataFolder(), LOG_FOLDER_NAME );
-						folder.getParentFile().mkdirs();
+						folder.mkdirs();
 
 						StringBuilder pattern = new StringBuilder( folder.getCanonicalPath() );
 						pattern.append( File.separatorChar );
