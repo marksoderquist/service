@@ -1201,6 +1201,7 @@ public class ProductManager extends Agent implements Persistent {
 			//Constructor<?> constructor = moduleClass.getConstructor( Service.class, ProductCard.class );
 
 			Constructor<?> constructor = findConstructor( moduleClass );
+			if( constructor == null ) throw new NoSuchMethodException( "Module constructor not found: " + JavaUtil.getClassName( className ) + "( Service, ProductCard )" );
 
 			module = (ServiceModule)constructor.newInstance( service, card );
 			registerModule( module, updatable, removable );
