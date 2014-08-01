@@ -776,23 +776,23 @@ public class ProductManager extends Agent implements Persistent {
 			// Look for simple modules (not common).
 			File[] jars = folder.listFiles( FileUtil.JAR_FILE_FILTER );
 			for( File jar : jars ) {
-				Log.write( Log.DEBUG, "Searching for simple module: " + jar.toURI() );
+				Log.write( Log.DEBUG, "Searching for module in: " + jar.toURI() );
 				URI uri = URI.create( "jar:" + jar.toURI().toASCIIString() + "!/" + PRODUCT_DESCRIPTOR_PATH );
 				ProductCard card = new ProductCard( jar.getParentFile().toURI(), new Descriptor( uri ) );
 				loadSimpleModule( card, jar.toURI(), parent );
 			}
 
-			// Look for complex modules (most common).
+			// Look for normal modules (most common).
 			File[] moduleFolders = folder.listFiles( FileUtil.FOLDER_FILTER );
 			for( File moduleFolder : moduleFolders ) {
-				Log.write( Log.DEBUG, "Searching for complex module: " + moduleFolder.toURI() );
+				Log.write( Log.DEBUG, "Searching for module in: " + moduleFolder.toURI() );
 
 				jars = moduleFolder.listFiles( FileUtil.JAR_FILE_FILTER );
 				for( File jar : jars ) {
 					try {
 						URI uri = URI.create( "jar:" + jar.toURI().toASCIIString() + "!/" + PRODUCT_DESCRIPTOR_PATH );
 						ProductCard card = new ProductCard( jar.getParentFile().toURI(), new Descriptor( uri ) );
-						loadComplexModule( card, moduleFolder.toURI(), parent );
+						loadNormalModule( card, moduleFolder.toURI(), parent );
 					} catch( FileNotFoundException exception ) {
 						// Not finding a product card is a common situation with dependencies.
 					} catch( Throwable throwable ) {
@@ -1131,7 +1131,7 @@ public class ProductManager extends Agent implements Persistent {
 		}
 
 		ModuleClassLoader loader = new ModuleClassLoader( new URL[] { classpath }, parent, codebase );
-		ServiceModule module = loadModule( card, loader, "CP", false, false );
+		ServiceModule module = loadModule( card, loader, "CLASSPATH", false, false );
 		return module;
 	}
 
@@ -1153,11 +1153,11 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Create the class loader.
 		ModuleClassLoader loader = new ModuleClassLoader( new URL[] { jarfile.toURI().toURL() }, parent, codebase );
-		return loadModule( card, loader, "SM", true, true );
+		return loadModule( card, loader, "SIMPLE", true, true );
 	}
 
 	/**
-	 * A complex module, the most common, is entirely contained in a folder.
+	 * A normal module, the most common, is entirely contained in a folder.
 	 * 
 	 * @param descriptor
 	 * @param moduleFolderUri
@@ -1165,7 +1165,7 @@ public class ProductManager extends Agent implements Persistent {
 	 * @return
 	 * @throws Exception
 	 */
-	private ServiceModule loadComplexModule( ProductCard card, URI moduleFolderUri, ClassLoader parent ) throws Exception {
+	private ServiceModule loadNormalModule( ProductCard card, URI moduleFolderUri, ClassLoader parent ) throws Exception {
 		// Get the folder to load from.
 		File folder = new File( moduleFolderUri );
 		card.setInstallFolder( folder );
@@ -1179,7 +1179,7 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Create the class loader.
 		ModuleClassLoader loader = new ModuleClassLoader( urls.toArray( new URL[urls.size()] ), parent, moduleFolderUri );
-		return loadModule( card, loader, "LX", true, true );
+		return loadModule( card, loader, "NORMAL", true, true );
 	}
 
 	private ServiceModule loadModule( ProductCard card, ModuleClassLoader loader, String source, boolean updatable, boolean removable ) throws Exception {
@@ -1197,11 +1197,9 @@ public class ProductManager extends Agent implements Persistent {
 		// Load the module.
 		try {
 			Log.write( Log.DEBUG, "Loading ", source, " module: ", card.getProductKey() );
-			Class<?> moduleClass = loader.loadClass( className );
-			//Constructor<?> constructor = moduleClass.getConstructor( Service.class, ProductCard.class );
 
+			Class<?> moduleClass = loader.loadClass( className );
 			Constructor<?> constructor = findConstructor( moduleClass );
-			if( constructor == null ) throw new NoSuchMethodException( "Module constructor not found: " + JavaUtil.getClassName( className ) + "( Service, ProductCard )" );
 
 			module = (ServiceModule)constructor.newInstance( service, card );
 			registerModule( module, updatable, removable );
@@ -1220,13 +1218,18 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Look for a constructor that has assignable parameters.
 		Constructor<?>[] constructors = moduleClass.getConstructors();
+		if( constructors.length == 0 ) throw new NoSuchMethodException( "No constructors found: " + moduleClass.getName() );
+
 		for( Constructor<?> constructor : constructors ) {
+			Log.write( Log.DEVEL, "Checking constructor: ", constructor.toString() );
 			Class<?>[] types = constructor.getParameterTypes();
 			if( types.length == 2 && Service.class.isAssignableFrom( types[0] ) && ProductCard.class.isAssignableFrom( types[1] ) ) {
 				result = constructor;
 				break;
 			}
 		}
+
+		if( result == null ) throw new NoSuchMethodException( "Module constructor not found: " + JavaUtil.getClassName( moduleClass ) + "( Service, ProductCard )" );
 
 		return result;
 	}
