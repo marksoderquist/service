@@ -1223,6 +1223,9 @@ public class ProductManager extends Agent implements Persistent {
 		for( Constructor<?> constructor : constructors ) {
 			Log.write( Log.DEVEL, "Checking constructor: ", constructor.toString() );
 			Class<?>[] types = constructor.getParameterTypes();
+
+			Log.write( Log.DEVEL, "Checking values:  length: ", types.length, "  instanceof Service: ", Service.class.isAssignableFrom( types[0] ), "  instanceof ProductCard: ", ProductCard.class.isAssignableFrom( types[1] ) );
+
 			if( types.length == 2 && Service.class.isAssignableFrom( types[0] ) && ProductCard.class.isAssignableFrom( types[1] ) ) {
 				result = constructor;
 				break;
