@@ -1214,23 +1214,34 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	private Constructor<?> findConstructor( Class<?> moduleClass ) throws NoSuchMethodException, SecurityException {
-		Constructor<?> result = null;
-
 		// Look for a constructor that has assignable parameters.
 		Constructor<?>[] constructors = moduleClass.getConstructors();
 		if( constructors.length == 0 ) throw new NoSuchMethodException( "No constructors found: " + moduleClass.getName() );
 
 		for( Constructor<?> constructor : constructors ) {
 			Class<?>[] types = constructor.getParameterTypes();
-			if( types.length == 2 && Service.class.isAssignableFrom( types[0] ) && ProductCard.class.isAssignableFrom( types[1] ) ) {
-				result = constructor;
-				break;
+
+			if( types.length != 2 ) continue;
+
+			boolean nameService = Service.class.getName().equals( types[0].getName() );
+			boolean nameProductCard = ProductCard.class.getName().equals( types[1].getName() );
+			boolean instanceofService = Service.class.isAssignableFrom( types[0] );
+			boolean instanceofProductCard = ProductCard.class.isAssignableFrom( types[1] );
+			
+			if( nameService && !instanceofService ) {
+				Log.write( Log.WARN, "Class name matched but not not assignable: ", Service.class.getName() );
+				Log.write( Log.WARN, "This is usually due to a copy of service.jar in the module folder." );
 			}
+			
+			if( nameProductCard && !instanceofProductCard ) {
+				Log.write( Log.WARN, "Class name matched but not not assignable: ", ProductCard.class.getName() );
+				Log.write( Log.WARN, "This is usually due to a copy of service.jar in the module folder." );
+			}
+			
+			if( instanceofService && instanceofProductCard ) return constructor;
 		}
 
-		if( result == null ) throw new NoSuchMethodException( "Module constructor not found: " + JavaUtil.getClassName( moduleClass ) + "( Service, ProductCard )" );
-
-		return result;
+		throw new NoSuchMethodException( "Module constructor not found: " + JavaUtil.getClassName( moduleClass ) + "( Service, ProductCard )" );
 	}
 
 	private void registerModule( ServiceModule module, boolean updatable, boolean removable ) {
