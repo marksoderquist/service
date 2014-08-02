@@ -1229,19 +1229,19 @@ public class ProductManager extends Agent implements Persistent {
 			boolean instanceofProductCard = ProductCard.class.isAssignableFrom( types[1] );
 			
 			if( nameService && !instanceofService ) {
-				Log.write( Log.WARN, "Class name matched but not not assignable: ", Service.class.getName() );
+				Log.write( Log.WARN, "Class name matched but not assignable: ", Service.class.getName() );
 				Log.write( Log.WARN, "This is usually due to a copy of service.jar in the module folder." );
 			}
 			
 			if( nameProductCard && !instanceofProductCard ) {
-				Log.write( Log.WARN, "Class name matched but not not assignable: ", ProductCard.class.getName() );
-				Log.write( Log.WARN, "This is usually due to a copy of service.jar in the module folder." );
+				Log.write( Log.WARN, "Class name matched but not assignable: ", ProductCard.class.getName() );
+				Log.write( Log.WARN, "This is usually due to a copy of utility.jar in the module folder." );
 			}
 			
 			if( instanceofService && instanceofProductCard ) return constructor;
 		}
 
-		throw new NoSuchMethodException( "Module constructor not found: " + JavaUtil.getClassName( moduleClass ) + "( Service, ProductCard )" );
+		throw new NoSuchMethodException( "Module constructor not found: " + JavaUtil.getClassName( moduleClass ) + "( " + JavaUtil.getClassName( Service.class) + ", " + JavaUtil.getClassName( ProductCard.class ) + " )" );
 	}
 
 	private void registerModule( ServiceModule module, boolean updatable, boolean removable ) {
