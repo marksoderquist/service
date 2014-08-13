@@ -507,6 +507,13 @@ public abstract class Service extends Agent implements ServiceProduct {
 			// Intentionally ignore exception.
 		}
 		Log.write( getName() + " stopped." );
+
+		/*
+		 * Start the JvmSureStop to force the JVM to halt after a reasonable amount
+		 * of time if the JVM does not exit cleanly.
+		 */
+		// FIXME This causes a problem running the unit tests because the unit test JVM does not exit.
+		new JvmSureStop().start();
 	}
 
 	protected abstract void startService( Parameters parameters ) throws Exception;
