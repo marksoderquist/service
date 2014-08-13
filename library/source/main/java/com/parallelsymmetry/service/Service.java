@@ -86,8 +86,6 @@ public abstract class Service extends Agent implements ServiceProduct {
 
 	public static final String DEVL_PREFIX = "#";
 
-	private static RestartShutdownHook restartShutdownHook;
-
 	private Thread shutdownHook = new ShutdownHook( this );
 
 	private Parameters parameters = Parameters.create();
@@ -427,7 +425,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 	 */
 	public void serviceRestart( String... commands ) {
 		// Register a shutdown hook to restart the application.
-		restartShutdownHook = new RestartShutdownHook( this, commands );
+		RestartShutdownHook restartShutdownHook = new RestartShutdownHook( this, commands );
 		Runtime.getRuntime().addShutdownHook( restartShutdownHook );
 
 		// Request the program stop.
