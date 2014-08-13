@@ -43,6 +43,7 @@ import com.parallelsymmetry.utility.JavaUtil;
 import com.parallelsymmetry.utility.OperatingSystem;
 import com.parallelsymmetry.utility.Parameters;
 import com.parallelsymmetry.utility.PerformanceCheck;
+import com.parallelsymmetry.utility.TestUtil;
 import com.parallelsymmetry.utility.TextUtil;
 import com.parallelsymmetry.utility.ThreadUtil;
 import com.parallelsymmetry.utility.agent.Agent;
@@ -510,10 +511,10 @@ public abstract class Service extends Agent implements ServiceProduct {
 
 		/*
 		 * Start the JvmSureStop to force the JVM to halt after a reasonable amount
-		 * of time if the JVM does not exit cleanly.
+		 * of time if the JVM does not exit cleanly. Do this only when not running
+		 * the unit tests.
 		 */
-		// FIXME This causes a problem running the unit tests because the unit test JVM does not exit.
-		new JvmSureStop().start();
+		if( !TestUtil.isTest() ) new JvmSureStop().start();
 	}
 
 	protected abstract void startService( Parameters parameters ) throws Exception;
