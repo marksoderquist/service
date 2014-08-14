@@ -736,7 +736,7 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Start the process.
 		builder.start();
-		Log.write( Log.TRACE, "Update process started." );
+		Log.write( Log.TRACE, "Updater process started." );
 
 		// Store the update count because the collection will be cleared.
 		int count = updates.size();
