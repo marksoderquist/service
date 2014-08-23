@@ -663,12 +663,6 @@ public class ProductManager extends Agent implements Persistent {
 		if( updaterSource == null || !updaterSource.exists() ) throw new RuntimeException( "Update library not found: " + updaterSource );
 		if( !FileUtil.copy( updaterSource, updaterTarget ) ) throw new RuntimeException( "Update library not staged: " + updaterTarget );
 
-		// Check if process elevation is necessary.
-		boolean elevate = false;
-		for( ProductUpdate update : updates.values() ) {
-			elevate |= !FileUtil.isWritable( update.getTarget() );
-		}
-
 		// Start the updater in a new JVM.
 		ProcessBuilder builder = new ProcessBuilder();
 		builder.directory( updaterTarget.getParentFile() );
@@ -727,9 +721,6 @@ public class ProductManager extends Agent implements Persistent {
 
 		builder.command().add( UpdaterFlag.LAUNCH_HOME );
 		builder.command().add( System.getProperty( "user.dir" ) );
-
-		// Configure the builder with elevated privilege commands.
-		if( elevate ) OperatingSystem.elevateProcessBuilder( service.getName(), builder );
 
 		// Print the process commands.
 		Log.write( Log.INFO, "Launch updater: " + TextUtil.toString( builder.command(), " " ) );
