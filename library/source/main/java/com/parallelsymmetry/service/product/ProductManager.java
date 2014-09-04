@@ -21,6 +21,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import com.parallelsymmetry.service.JvmSureStop;
 import com.parallelsymmetry.service.Service;
 import com.parallelsymmetry.service.ServiceFlag;
 import com.parallelsymmetry.service.ServiceSettingsPath;
@@ -679,6 +680,10 @@ public class ProductManager extends Agent implements Persistent {
 		builder.command().add( LogFlag.LOG_LEVEL );
 		builder.command().add( Log.getLevel().getName() );
 
+		// Specify the update start delay.
+		builder.command().add( UpdaterFlag.UPDATE_DELAY );
+		builder.command().add( String.valueOf( JvmSureStop.JVM_SURE_STOP_DELAY ) );
+
 		// Add the updates.
 		builder.command().add( UpdaterFlag.UPDATE );
 		for( ProductUpdate update : updates.values() ) {
@@ -1218,21 +1223,21 @@ public class ProductManager extends Agent implements Persistent {
 			boolean nameProductCard = ProductCard.class.getName().equals( types[1].getName() );
 			boolean instanceofService = Service.class.isAssignableFrom( types[0] );
 			boolean instanceofProductCard = ProductCard.class.isAssignableFrom( types[1] );
-			
+
 			if( nameService && !instanceofService ) {
 				Log.write( Log.WARN, "Class name matched but not assignable: ", Service.class.getName() );
 				Log.write( Log.WARN, "This is usually due to a copy of service.jar in the module folder." );
 			}
-			
+
 			if( nameProductCard && !instanceofProductCard ) {
 				Log.write( Log.WARN, "Class name matched but not assignable: ", ProductCard.class.getName() );
 				Log.write( Log.WARN, "This is usually due to a copy of utility.jar in the module folder." );
 			}
-			
+
 			if( instanceofService && instanceofProductCard ) return constructor;
 		}
 
-		throw new NoSuchMethodException( "Module constructor not found: " + JavaUtil.getClassName( moduleClass ) + "( " + JavaUtil.getClassName( Service.class) + ", " + JavaUtil.getClassName( ProductCard.class ) + " )" );
+		throw new NoSuchMethodException( "Module constructor not found: " + JavaUtil.getClassName( moduleClass ) + "( " + JavaUtil.getClassName( Service.class ) + ", " + JavaUtil.getClassName( ProductCard.class ) + " )" );
 	}
 
 	private void registerModule( ServiceModule module, boolean updatable, boolean removable ) {
