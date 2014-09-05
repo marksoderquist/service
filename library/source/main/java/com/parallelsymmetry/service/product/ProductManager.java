@@ -648,9 +648,11 @@ public class ProductManager extends Agent implements Persistent {
 	 * successfully started, the program should be terminated to allow for the
 	 * updates to be applied.
 	 * 
+	 * @param ui Should the updater show a progress bar?
+	 * @return The number of updates applied.
 	 * @throws Exception
 	 */
-	public int applyStagedUpdates() throws Exception {
+	public int applyStagedUpdates( String... extras ) throws Exception {
 		if( !isEnabled() || getStagedUpdateCount() == 0 ) return 0;
 
 		Log.write( Log.DEBUG, "Starting update process..." );
@@ -679,6 +681,12 @@ public class ProductManager extends Agent implements Persistent {
 		builder.command().add( LogFlag.LOG_FILE_APPEND );
 		builder.command().add( LogFlag.LOG_LEVEL );
 		builder.command().add( Log.getLevel().getName() );
+
+		if( extras.length > 0 ) {
+			for( String command : extras ) {
+				builder.command().add( command );
+			}
+		}
 
 		// Specify the update start delay.
 		builder.command().add( UpdaterFlag.UPDATE_DELAY );
@@ -1237,7 +1245,13 @@ public class ProductManager extends Agent implements Persistent {
 			if( instanceofService && instanceofProductCard ) return constructor;
 		}
 
-		throw new NoSuchMethodException( "Module constructor not found: " + JavaUtil.getClassName( moduleClass ) + "( " + JavaUtil.getClassName( Service.class ) + ", " + JavaUtil.getClassName( ProductCard.class ) + " )" );
+		throw new NoSuchMethodException( "Module constructor not found: "
+			+ JavaUtil.getClassName( moduleClass )
+			+ "( "
+			+ JavaUtil.getClassName( Service.class )
+			+ ", "
+			+ JavaUtil.getClassName( ProductCard.class )
+			+ " )" );
 	}
 
 	private void registerModule( ServiceModule module, boolean updatable, boolean removable ) {
