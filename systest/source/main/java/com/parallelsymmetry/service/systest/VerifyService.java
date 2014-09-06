@@ -13,7 +13,7 @@ public class VerifyService extends Service {
 
 	public static final String AUTO_TERMINATION_MESSAGE = "*** AUTOMATIC TERMINATION ***";
 
-	public static final int AUTO_TERMINATE_TIMEOUT = 1000;
+	public static final int AUTO_TERMINATE_TIMEOUT = 2000;
 
 	private Timer timer;
 
@@ -32,7 +32,7 @@ public class VerifyService extends Service {
 
 	@Override
 	protected void startService( Parameters parameters ) throws Exception {
-		timer = new Timer();
+		timer = new Timer( true );
 		timer.schedule( new TerminateTask(), AUTO_TERMINATE_TIMEOUT );
 	}
 

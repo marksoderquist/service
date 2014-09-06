@@ -91,6 +91,7 @@ public class ServiceUpdateTest extends BaseTestCase {
 			Log.write( Log.TRACE, "Looking for: " + "[I] <timestamp> Successful update: " + update.getCanonicalPath() );
 			try {
 				assertEquals( "Update success not detected", 1, TextUtil.countLines( updateLogLines, "\\[I\\] " + TIMESTAMP + " Successful update: " + Pattern.quote( update.getCanonicalPath() ) ) );
+				Log.write( "Update success detected. Test passed." );
 			} catch( AssertionError error ) {
 				Log.write( Log.ERROR, updateLog );
 				throw error;
