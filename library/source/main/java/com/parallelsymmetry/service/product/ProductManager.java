@@ -3,8 +3,6 @@ package com.parallelsymmetry.service.product;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.net.URL;
@@ -13,7 +11,6 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
@@ -24,22 +21,17 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import com.parallelsymmetry.service.Service;
 import com.parallelsymmetry.service.ServiceFlag;
 import com.parallelsymmetry.service.ServiceSettingsPath;
+import com.parallelsymmetry.service.UpdateShutdownHook;
 import com.parallelsymmetry.service.product.ProductManagerEvent.Type;
 import com.parallelsymmetry.service.task.DescriptorDownloadTask;
 import com.parallelsymmetry.service.task.DownloadTask;
 import com.parallelsymmetry.updater.Updater;
-import com.parallelsymmetry.updater.UpdaterFlag;
 import com.parallelsymmetry.utility.Descriptor;
-import com.parallelsymmetry.utility.EchoServer;
 import com.parallelsymmetry.utility.FileUtil;
 import com.parallelsymmetry.utility.JavaUtil;
-import com.parallelsymmetry.utility.OperatingSystem;
-import com.parallelsymmetry.utility.Parameters;
-import com.parallelsymmetry.utility.TextUtil;
 import com.parallelsymmetry.utility.UriUtil;
 import com.parallelsymmetry.utility.agent.Agent;
 import com.parallelsymmetry.utility.log.Log;
-import com.parallelsymmetry.utility.log.LogFlag;
 import com.parallelsymmetry.utility.product.ProductCard;
 import com.parallelsymmetry.utility.setting.Persistent;
 import com.parallelsymmetry.utility.setting.SettingEvent;
@@ -666,88 +658,10 @@ public class ProductManager extends Agent implements Persistent {
 		if( updaterSource == null || !updaterSource.exists() ) throw new RuntimeException( "Update library not found: " + updaterSource );
 		if( !FileUtil.copy( updaterSource, updaterTarget ) ) throw new RuntimeException( "Update library not staged: " + updaterTarget );
 
-		// Start the updater in a new JVM.
-		ProcessBuilder builder = new ProcessBuilder();
-		builder.directory( updaterTarget.getParentFile() );
-
-		builder.command().add( OperatingSystem.getJavaExecutableName() );
-		builder.command().add( "-jar" );
-		builder.command().add( updaterTarget.toString() );
-
-		// Specify where to put the updater log.
-		builder.command().add( LogFlag.LOG_FILE );
-		builder.command().add( updaterLogFile.getAbsolutePath() );
-		builder.command().add( LogFlag.LOG_DATE );
-		builder.command().add( LogFlag.LOG_FILE_APPEND );
-		builder.command().add( LogFlag.LOG_LEVEL );
-		builder.command().add( Log.getLevel().getName() );
-
-		if( extras.length > 0 ) {
-			for( String command : extras ) {
-				builder.command().add( command );
-			}
-		}
-		
-		EchoServer echoServer =new EchoServer();
-		Runtime.getRuntime().addShutdownHook( echoServer );
-		
-		// Start and register the echo port.
-		builder.command().add( UpdaterFlag.ECHOPORT );
-		builder.command().add( String.valueOf( echoServer.getLocalPort() ) );
-
-		// Specify the update start delay.
-		//builder.command().add( UpdaterFlag.UPDATE_DELAY );
-		//builder.command().add( String.valueOf( JvmSureStop.JVM_SURE_STOP_DELAY ) );
-
-		// Add the updates.
-		builder.command().add( UpdaterFlag.UPDATE );
-		for( ProductUpdate update : updates.values() ) {
-			builder.command().add( update.getSource().getAbsolutePath() );
-			builder.command().add( update.getTarget().getAbsolutePath() );
-		}
-
-		// Add the launch parameters.
-		builder.command().add( UpdaterFlag.LAUNCH );
-		builder.command().add( OperatingSystem.getJavaExecutableName() );
-
-		// Add the VM parameters to the commands.
-		RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
-		List<String> commands = runtimeBean.getInputArguments();
-		for( String command : commands ) {
-			if( command.startsWith( Parameters.SINGLE ) ) {
-				builder.command().add( "\\" + command );
-			} else {
-				builder.command().add( command );
-			}
-		}
-
-		// Add the classpath information.
-		List<URI> uris = JavaUtil.parseClasspath( runtimeBean.getClassPath() );
-		if( uris.size() == 1 && uris.get( 0 ).getPath().endsWith( ".jar" ) ) {
-			builder.command().add( "\\-jar" );
-		} else {
-			builder.command().add( "\\-cp" );
-		}
-		builder.command().add( runtimeBean.getClassPath() );
-
-		// Add the original command line parameters.
-		for( String command : service.getParameters().getOriginalCommands() ) {
-			if( command.startsWith( Parameters.SINGLE ) ) {
-				builder.command().add( "\\" + command );
-			} else {
-				builder.command().add( command );
-			}
-		}
-
-		builder.command().add( UpdaterFlag.LAUNCH_HOME );
-		builder.command().add( System.getProperty( "user.dir" ) );
-
-		// Print the process commands.
-		Log.write( Log.INFO, "Launch updater: " + TextUtil.toString( builder.command(), " " ) );
-
-		// Start the process.
-		builder.start();
-		Log.write( Log.TRACE, "Updater process started." );
+		// Register a shutdown hook to start the updater.
+		UpdateShutdownHook updateShutdownHook = new UpdateShutdownHook( service, updates, updaterTarget, updaterLogFile, extras );
+		Runtime.getRuntime().addShutdownHook( updateShutdownHook );
+		Log.write( Log.DEVEL, "Update shutdown hook registered." );
 
 		// Store the update count because the collection will be cleared.
 		int count = updates.size();
@@ -1252,13 +1166,7 @@ public class ProductManager extends Agent implements Persistent {
 			if( instanceofService && instanceofProductCard ) return constructor;
 		}
 
-		throw new NoSuchMethodException( "Module constructor not found: "
-			+ JavaUtil.getClassName( moduleClass )
-			+ "( "
-			+ JavaUtil.getClassName( Service.class )
-			+ ", "
-			+ JavaUtil.getClassName( ProductCard.class )
-			+ " )" );
+		throw new NoSuchMethodException( "Module constructor not found: " + JavaUtil.getClassName( moduleClass ) + "( " + JavaUtil.getClassName( Service.class ) + ", " + JavaUtil.getClassName( ProductCard.class ) + " )" );
 	}
 
 	private void registerModule( ServiceModule module, boolean updatable, boolean removable ) {

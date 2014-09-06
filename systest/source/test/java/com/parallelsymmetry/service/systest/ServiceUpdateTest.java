@@ -93,6 +93,7 @@ public class ServiceUpdateTest extends BaseTestCase {
 				assertEquals( "Update success not detected", 1, TextUtil.countLines( updateLogLines, "\\[I\\] " + TIMESTAMP + " Successful update: " + Pattern.quote( update.getCanonicalPath() ) ) );
 				Log.write( "Update success detected. Test passed." );
 			} catch( AssertionError error ) {
+				Log.write( Log.ERROR, "Update success not detected. Test failed. Showing updater log:" );
 				Log.write( Log.ERROR, updateLog );
 				throw error;
 			}

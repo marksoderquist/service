@@ -20,11 +20,8 @@ public class RestartShutdownHook extends Thread {
 
 	private volatile ProcessBuilder builder;
 
-	private Service service;
-
 	public RestartShutdownHook( Service service, String... commands ) {
-		super( "RestartHook" );
-		this.service = service;
+		super( "Restart Hook" );
 
 		builder = new ProcessBuilder( OperatingSystem.isWindows() ? "javaw" : "java" );
 		builder.directory( new File( System.getProperty( "user.dir" ) ) );
@@ -82,7 +79,7 @@ public class RestartShutdownHook extends Thread {
 			}
 		}
 
-		Log.write( Log.DEVEL, "Restart command: ", TextUtil.toString( builder.command(), " " ) );
+		Log.write( Log.TRACE, "Restart command: ", TextUtil.toString( builder.command(), " " ) );
 	}
 
 	@Override
@@ -92,7 +89,7 @@ public class RestartShutdownHook extends Thread {
 		try {
 			builder.start();
 		} catch( IOException exception ) {
-			service.error( exception );
+			Log.write( exception );
 		}
 	}
 

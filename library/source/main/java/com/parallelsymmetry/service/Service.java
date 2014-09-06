@@ -514,6 +514,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 		 * of time if the JVM does not exit cleanly. Do this only when not running
 		 * the unit tests.
 		 */
+		// Do not add this as a shutdown hook, it hangs the JVM.
 		if( !TestUtil.isTest() ) new JvmSureStop().start();
 	}
 
