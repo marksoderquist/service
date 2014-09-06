@@ -31,6 +31,7 @@ import com.parallelsymmetry.service.task.DownloadTask;
 import com.parallelsymmetry.updater.Updater;
 import com.parallelsymmetry.updater.UpdaterFlag;
 import com.parallelsymmetry.utility.Descriptor;
+import com.parallelsymmetry.utility.EchoServer;
 import com.parallelsymmetry.utility.FileUtil;
 import com.parallelsymmetry.utility.JavaUtil;
 import com.parallelsymmetry.utility.OperatingSystem;
@@ -687,10 +688,17 @@ public class ProductManager extends Agent implements Persistent {
 				builder.command().add( command );
 			}
 		}
+		
+		EchoServer echoServer =new EchoServer();
+		Runtime.getRuntime().addShutdownHook( echoServer );
+		
+		// Start and register the echo port.
+		builder.command().add( UpdaterFlag.ECHOPORT );
+		builder.command().add( String.valueOf( echoServer.getLocalPort() ) );
 
 		// Specify the update start delay.
-		builder.command().add( UpdaterFlag.UPDATE_DELAY );
-		builder.command().add( String.valueOf( JvmSureStop.JVM_SURE_STOP_DELAY ) );
+		//builder.command().add( UpdaterFlag.UPDATE_DELAY );
+		//builder.command().add( String.valueOf( JvmSureStop.JVM_SURE_STOP_DELAY ) );
 
 		// Add the updates.
 		builder.command().add( UpdaterFlag.UPDATE );
