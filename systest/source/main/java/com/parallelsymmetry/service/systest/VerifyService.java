@@ -13,7 +13,7 @@ public class VerifyService extends Service {
 
 	public static final String AUTO_TERMINATION_MESSAGE = "*** AUTOMATIC TERMINATION ***";
 
-	public static final int AUTO_TERMINATE_TIMEOUT = 2000;
+	public static final int AUTO_TERMINATE_TIMEOUT = 1000;
 
 	private Timer timer;
 

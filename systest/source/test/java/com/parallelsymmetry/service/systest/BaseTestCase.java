@@ -79,7 +79,7 @@ public abstract class BaseTestCase extends TestCase {
 	 * The build computer is generally not as powerful as developer computers so
 	 * the delay may need to be longer than what is necessary for a developer.
 	 */
-	protected static final int PROCESS_EXECUTE_TIME = 8000;
+	protected static final int PROCESS_EXECUTE_TIME = 9000;
 
 	private static final int TIMESTAMP_OFFSET = 61174;
 
