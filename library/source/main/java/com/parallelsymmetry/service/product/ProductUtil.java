@@ -11,7 +11,7 @@ import com.parallelsymmetry.utility.setting.Settings;
 
 public class ProductUtil {
 
-	private static final String PRODUCT_SETTINGS_KEY = "products";
+	static final String PRODUCT_SETTINGS_KEY = "products";
 
 	public static final String getString( Product product, String bundleKey, String name ) {
 		return Bundles.getString( product.getClass().getClassLoader(), bundleKey, name );
@@ -42,11 +42,11 @@ public class ProductUtil {
 		service.getSettings().removeProvider( provider );
 	}
 
-	private static final String getSettingsPath( Product product ) {
+	public static final String getSettingsPath( Product product ) {
 		return getSettingsPath( product.getCard() );
 	}
 
-	private static final String getSettingsPath( ProductCard card ) {
+	public static final String getSettingsPath( ProductCard card ) {
 		return PRODUCT_SETTINGS_KEY + "/" + card.getProductKey();
 	}
 
