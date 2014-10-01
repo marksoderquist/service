@@ -17,13 +17,17 @@ import com.parallelsymmetry.utility.task.Task;
 
 public class DownloadTask extends Task<Download> {
 
-	public static final int DEFAULT_CONNECTION_TIMEOUT = 5000;
+	public static final int DEFAULT_CONNECT_TIMEOUT = 2000;
+
+	public static final int DEFAULT_READ_TIMEOUT = 10000;
 
 	private URI uri;
 
 	private File target;
 
-	private int timeout = DEFAULT_CONNECTION_TIMEOUT;
+	private int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
+	
+	private int readTimeout = DEFAULT_READ_TIMEOUT;
 
 	private Set<DownloadListener> listeners;
 
@@ -49,8 +53,8 @@ public class DownloadTask extends Task<Download> {
 
 	private Download download() throws IOException {
 		URLConnection connection = uri.toURL().openConnection();
-		connection.setConnectTimeout( timeout );
-		connection.setReadTimeout( timeout );
+		connection.setConnectTimeout( connectTimeout );
+		connection.setReadTimeout( readTimeout );
 		connection.setUseCaches( false );
 
 		try {
