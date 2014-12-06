@@ -54,6 +54,10 @@ public final class ProductResource {
 	public void setThrowable( Throwable throwable ) {
 		this.throwable = throwable;
 	}
+	
+	public boolean isValid() {
+		return throwable == null;
+	}
 
 	@Override
 	public String toString() {

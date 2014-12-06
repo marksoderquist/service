@@ -504,7 +504,7 @@ public class ProductManager extends Agent implements Persistent {
 
 			// Verify the resources have all been staged successfully.
 			Set<ProductResource> resources = productResources.get( updateCard );
-			if( !validateResources( resources ) ) continue;
+			if( !areResourcesValid( resources ) ) continue;
 
 			File installFolder = productCard.getInstallFolder();
 			boolean installFolderValid = installFolder != null && installFolder.exists();
@@ -540,14 +540,6 @@ public class ProductManager extends Agent implements Persistent {
 		saveSettings( settings );
 
 		return productResources;
-	}
-
-	private boolean validateResources( Set<ProductResource> resources ) {
-		for( ProductResource resource : resources ) {
-			if( resource.getThrowable() != null ) return false;
-		}
-
-		return true;
 	}
 
 	public String getStagedUpdateFileName( ProductCard card ) {
@@ -804,6 +796,14 @@ public class ProductManager extends Agent implements Persistent {
 		}
 
 		return map;
+	}
+
+	public static boolean areResourcesValid( Set<ProductResource> resources ) {
+		for( ProductResource resource : resources ) {
+			if( !resource.isValid() ) return false;
+		}
+	
+		return true;
 	}
 
 	protected boolean isEnabled() {
