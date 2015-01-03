@@ -57,6 +57,7 @@ import com.parallelsymmetry.utility.product.ProductCardException;
 import com.parallelsymmetry.utility.setting.BaseSettingProvider;
 import com.parallelsymmetry.utility.setting.DescriptorSettingProvider;
 import com.parallelsymmetry.utility.setting.ParametersSettingProvider;
+import com.parallelsymmetry.utility.setting.PersistentMapSettingProvider;
 import com.parallelsymmetry.utility.setting.PreferencesSettingProvider;
 import com.parallelsymmetry.utility.setting.SettingEvent;
 import com.parallelsymmetry.utility.setting.SettingListener;
@@ -836,11 +837,27 @@ public abstract class Service extends Agent implements ServiceProduct {
 		}
 
 		// Add the preferences settings provider.
-		String preferencesPath = "/" + card.getGroup() + "." + card.getArtifact();
-		if( parameters.isSet( ServiceFlag.EXECMODE ) ) preferencesPath = "/" + card.getGroup() + execModePrefix + card.getArtifact();
-		Preferences preferences = Preferences.userRoot().node( preferencesPath );
-		if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
-		Log.write( Log.DEBUG, "Preferences path: " + preferencesPath );
+		//		String preferencesPath = "/" + card.getGroup() + "." + card.getArtifact();
+		//		if( parameters.isSet( ServiceFlag.EXECMODE ) ) preferencesPath = "/" + card.getGroup() + execModePrefix + card.getArtifact();
+		//		Preferences preferences = Preferences.userRoot().node( preferencesPath );
+		//		if( preferences != null ) settings.addProvider( new PreferencesSettingProvider( preferences ) );
+		//		Log.write( Log.DEBUG, "Preferences path: " + preferencesPath );
+
+		// Add the persistent settings provider.
+		File providerFile = new File( getDataFolder(), "settings.properties" );
+		settings.addProvider( new PersistentMapSettingProvider( providerFile ) );
+
+		// TODO Remove the following if statement after 2015-03-01.
+		if( !providerFile.exists() ) {
+			// Copy from preferences.
+			String preferencesPath = "/" + card.getGroup() + "." + card.getArtifact();
+			if( parameters.isSet( ServiceFlag.EXECMODE ) ) preferencesPath = "/" + card.getGroup() + execModePrefix + card.getArtifact();
+			Preferences preferences = Preferences.userRoot().node( preferencesPath );
+			PreferencesSettingProvider prefsProvider = new PreferencesSettingProvider( preferences );
+
+			this.settings.copyDeepFrom( new Settings( prefsProvider ) );
+			this.settings.flush();
+		}
 
 		// Reset the settings specified on the command line.
 		if( parameters.isTrue( ServiceFlag.SETTINGS_RESET ) ) {
