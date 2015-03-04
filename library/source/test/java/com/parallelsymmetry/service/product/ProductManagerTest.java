@@ -120,7 +120,7 @@ public class ProductManagerTest extends BaseServiceTest {
 
 		// Ensure there are no posted updates.
 		try {
-			manager.getPostedUpdates();
+			manager.getPostedUpdates( true );
 			fail( "UpdateManager should throw an exception when the pack descriptor cannot be found." );
 		} catch( ExecutionException exception ) {
 			// Intentionally ignore exception.
@@ -147,7 +147,7 @@ public class ProductManagerTest extends BaseServiceTest {
 		fixProductCardData( TARGET_UPDATE_CARD );
 
 		// Ensure there are posted updates.
-		assertEquals( 1, manager.getPostedUpdates().size() );
+		assertEquals( 1, manager.getPostedUpdates( true ).size() );
 	}
 
 	@Test

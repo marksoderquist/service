@@ -98,6 +98,8 @@ public class ProductManager extends Agent implements Persistent {
 
 	private static final int POSTED_UPDATE_CACHE_TIMEOUT = 60000;
 
+	private static final int NO_CHECK = -1;
+
 	private Service service;
 
 	private Set<ProductCatalog> catalogs;
@@ -340,7 +342,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	public void setCheckOption( CheckOption checkOption ) {
 		this.checkOption = checkOption;
-		scheduleCheckUpdateTask();
+		scheduleUpdateCheck( false );
 		saveSettings( settings );
 	}
 
@@ -362,8 +364,56 @@ public class ProductManager extends Agent implements Persistent {
 		saveSettings( settings );
 	}
 
+	/**
+	 * Schedule the update check task according to the settings. This method may
+	 * safely be called as many times as necessary from any thread.
+	 */
+	public void scheduleUpdateCheck( boolean startup ) {
+		synchronized( this ) {
+			if( task != null ) {
+				task.cancel();
+				task = null;
+				Log.write( Log.DEBUG, "Update task cancelled." );
+			}
+
+			//			if( !parameters.isSet( ServiceFlag.NOUPDATECHECK ) && productManager.getCheckOption() == ProductManager.CheckOption.STARTUP ) {
+			//				productManager.checkForUpdates();
+			//			}
+
+			// Don't schedule tasks if the NOUPDATECHECK flag is set. 
+			if( service.getParameters().isSet( ServiceFlag.NOUPDATECHECK ) ) return;
+
+			int delay = NO_CHECK;
+			switch( checkOption ) {
+				case MANUAL:
+					delay = NO_CHECK;
+					break;
+				case STARTUP:
+					delay = startup ? 0 : NO_CHECK;
+					break;
+				case INTERVAL: {
+					task = new UpdateCheckTask( this );
+					// TODO Schedule the task by interval.
+					break;
+				}
+				case SCHEDULE: {
+					task = new UpdateCheckTask( this );
+					// TODO Schedule the task by schedule.
+					break;
+				}
+				default:
+					break;
+			}
+			if( delay > NO_CHECK ) {
+				Log.write( Log.DEVEL, "Next check scheduled for: " + ( delay == 0 ? "now" : String.valueOf( delay ) ) );
+				timer.schedule( task = new UpdateCheckTask( this ), delay );
+			}
+
+			Log.write( Log.DEBUG, "Update task scheduled." );
+		}
+	}
+
 	public void checkForUpdates() {
-		Log.write( "ProductManager enabled: " + isEnabled() );
 		if( !isEnabled() ) return;
 
 		try {
@@ -390,6 +440,8 @@ public class ProductManager extends Agent implements Persistent {
 	 * @throws Exception
 	 */
 	public Set<ProductCard> getPostedUpdates( boolean force ) throws Exception {
+		scheduleUpdateCheck( false );
+
 		Set<ProductCard> newCards = new HashSet<ProductCard>();
 		if( !isEnabled() ) return newCards;
 
@@ -467,7 +519,7 @@ public class ProductManager extends Agent implements Persistent {
 	 */
 	public int stagePostedUpdates() throws Exception {
 		if( !isEnabled() ) return 0;
-		stageSelectedUpdates( getPostedUpdates() );
+		stageSelectedUpdates( getPostedUpdates( true ) );
 		return updates.size();
 	}
 
@@ -802,7 +854,7 @@ public class ProductManager extends Agent implements Persistent {
 		for( ProductResource resource : resources ) {
 			if( !resource.isValid() ) return false;
 		}
-	
+
 		return true;
 	}
 
@@ -828,43 +880,6 @@ public class ProductManager extends Agent implements Persistent {
 	@Override
 	protected void stopAgent() throws Exception {
 		if( timer != null ) timer.cancel();
-	}
-
-	/**
-	 * Schedule the check update task according to the settings. This method may
-	 * safely be called as many times as necessary from any thread.
-	 */
-	private void scheduleCheckUpdateTask() {
-		synchronized( this ) {
-			if( task != null ) {
-				task.cancel();
-				Log.write( Log.DEBUG, "Update task cancelled." );
-			}
-
-			// Don't schedule tasks if the NOUPDATECHECK flag is set. 
-			if( service.getParameters().isSet( ServiceFlag.NOUPDATECHECK ) ) return;
-
-			switch( checkOption ) {
-				case MANUAL:
-					break;
-				case STARTUP:
-					break;
-				case INTERVAL: {
-					task = new UpdateCheckTask( service );
-					// TODO Schedule the task by interval.
-					break;
-				}
-				case SCHEDULE: {
-					task = new UpdateCheckTask( service );
-					// TODO Schedule the task by schedule.
-					break;
-				}
-				default:
-					break;
-			}
-
-			Log.write( Log.DEBUG, "Update task scheduled." );
-		}
 	}
 
 	private void installProductImpl( ProductCard card, Map<ProductCard, Set<ProductResource>> productResources ) throws Exception {
@@ -1316,15 +1331,15 @@ public class ProductManager extends Agent implements Persistent {
 
 	private final class UpdateCheckTask extends TimerTask {
 
-		private Service service;
+		private ProductManager productManager;
 
-		public UpdateCheckTask( Service service ) {
-			this.service = service;
+		public UpdateCheckTask( ProductManager productManager ) {
+			this.productManager = productManager;
 		}
 
 		@Override
 		public void run() {
-			service.getProductManager().checkForUpdates();
+			productManager.checkForUpdates();
 		}
 
 	}
