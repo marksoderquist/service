@@ -395,7 +395,7 @@ public class ProductManager extends Agent implements Persistent {
 
 			Settings settings = service.getSettings().getNode( ServiceSettingsPath.UPDATE_SETTINGS_PATH );
 
-			long lastUpdateCheck = settings.getLong( "last", 0 );
+			long lastUpdateCheck = settings.getLong( "check/last", 0 );
 			long timeSinceLastCheck = System.currentTimeMillis() - lastUpdateCheck;
 			long delay = NO_CHECK;
 
@@ -496,8 +496,7 @@ public class ProductManager extends Agent implements Persistent {
 	 */
 	public Set<ProductCard> getPostedUpdates( boolean force ) throws Exception {
 		// Update when the last update check occurred.
-		Settings settings = service.getSettings().getNode( ServiceSettingsPath.UPDATE_SETTINGS_PATH );
-		settings.putLong( "last", System.currentTimeMillis() );
+		service.getSettings().putLong( ServiceSettingsPath.UPDATE_SETTINGS_PATH + "/check/last", System.currentTimeMillis() );
 
 		// Schedule the next update check.
 		scheduleUpdateCheck( false );
