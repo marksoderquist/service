@@ -471,9 +471,6 @@ public class ProductManager extends Agent implements Persistent {
 	public void checkForUpdates() {
 		if( !isEnabled() ) return;
 
-		Settings settings = service.getSettings().getNode( ServiceSettingsPath.UPDATE_SETTINGS_PATH );
-		settings.putLong( "last", System.currentTimeMillis() );
-
 		try {
 			Log.write( Log.TRACE, "Checking for updates..." );
 			int stagedUpdateCount = service.getProductManager().stagePostedUpdates();
@@ -498,6 +495,11 @@ public class ProductManager extends Agent implements Persistent {
 	 * @throws Exception
 	 */
 	public Set<ProductCard> getPostedUpdates( boolean force ) throws Exception {
+		// Update when the last update check occurred.
+		Settings settings = service.getSettings().getNode( ServiceSettingsPath.UPDATE_SETTINGS_PATH );
+		settings.putLong( "last", System.currentTimeMillis() );
+
+		// Schedule the next update check.
 		scheduleUpdateCheck( false );
 
 		Set<ProductCard> newCards = new HashSet<ProductCard>();
