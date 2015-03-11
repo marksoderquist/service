@@ -8,7 +8,9 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Enumeration;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -60,6 +62,14 @@ public class ProductManager extends Agent implements Persistent {
 
 	public enum CheckOption {
 		MANUAL, STARTUP, INTERVAL, SCHEDULE
+	}
+
+	public enum CheckInterval {
+		MONTH, WEEK, DAY, HOUR
+	}
+
+	public enum CheckWhen {
+		SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, DAILY
 	}
 
 	public enum FoundOption {
@@ -163,7 +173,7 @@ public class ProductManager extends Agent implements Persistent {
 		foundOption = FoundOption.STAGE;
 		applyOption = ApplyOption.RESTART;
 
-		service.getSettings().addSettingListener( ServiceSettingsPath.PRODUCT_MANAGER_SETTINGS_PATH, new SettingChangeHandler() );
+		service.getSettings().addSettingListener( ServiceSettingsPath.UPDATE_SETTINGS_PATH, new SettingChangeHandler() );
 	}
 
 	public int getCatalogCount() {
@@ -383,7 +393,12 @@ public class ProductManager extends Agent implements Persistent {
 			// Don't schedule tasks if the NOUPDATECHECK flag is set. 
 			if( service.getParameters().isSet( ServiceFlag.NOUPDATECHECK ) ) return;
 
-			int delay = NO_CHECK;
+			Settings settings = service.getSettings().getNode( ServiceSettingsPath.UPDATE_SETTINGS_PATH );
+
+			long lastUpdateCheck = settings.getLong( "last", 0 );
+			long timeSinceLastCheck = System.currentTimeMillis() - lastUpdateCheck;
+			long delay = NO_CHECK;
+
 			switch( checkOption ) {
 				case MANUAL:
 					delay = NO_CHECK;
@@ -392,22 +407,62 @@ public class ProductManager extends Agent implements Persistent {
 					delay = startup ? 0 : NO_CHECK;
 					break;
 				case INTERVAL: {
-					task = new UpdateCheckTask( this );
-					// TODO Schedule the task by interval.
+					long intervalDelay = 0;
+
+					CheckInterval intervalUnit = CheckInterval.valueOf( settings.get( "interval/unit", "day" ).toUpperCase() );
+					switch( intervalUnit ) {
+						case MONTH: {
+							intervalDelay = 30 * 24 * 7;
+							break;
+						}
+						case WEEK: {
+							intervalDelay = 24 * 7;
+							break;
+						}
+						case DAY: {
+							intervalDelay = 24;
+							break;
+						}
+						case HOUR: {
+							intervalDelay = 1;
+							break;
+						}
+					}
+
+					if( timeSinceLastCheck < intervalDelay ) {
+						// Schedule the next interval.
+						delay = ( lastUpdateCheck + intervalDelay ) - System.currentTimeMillis();
+					} else {
+						// Check now and schedule again.
+						delay = 0;
+					}
 					break;
 				}
 				case SCHEDULE: {
-					task = new UpdateCheckTask( this );
 					// TODO Schedule the task by schedule.
+					// TODO Need a calendar for this one.
+					Calendar calendar = new GregorianCalendar();
+					CheckWhen scheduleWhen = CheckWhen.valueOf( settings.get( "schedule/when", "daily" ) );
+					int scheduleHour = settings.getInt( "schedule/hour", 0 );
+					
+					if( scheduleWhen == CheckWhen.DAILY ) {
+						// Only need to check the hour.
+					} else {
+						// Check the day and hour.
+					}
+					
+					// TODO If past the scheduled time, add a day or week.
+					
 					break;
 				}
 				default:
 					break;
 			}
-			if( delay > NO_CHECK ) {
-				Log.write( Log.DEVEL, "Next check scheduled for: " + ( delay == 0 ? "now" : String.valueOf( delay ) ) );
-				timer.schedule( task = new UpdateCheckTask( this ), delay );
-			}
+
+			if( delay == NO_CHECK ) return;
+
+			timer.schedule( task = new UpdateCheckTask( this ), delay );
+			Log.write( Log.DEVEL, "Next check scheduled for: " + ( delay == 0 ? "now" : String.valueOf( delay ) ) );
 
 			Log.write( Log.DEBUG, "Update task scheduled." );
 		}
@@ -415,6 +470,9 @@ public class ProductManager extends Agent implements Persistent {
 
 	public void checkForUpdates() {
 		if( !isEnabled() ) return;
+
+		Settings settings = service.getSettings().getNode( ServiceSettingsPath.UPDATE_SETTINGS_PATH );
+		settings.putLong( "last", System.currentTimeMillis() );
 
 		try {
 			Log.write( Log.TRACE, "Checking for updates..." );
@@ -1349,7 +1407,7 @@ public class ProductManager extends Agent implements Persistent {
 		@Override
 		public void settingChanged( SettingEvent event ) {
 			if( CHECK.equals( event.getKey() ) ) {
-				setCheckOption( CheckOption.valueOf( event.getNewValue() ) );
+				setCheckOption( CheckOption.valueOf( event.getNewValue().toUpperCase() ) );
 			}
 		}
 
