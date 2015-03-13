@@ -9,12 +9,14 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,6 +30,7 @@ import com.parallelsymmetry.service.product.ProductManagerEvent.Type;
 import com.parallelsymmetry.service.task.DescriptorDownloadTask;
 import com.parallelsymmetry.service.task.DownloadTask;
 import com.parallelsymmetry.updater.Updater;
+import com.parallelsymmetry.utility.DateUtil;
 import com.parallelsymmetry.utility.Descriptor;
 import com.parallelsymmetry.utility.FileUtil;
 import com.parallelsymmetry.utility.JavaUtil;
@@ -69,7 +72,7 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	public enum CheckWhen {
-		SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, DAILY
+		DAILY, SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY
 	}
 
 	public enum FoundOption {
@@ -108,6 +111,8 @@ public class ProductManager extends Agent implements Persistent {
 
 	private static final int POSTED_UPDATE_CACHE_TIMEOUT = 60000;
 
+	private static final int MILLIS_IN_HOUR = 3600000;
+
 	private static final int NO_CHECK = -1;
 
 	private Service service;
@@ -144,6 +149,8 @@ public class ProductManager extends Agent implements Persistent {
 
 	private long postedUpdateCacheTime;
 
+	private Calendar calendar;
+
 	private Timer timer;
 
 	private UpdateCheckTask task;
@@ -168,12 +175,13 @@ public class ProductManager extends Agent implements Persistent {
 		// Create the posted update cache.
 		postedUpdateCache = new CopyOnWriteArraySet<ProductCard>();
 
+		// Create the calendar.
+		calendar = new GregorianCalendar();
+
 		// Default options.
 		checkOption = CheckOption.MANUAL;
 		foundOption = FoundOption.STAGE;
 		applyOption = ApplyOption.RESTART;
-
-		service.getSettings().addSettingListener( ServiceSettingsPath.UPDATE_SETTINGS_PATH, new SettingChangeHandler() );
 	}
 
 	public int getCatalogCount() {
@@ -386,16 +394,12 @@ public class ProductManager extends Agent implements Persistent {
 				Log.write( Log.DEBUG, "Update task cancelled." );
 			}
 
-			//			if( !parameters.isSet( ServiceFlag.NOUPDATECHECK ) && productManager.getCheckOption() == ProductManager.CheckOption.STARTUP ) {
-			//				productManager.checkForUpdates();
-			//			}
-
 			// Don't schedule tasks if the NOUPDATECHECK flag is set. 
 			if( service.getParameters().isSet( ServiceFlag.NOUPDATECHECK ) ) return;
 
-			Settings settings = service.getSettings().getNode( ServiceSettingsPath.UPDATE_SETTINGS_PATH );
+			Settings settings = service.getSettings().getNode( ServiceSettingsPath.UPDATE_SETTINGS_PATH + "/check" );
 
-			long lastUpdateCheck = settings.getLong( "check/last", 0 );
+			long lastUpdateCheck = settings.getLong( "last", 0 );
 			long timeSinceLastCheck = System.currentTimeMillis() - lastUpdateCheck;
 			long delay = NO_CHECK;
 
@@ -412,59 +416,71 @@ public class ProductManager extends Agent implements Persistent {
 					CheckInterval intervalUnit = CheckInterval.valueOf( settings.get( "interval/unit", "day" ).toUpperCase() );
 					switch( intervalUnit ) {
 						case MONTH: {
-							intervalDelay = 30 * 24 * 7;
+							intervalDelay = 30 * 24 * 7 * MILLIS_IN_HOUR;
 							break;
 						}
 						case WEEK: {
-							intervalDelay = 24 * 7;
+							intervalDelay = 24 * 7 * MILLIS_IN_HOUR;
 							break;
 						}
 						case DAY: {
-							intervalDelay = 24;
+							intervalDelay = 24 * MILLIS_IN_HOUR;
 							break;
 						}
 						case HOUR: {
-							intervalDelay = 1;
+							intervalDelay = 1 * MILLIS_IN_HOUR;
 							break;
 						}
 					}
 
-					if( timeSinceLastCheck < intervalDelay ) {
-						// Schedule the next interval.
-						delay = ( lastUpdateCheck + intervalDelay ) - System.currentTimeMillis();
-					} else {
+					if( timeSinceLastCheck > intervalDelay ) {
 						// Check now and schedule again.
 						delay = 0;
+					} else {
+						// Schedule the next interval.
+						delay = ( lastUpdateCheck + intervalDelay ) - System.currentTimeMillis();
 					}
 					break;
 				}
 				case SCHEDULE: {
-					// TODO Schedule the task by schedule.
-					// TODO Need a calendar for this one.
-					Calendar calendar = new GregorianCalendar();
-					CheckWhen scheduleWhen = CheckWhen.valueOf( settings.get( "schedule/when", "daily" ) );
+					// Get the setting values.
+					CheckWhen scheduleWhen = CheckWhen.valueOf( settings.get( "schedule/when", "daily" ).toUpperCase() );
 					int scheduleHour = settings.getInt( "schedule/hour", 0 );
 					
-					if( scheduleWhen == CheckWhen.DAILY ) {
-						// Only need to check the hour.
-					} else {
-						// Check the day and hour.
+					// Calculate the next update check.
+					calendar.setTimeInMillis( System.currentTimeMillis() );
+					calendar.set( Calendar.HOUR_OF_DAY, scheduleHour );
+					calendar.set( Calendar.MINUTE, 0 );
+					calendar.set( Calendar.SECOND, 0 );
+					calendar.set( Calendar.MILLISECOND, 0 );
+					if( scheduleWhen != CheckWhen.DAILY ) calendar.set( Calendar.DAY_OF_WEEK, scheduleWhen.ordinal() );
+
+					delay = calendar.getTimeInMillis() - System.currentTimeMillis();
+
+					// If past the scheduled time, add a day or week.
+					if( delay < 0 ) {
+						if( scheduleWhen == CheckWhen.DAILY ) {
+							delay += 24 * MILLIS_IN_HOUR;
+						} else {
+							delay += 7 * 24 * MILLIS_IN_HOUR;
+						}
 					}
-					
-					// TODO If past the scheduled time, add a day or week.
-					
+
 					break;
 				}
-				default:
+				default: {
+					delay = NO_CHECK;
 					break;
+				}
 			}
 
 			if( delay == NO_CHECK ) return;
 
 			timer.schedule( task = new UpdateCheckTask( this ), delay );
-			Log.write( Log.DEVEL, "Next check scheduled for: " + ( delay == 0 ? "now" : String.valueOf( delay ) ) );
 
-			Log.write( Log.DEBUG, "Update task scheduled." );
+			String date = DateUtil.format( new Date( task.scheduledExecutionTime() ), DateUtil.DEFAULT_DATE_FORMAT, TimeZone.getTimeZone( "America/Denver" ) );
+
+			Log.write( Log.TRACE, "Next check scheduled for: " + ( delay == 0 ? "now" : date ) );
 		}
 	}
 
@@ -764,7 +780,7 @@ public class ProductManager extends Agent implements Persistent {
 		// Register a shutdown hook to start the updater.
 		UpdateShutdownHook updateShutdownHook = new UpdateShutdownHook( service, updates, updaterTarget, updaterLogFile, extras );
 		Runtime.getRuntime().addShutdownHook( updateShutdownHook );
-		Log.write( Log.DEVEL, "Update shutdown hook registered." );
+		Log.write( Log.TRACE, "Update shutdown hook registered." );
 
 		// Store the update count because the collection will be cleared.
 		int count = updates.size();
@@ -925,8 +941,10 @@ public class ProductManager extends Agent implements Persistent {
 	protected void startAgent() throws Exception {
 		cleanRemovedProducts();
 
+		service.getSettings().addSettingListener( ServiceSettingsPath.UPDATE_SETTINGS_PATH, new SettingChangeHandler() );
+
 		// Create the update check timer.
-		timer = new Timer();
+		timer = new Timer( true );
 
 		// Define the product folders.
 		homeProductFolder = new File( service.getHomeFolder(), Service.MODULE_INSTALL_FOLDER_NAME );
@@ -1409,6 +1427,8 @@ public class ProductManager extends Agent implements Persistent {
 		public void settingChanged( SettingEvent event ) {
 			if( CHECK.equals( event.getKey() ) ) {
 				setCheckOption( CheckOption.valueOf( event.getNewValue().toUpperCase() ) );
+			} else if( event.getFullPath().startsWith( ServiceSettingsPath.UPDATE_SETTINGS_PATH + "/check" ) ) {
+				scheduleUpdateCheck( false );
 			}
 		}
 
