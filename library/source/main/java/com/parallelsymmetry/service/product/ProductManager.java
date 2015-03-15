@@ -386,102 +386,101 @@ public class ProductManager extends Agent implements Persistent {
 	 * Schedule the update check task according to the settings. This method may
 	 * safely be called as many times as necessary from any thread.
 	 */
-	public void scheduleUpdateCheck( boolean startup ) {
-		synchronized( this ) {
-			if( task != null ) {
-				task.cancel();
-				task = null;
-				Log.write( Log.DEBUG, "Update task cancelled." );
-			}
-
-			// Don't schedule tasks if the NOUPDATECHECK flag is set. 
-			if( service.getParameters().isSet( ServiceFlag.NOUPDATECHECK ) ) return;
-
-			Settings settings = service.getSettings().getNode( ServiceSettingsPath.UPDATE_SETTINGS_PATH + "/check" );
-
-			long lastUpdateCheck = settings.getLong( "last", 0 );
-			long timeSinceLastCheck = System.currentTimeMillis() - lastUpdateCheck;
-			long delay = NO_CHECK;
-
-			switch( checkOption ) {
-				case MANUAL:
-					delay = NO_CHECK;
-					break;
-				case STARTUP:
-					delay = startup ? 0 : NO_CHECK;
-					break;
-				case INTERVAL: {
-					long intervalDelay = 0;
-
-					CheckInterval intervalUnit = CheckInterval.valueOf( settings.get( "interval/unit", "day" ).toUpperCase() );
-					switch( intervalUnit ) {
-						case MONTH: {
-							intervalDelay = 30 * 24 * 7 * MILLIS_IN_HOUR;
-							break;
-						}
-						case WEEK: {
-							intervalDelay = 24 * 7 * MILLIS_IN_HOUR;
-							break;
-						}
-						case DAY: {
-							intervalDelay = 24 * MILLIS_IN_HOUR;
-							break;
-						}
-						case HOUR: {
-							intervalDelay = 1 * MILLIS_IN_HOUR;
-							break;
-						}
-					}
-
-					if( timeSinceLastCheck > intervalDelay ) {
-						// Check now and schedule again.
-						delay = 0;
-					} else {
-						// Schedule the next interval.
-						delay = ( lastUpdateCheck + intervalDelay ) - System.currentTimeMillis();
-					}
-					break;
-				}
-				case SCHEDULE: {
-					// Get the setting values.
-					CheckWhen scheduleWhen = CheckWhen.valueOf( settings.get( "schedule/when", "daily" ).toUpperCase() );
-					int scheduleHour = settings.getInt( "schedule/hour", 0 );
-					
-					// Calculate the next update check.
-					calendar.setTimeInMillis( System.currentTimeMillis() );
-					calendar.set( Calendar.HOUR_OF_DAY, scheduleHour );
-					calendar.set( Calendar.MINUTE, 0 );
-					calendar.set( Calendar.SECOND, 0 );
-					calendar.set( Calendar.MILLISECOND, 0 );
-					if( scheduleWhen != CheckWhen.DAILY ) calendar.set( Calendar.DAY_OF_WEEK, scheduleWhen.ordinal() );
-
-					delay = calendar.getTimeInMillis() - System.currentTimeMillis();
-
-					// If past the scheduled time, add a day or week.
-					if( delay < 0 ) {
-						if( scheduleWhen == CheckWhen.DAILY ) {
-							delay += 24 * MILLIS_IN_HOUR;
-						} else {
-							delay += 7 * 24 * MILLIS_IN_HOUR;
-						}
-					}
-
-					break;
-				}
-				default: {
-					delay = NO_CHECK;
-					break;
-				}
-			}
-
-			if( delay == NO_CHECK ) return;
-
-			timer.schedule( task = new UpdateCheckTask( this ), delay );
-
-			String date = DateUtil.format( new Date( task.scheduledExecutionTime() ), DateUtil.DEFAULT_DATE_FORMAT, TimeZone.getTimeZone( "America/Denver" ) );
-
-			Log.write( Log.TRACE, "Next check scheduled for: " + ( delay == 0 ? "now" : date ) );
+	public synchronized void scheduleUpdateCheck( boolean startup ) {
+		if( task != null ) {
+			boolean alreadyRun = task.scheduledExecutionTime() < System.currentTimeMillis();
+			task.cancel();
+			task = null;
+			if( !alreadyRun ) Log.write( Log.DEBUG, "Check for updates task cancelled." );
 		}
+
+		// Don't schedule tasks if the NOUPDATECHECK flag is set. 
+		if( service.getParameters().isSet( ServiceFlag.NOUPDATECHECK ) ) return;
+
+		Settings settings = service.getSettings().getNode( ServiceSettingsPath.UPDATE_SETTINGS_PATH + "/check" );
+
+		long lastUpdateCheck = settings.getLong( "last", 0 );
+		long timeSinceLastCheck = System.currentTimeMillis() - lastUpdateCheck;
+		long delay = NO_CHECK;
+
+		switch( checkOption ) {
+			case MANUAL:
+				delay = NO_CHECK;
+				break;
+			case STARTUP:
+				delay = startup ? 0 : NO_CHECK;
+				break;
+			case INTERVAL: {
+				long intervalDelay = 0;
+
+				CheckInterval intervalUnit = CheckInterval.valueOf( settings.get( "interval/unit", "day" ).toUpperCase() );
+				switch( intervalUnit ) {
+					case MONTH: {
+						intervalDelay = 30 * 24 * 7 * MILLIS_IN_HOUR;
+						break;
+					}
+					case WEEK: {
+						intervalDelay = 24 * 7 * MILLIS_IN_HOUR;
+						break;
+					}
+					case DAY: {
+						intervalDelay = 24 * MILLIS_IN_HOUR;
+						break;
+					}
+					case HOUR: {
+						intervalDelay = 1 * MILLIS_IN_HOUR;
+						break;
+					}
+				}
+
+				if( timeSinceLastCheck > intervalDelay ) {
+					// Check now and schedule again.
+					delay = 0;
+				} else {
+					// Schedule the next interval.
+					delay = ( lastUpdateCheck + intervalDelay ) - System.currentTimeMillis();
+				}
+				break;
+			}
+			case SCHEDULE: {
+				// Get the setting values.
+				CheckWhen scheduleWhen = CheckWhen.valueOf( settings.get( "schedule/when", "daily" ).toUpperCase() );
+				int scheduleHour = settings.getInt( "schedule/hour", 0 );
+
+				// Calculate the next update check.
+				calendar.setTimeInMillis( System.currentTimeMillis() );
+				calendar.set( Calendar.HOUR_OF_DAY, scheduleHour );
+				calendar.set( Calendar.MINUTE, 0 );
+				calendar.set( Calendar.SECOND, 0 );
+				calendar.set( Calendar.MILLISECOND, 0 );
+				if( scheduleWhen != CheckWhen.DAILY ) calendar.set( Calendar.DAY_OF_WEEK, scheduleWhen.ordinal() );
+
+				delay = calendar.getTimeInMillis() - System.currentTimeMillis();
+
+				// If past the scheduled time, add a day or week.
+				if( delay < 0 ) {
+					if( scheduleWhen == CheckWhen.DAILY ) {
+						delay += 24 * MILLIS_IN_HOUR;
+					} else {
+						delay += 7 * 24 * MILLIS_IN_HOUR;
+					}
+				}
+
+				break;
+			}
+			default: {
+				delay = NO_CHECK;
+				break;
+			}
+		}
+
+		if( delay == NO_CHECK ) return;
+
+		timer.schedule( task = new UpdateCheckTask( this ), delay );
+
+		String date = DateUtil.format( new Date( task.scheduledExecutionTime() ), DateUtil.DEFAULT_DATE_FORMAT, TimeZone.getTimeZone( "America/Denver" ) );
+
+		Log.write( Log.TRACE, "Next check scheduled for: " + ( delay == 0 ? "now" : date ) );
 	}
 
 	public void checkForUpdates() {
@@ -513,9 +512,6 @@ public class ProductManager extends Agent implements Persistent {
 	public Set<ProductCard> getPostedUpdates( boolean force ) throws Exception {
 		// Update when the last update check occurred.
 		service.getSettings().putLong( ServiceSettingsPath.UPDATE_SETTINGS_PATH + "/check/last", System.currentTimeMillis() );
-
-		// Schedule the next update check.
-		scheduleUpdateCheck( false );
 
 		Set<ProductCard> newCards = new HashSet<ProductCard>();
 		if( !isEnabled() ) return newCards;
@@ -574,6 +570,9 @@ public class ProductManager extends Agent implements Persistent {
 		// Cache the discovered updates.
 		postedUpdateCacheTime = System.currentTimeMillis();
 		postedUpdateCache = new CopyOnWriteArraySet<ProductCard>( newCards );
+
+		// Schedule the next update check.
+		scheduleUpdateCheck( false );
 
 		return newCards;
 	}
