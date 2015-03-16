@@ -125,11 +125,11 @@ public class ProductManager extends Agent implements Persistent {
 
 	private File userProductFolder;
 
-	private CheckOption checkOption;
+	private CheckOption checkOption = CheckOption.INTERVAL;
 
-	private FoundOption foundOption;
+	private FoundOption foundOption = FoundOption.STAGE;
 
-	private ApplyOption applyOption;
+	private ApplyOption applyOption = ApplyOption.RESTART;
 
 	private File updater;
 
@@ -178,10 +178,13 @@ public class ProductManager extends Agent implements Persistent {
 		// Create the calendar.
 		calendar = new GregorianCalendar();
 
-		// Default options.
-		checkOption = CheckOption.MANUAL;
-		foundOption = FoundOption.STAGE;
-		applyOption = ApplyOption.RESTART;
+		Settings settings = service.getSettings().getNode( ServiceSettingsPath.UPDATE_SETTINGS_PATH );
+
+		// Update options.
+		// FIXME DescriptorSettingProvider causes namespace problem with child elements.
+		//checkOption = CheckOption.valueOf( settings.get( "check", checkOption.name() ).toUpperCase() );
+		//foundOption = FoundOption.valueOf( settings.get( "found", foundOption.name() ).toUpperCase() );
+		//applyOption = ApplyOption.valueOf( settings.get( "apply", applyOption.name() ).toUpperCase() );
 	}
 
 	public int getCatalogCount() {

@@ -6,9 +6,9 @@
 	</network>
 
 	<update>
-		<check>STARTUP</check>
-		<found>STAGE</found>
-		<apply>RESTART</apply>
+		<check>startup</check>
+		<found>stage</found>
+		<apply>restart</apply>
 	</update>
 
 </settings>
