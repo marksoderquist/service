@@ -177,14 +177,6 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Create the calendar.
 		calendar = new GregorianCalendar();
-
-		Settings settings = service.getSettings().getNode( ServiceSettingsPath.UPDATE_SETTINGS_PATH );
-
-		// Update options.
-		// FIXME DescriptorSettingProvider causes namespace problem with child elements.
-		//checkOption = CheckOption.valueOf( settings.get( "check", checkOption.name() ).toUpperCase() );
-		//foundOption = FoundOption.valueOf( settings.get( "found", foundOption.name() ).toUpperCase() );
-		//applyOption = ApplyOption.valueOf( settings.get( "apply", applyOption.name() ).toUpperCase() );
 	}
 
 	public int getCatalogCount() {
@@ -388,6 +380,8 @@ public class ProductManager extends Agent implements Persistent {
 	/**
 	 * Schedule the update check task according to the settings. This method may
 	 * safely be called as many times as necessary from any thread.
+	 * 
+	 * @param startup True if the method is called at product start.
 	 */
 	public synchronized void scheduleUpdateCheck( boolean startup ) {
 		if( task != null ) {
@@ -477,12 +471,16 @@ public class ProductManager extends Agent implements Persistent {
 			}
 		}
 
-		if( delay == NO_CHECK ) return;
+		if( delay == NO_CHECK ) {
+			Log.write( Log.TRACE, "No update check scheduled." );
+			return;
+		}
 
 		timer.schedule( task = new UpdateCheckTask( this ), delay );
+		settings.putLong( "next", task.scheduledExecutionTime() );
+		settings.flush();
 
 		String date = DateUtil.format( new Date( task.scheduledExecutionTime() ), DateUtil.DEFAULT_DATE_FORMAT, TimeZone.getTimeZone( "America/Denver" ) );
-
 		Log.write( Log.TRACE, "Next check scheduled for: " + ( delay == 0 ? "now" : date ) );
 	}
 
@@ -897,9 +895,9 @@ public class ProductManager extends Agent implements Persistent {
 		}
 		this.updates = updatesMap;
 
-		this.checkOption = CheckOption.valueOf( settings.get( CHECK, CheckOption.MANUAL.name() ) );
-		this.foundOption = FoundOption.valueOf( settings.get( FOUND, FoundOption.STAGE.name() ) );
-		this.applyOption = ApplyOption.valueOf( settings.get( APPLY, ApplyOption.RESTART.name() ) );
+		this.checkOption = CheckOption.valueOf( settings.get( CHECK, checkOption.name() ).toUpperCase() );
+		this.foundOption = FoundOption.valueOf( settings.get( FOUND, foundOption.name() ).toUpperCase() );
+		this.applyOption = ApplyOption.valueOf( settings.get( APPLY, applyOption.name() ).toUpperCase() );
 	}
 
 	@Override
