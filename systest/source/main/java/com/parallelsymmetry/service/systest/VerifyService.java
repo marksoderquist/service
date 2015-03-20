@@ -2,12 +2,13 @@ package com.parallelsymmetry.service.systest;
 
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.logging.Level;
 
 import com.parallelsymmetry.service.Service;
 import com.parallelsymmetry.service.ServiceFlag;
+import com.parallelsymmetry.service.ServiceSettingsPath;
 import com.parallelsymmetry.utility.Parameters;
 import com.parallelsymmetry.utility.log.Log;
+import com.parallelsymmetry.utility.setting.Settings;
 
 public class VerifyService extends Service {
 
@@ -46,18 +47,10 @@ public class VerifyService extends Service {
 		Log.write( "milliseconds regardless of what parameters are specified on the command line." );
 		Log.write();
 
-		Level level = Log.getLevel();
-		Log.setLevel( Log.ALL );
-		Log.write( "Sample log messages:" );
-		Log.write( Log.DEVEL, "Development message." );
-		Log.write( Log.ERROR, "Error message." );
-		Log.write( Log.WARN, "Warning message." );
-		Log.write( Log.INFO, "Information message." );
-		Log.write( Log.TRACE, "Trace message." );
-		Log.write( Log.DEBUG, "Debug message." );
-		Log.write( Log.DETAIL, "Detail message." );
-		Log.write();
-		Log.setLevel( level );
+		Settings updateSettings = getSettings().getNode( ServiceSettingsPath.UPDATE_SETTINGS_PATH );
+		Log.write( Log.TRACE, "Update check: " + updateSettings.get( "check", null ) );
+		Log.write( Log.TRACE, "Update found: " + updateSettings.get( "found", null ) );
+		Log.write( Log.TRACE, "Update apply: " + updateSettings.get( "apply", null ) );
 	}
 
 	@Override

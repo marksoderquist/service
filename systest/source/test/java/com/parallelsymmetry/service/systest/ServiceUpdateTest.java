@@ -22,7 +22,7 @@ public class ServiceUpdateTest extends BaseTestCase {
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
-		Log.setLevel( Log.TRACE );
+		Log.setLevel( Log.INFO );
 	}
 
 	/*
@@ -37,12 +37,11 @@ public class ServiceUpdateTest extends BaseTestCase {
 		stage();
 
 		// Create an instance of the service for configuration purposes.
-		Log.write( Log.ERROR, "Configuring service..." );
 		service = new VerifyService();
 		assertNotNull( service.getCard() );
 
 		// Reset the preferences but don't start the service.
-		Log.write( "Resetting service settings..." );
+		Log.write( Log.DEVEL, "Resetting service settings..." );
 		service.processInternal( ServiceFlag.EXECMODE, ServiceFlagValue.TEST, ServiceFlag.SETTINGS_RESET, LogFlag.LOG_DATE, ServiceFlag.STOP );
 		Log.setShowDate( false );
 
@@ -54,12 +53,13 @@ public class ServiceUpdateTest extends BaseTestCase {
 		assertTrue( FileUtil.delete( updateLogFile ) );
 
 		// Configure the service update settings.
-		Settings updateSettings = service.getSettings().getNode( ServiceSettingsPath.PRODUCT_MANAGER_SETTINGS_PATH );
-		updateSettings.put( "check", "STARTUP" );
+		Settings updateSettings = service.getSettings().getNode( ServiceSettingsPath.UPDATE_SETTINGS_PATH );
+		updateSettings.put( "check", "startup" );
 		updateSettings.flush();
 
 		// Start the service that detects the update, stages the update, and restarts.
-		Log.write( Log.ERROR, "Executing update and waiting for results..." );
+		System.out.println();
+		Log.write( Log.DEVEL, "Executing update and waiting for results..." );
 		executeUpdate();
 
 		// Because the stage process should restart the application immediately 
@@ -67,7 +67,8 @@ public class ServiceUpdateTest extends BaseTestCase {
 		// terminate and for the auto terminate timeout also.
 		Thread.sleep( PROCESS_EXECUTE_TIME + VerifyService.AUTO_TERMINATE_TIMEOUT );
 
-		Log.write( Log.ERROR, "Verifying update results..." );
+		System.out.println();
+		Log.write( Log.DEVEL, "Verifying update results..." );
 
 		// Load the verify service log file.
 		assertTrue( "Verify log file not found: " + verifyLogFile, verifyLogFile.exists() );

@@ -29,7 +29,6 @@ import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
-import java.util.prefs.Preferences;
 
 import javax.swing.Icon;
 import javax.swing.JOptionPane;
@@ -57,15 +56,14 @@ import com.parallelsymmetry.utility.log.LogFlag;
 import com.parallelsymmetry.utility.product.ProductCard;
 import com.parallelsymmetry.utility.product.ProductCardException;
 import com.parallelsymmetry.utility.setting.BaseSettingsProvider;
-import com.parallelsymmetry.utility.setting.DescriptorSettingsProvider;
 import com.parallelsymmetry.utility.setting.MapSettingsProvider;
 import com.parallelsymmetry.utility.setting.ParametersSettingsProvider;
 import com.parallelsymmetry.utility.setting.PersistentMapSettingsProvider;
-import com.parallelsymmetry.utility.setting.PreferencesSettingsProvider;
+//import com.parallelsymmetry.utility.setting.PreferencesSettingsProvider;
 import com.parallelsymmetry.utility.setting.SettingEvent;
 import com.parallelsymmetry.utility.setting.SettingListener;
-import com.parallelsymmetry.utility.setting.SettingsProvider;
 import com.parallelsymmetry.utility.setting.Settings;
+import com.parallelsymmetry.utility.setting.SettingsProvider;
 import com.parallelsymmetry.utility.task.Task;
 import com.parallelsymmetry.utility.task.TaskManager;
 
@@ -550,7 +548,6 @@ public abstract class Service extends Agent implements ServiceProduct {
 			Log.write( Log.HELP, TextUtil.reline( summary, 75 ) );
 		}
 		Log.write( Log.HELP, TextUtil.pad( 75, '-' ) );
-		Log.write( Log.HELP );
 
 		Log.write( Log.TRACE, "Java: " + System.getProperty( "java.runtime.version" ) );
 
@@ -854,18 +851,6 @@ public abstract class Service extends Agent implements ServiceProduct {
 		// Add the persistent settings provider.
 		File providerFile = new File( getDataFolder(), "settings.properties" );
 		settings.addProvider( new PersistentMapSettingsProvider( providerFile ) );
-
-		// TODO Remove the following if statement after 2015-03-01.
-		if( !providerFile.exists() ) {
-			// Copy from preferences.
-			String preferencesPath = "/" + card.getGroup() + "." + card.getArtifact();
-			if( parameters.isSet( ServiceFlag.EXECMODE ) ) preferencesPath = "/" + card.getGroup() + execModePrefix + card.getArtifact();
-			Preferences preferences = Preferences.userRoot().node( preferencesPath );
-			PreferencesSettingsProvider prefsProvider = new PreferencesSettingsProvider( preferences );
-
-			this.settings.copyDeepFrom( new Settings( prefsProvider ) );
-			this.settings.flush();
-		}
 
 		// Reset the settings specified on the command line.
 		if( parameters.isTrue( ServiceFlag.SETTINGS_RESET ) ) {

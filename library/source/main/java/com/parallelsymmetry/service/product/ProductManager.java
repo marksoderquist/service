@@ -125,11 +125,11 @@ public class ProductManager extends Agent implements Persistent {
 
 	private File userProductFolder;
 
-	private CheckOption checkOption = CheckOption.MANUAL;
+	private CheckOption checkOption;
 
-	private FoundOption foundOption = FoundOption.STAGE;
+	private FoundOption foundOption;
 
-	private ApplyOption applyOption = ApplyOption.RESTART;
+	private ApplyOption applyOption;
 
 	private File updater;
 
@@ -355,8 +355,8 @@ public class ProductManager extends Agent implements Persistent {
 
 	public void setCheckOption( CheckOption checkOption ) {
 		this.checkOption = checkOption;
-		scheduleUpdateCheck( false );
 		saveSettings( settings );
+		scheduleUpdateCheck( false );
 	}
 
 	public FoundOption getFoundOption() {
@@ -476,11 +476,19 @@ public class ProductManager extends Agent implements Persistent {
 			return;
 		}
 
-		timer.schedule( task = new UpdateCheckTask( this ), delay );
-		settings.putLong( "next", task.scheduledExecutionTime() );
-		settings.flush();
+		// Create the update check task.
+		task = new UpdateCheckTask( this );
+		
+		// Schedule the update check task.
+		timer.schedule( task, delay );
+		
+		long nextCheckTime = System.currentTimeMillis() + delay;
+		
+		// Set the next update check time in the settings.
+		settings.putLong( "next", nextCheckTime );
 
-		String date = DateUtil.format( new Date( task.scheduledExecutionTime() ), DateUtil.DEFAULT_DATE_FORMAT, TimeZone.getTimeZone( "America/Denver" ) );
+		// Log the next update check time.
+		String date = DateUtil.format( new Date( nextCheckTime ), DateUtil.DEFAULT_DATE_FORMAT, TimeZone.getTimeZone( "America/Denver" ) );
 		Log.write( Log.TRACE, "Next check scheduled for: " + ( delay == 0 ? "now" : date ) );
 	}
 
@@ -895,9 +903,10 @@ public class ProductManager extends Agent implements Persistent {
 		}
 		this.updates = updatesMap;
 
-		this.checkOption = CheckOption.valueOf( settings.get( CHECK, checkOption.name() ).toUpperCase() );
-		this.foundOption = FoundOption.valueOf( settings.get( FOUND, foundOption.name() ).toUpperCase() );
-		this.applyOption = ApplyOption.valueOf( settings.get( APPLY, applyOption.name() ).toUpperCase() );
+		Settings updateSettings = settings.getNode( "update" );
+		this.checkOption = CheckOption.valueOf( updateSettings.get( CHECK, null ).toUpperCase() );
+		this.foundOption = FoundOption.valueOf( updateSettings.get( FOUND, null ).toUpperCase() );
+		this.applyOption = ApplyOption.valueOf( updateSettings.get( APPLY, null ).toUpperCase() );
 	}
 
 	@Override
@@ -907,9 +916,10 @@ public class ProductManager extends Agent implements Persistent {
 		settings.putNodeSet( CATALOGS_SETTINGS_KEY, catalogs );
 		settings.putNodeMap( UPDATES_SETTINGS_KEY, updates );
 
-		settings.put( CHECK, checkOption.name().toLowerCase() );
-		settings.put( FOUND, foundOption.name().toLowerCase() );
-		settings.put( APPLY, applyOption.name().toLowerCase() );
+		Settings updateSettings = settings.getNode( "update" );
+		updateSettings.put( CHECK, checkOption.name().toLowerCase() );
+		updateSettings.put( FOUND, foundOption.name().toLowerCase() );
+		updateSettings.put( APPLY, applyOption.name().toLowerCase() );
 
 		settings.flush();
 	}
