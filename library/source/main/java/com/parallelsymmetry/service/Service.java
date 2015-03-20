@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
@@ -21,6 +22,7 @@ import java.security.InvalidParameterException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.FileHandler;
@@ -56,6 +58,7 @@ import com.parallelsymmetry.utility.product.ProductCard;
 import com.parallelsymmetry.utility.product.ProductCardException;
 import com.parallelsymmetry.utility.setting.BaseSettingProvider;
 import com.parallelsymmetry.utility.setting.DescriptorSettingProvider;
+import com.parallelsymmetry.utility.setting.MapSettingProvider;
 import com.parallelsymmetry.utility.setting.ParametersSettingProvider;
 import com.parallelsymmetry.utility.setting.PersistentMapSettingProvider;
 import com.parallelsymmetry.utility.setting.PreferencesSettingProvider;
@@ -76,7 +79,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 
 	protected static final String DEFAULT_PRODUCT_PATH = "/META-INF/product.xml";
 
-	protected static final String DEFAULT_SETTINGS_PATH = "/settings/default.xml";
+	protected static final String DEFAULT_SETTINGS_PATH = "/settings/default.map";
 
 	private static final String JAVA_VERSION_MINIMUM = "1.6";
 
@@ -148,13 +151,20 @@ public abstract class Service extends Agent implements ServiceProduct {
 
 		// Create the settings object.
 		settings = new Settings();
+		InputStream input = getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH );
 		try {
-			Descriptor descriptor = new Descriptor( getClass().getResourceAsStream( DEFAULT_SETTINGS_PATH ) );
-			DescriptorSettingProvider settingProvider = new DescriptorSettingProvider( descriptor );
-			defaultSettingProvider = new BaseSettingProvider( settingProvider );
+			Properties properties = new Properties();
+			properties.load( input );
+			defaultSettingProvider = new BaseSettingProvider( new MapSettingProvider( properties ) );
 			settings.setDefaultProvider( defaultSettingProvider );
 		} catch( Exception exception ) {
 			Log.write( exception );
+		} finally {
+			try {
+				if( input != null ) input.close();
+			} catch( Exception exception ) {
+				Log.write( exception );
+			}
 		}
 
 		peerServer = new PeerServer( this );

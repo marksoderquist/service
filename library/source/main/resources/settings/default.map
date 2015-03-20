@@ -1,0 +1,6 @@
+/network/enableipv6=false
+/network/preferipv6=false
+/network/proxy/all=true
+/update/check=startup
+/update/found=stage
+/update/apply=restart
