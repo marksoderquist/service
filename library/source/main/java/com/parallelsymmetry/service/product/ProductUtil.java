@@ -6,7 +6,7 @@ import com.parallelsymmetry.service.Service;
 import com.parallelsymmetry.utility.Bundles;
 import com.parallelsymmetry.utility.product.Product;
 import com.parallelsymmetry.utility.product.ProductCard;
-import com.parallelsymmetry.utility.setting.SettingProvider;
+import com.parallelsymmetry.utility.setting.SettingsProvider;
 import com.parallelsymmetry.utility.setting.Settings;
 
 public class ProductUtil {
@@ -34,11 +34,11 @@ public class ProductUtil {
 		return service.getSettings().getNode( getSettingsPath( card ) );
 	}
 
-	public static final void addSettingsProvider( Service service, Product product, SettingProvider provider ) {
+	public static final void addSettingsProvider( Service service, Product product, SettingsProvider provider ) {
 		service.getSettings().addProvider( provider, getSettingsPath( product ) );
 	}
 
-	public static final void removeSettingsProvider( Service service, Product product, SettingProvider provider ) {
+	public static final void removeSettingsProvider( Service service, Product product, SettingsProvider provider ) {
 		service.getSettings().removeProvider( provider );
 	}
 

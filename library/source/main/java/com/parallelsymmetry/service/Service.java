@@ -56,15 +56,15 @@ import com.parallelsymmetry.utility.log.Log;
 import com.parallelsymmetry.utility.log.LogFlag;
 import com.parallelsymmetry.utility.product.ProductCard;
 import com.parallelsymmetry.utility.product.ProductCardException;
-import com.parallelsymmetry.utility.setting.BaseSettingProvider;
-import com.parallelsymmetry.utility.setting.DescriptorSettingProvider;
-import com.parallelsymmetry.utility.setting.MapSettingProvider;
-import com.parallelsymmetry.utility.setting.ParametersSettingProvider;
-import com.parallelsymmetry.utility.setting.PersistentMapSettingProvider;
-import com.parallelsymmetry.utility.setting.PreferencesSettingProvider;
+import com.parallelsymmetry.utility.setting.BaseSettingsProvider;
+import com.parallelsymmetry.utility.setting.DescriptorSettingsProvider;
+import com.parallelsymmetry.utility.setting.MapSettingsProvider;
+import com.parallelsymmetry.utility.setting.ParametersSettingsProvider;
+import com.parallelsymmetry.utility.setting.PersistentMapSettingsProvider;
+import com.parallelsymmetry.utility.setting.PreferencesSettingsProvider;
 import com.parallelsymmetry.utility.setting.SettingEvent;
 import com.parallelsymmetry.utility.setting.SettingListener;
-import com.parallelsymmetry.utility.setting.SettingProvider;
+import com.parallelsymmetry.utility.setting.SettingsProvider;
 import com.parallelsymmetry.utility.setting.Settings;
 import com.parallelsymmetry.utility.task.Task;
 import com.parallelsymmetry.utility.task.TaskManager;
@@ -97,7 +97,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 
 	private String execModePrefix = "";
 
-	private BaseSettingProvider defaultSettingProvider;
+	private BaseSettingsProvider defaultSettingProvider;
 
 	private Settings settings;
 
@@ -155,7 +155,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 		try {
 			Properties properties = new Properties();
 			properties.load( input );
-			defaultSettingProvider = new BaseSettingProvider( new MapSettingProvider( properties ) );
+			defaultSettingProvider = new BaseSettingsProvider( new MapSettingsProvider( properties ) );
 			settings.setDefaultProvider( defaultSettingProvider );
 		} catch( Exception exception ) {
 			Log.write( exception );
@@ -242,16 +242,16 @@ public abstract class Service extends Agent implements ServiceProduct {
 		return settings;
 	}
 
-	public void setDefaultSettings( SettingProvider provider ) {
+	public void setDefaultSettings( SettingsProvider provider ) {
 		defaultSettingProvider.setProvider( provider );
 	}
 
-	public void addDefaultSettings( SettingProvider provider ) {
+	public void addDefaultSettings( SettingsProvider provider ) {
 		if( provider == null ) return;
 		defaultSettingProvider.addProvider( provider );
 	}
 
-	public void removeDefaultSettings( SettingProvider provider ) {
+	public void removeDefaultSettings( SettingsProvider provider ) {
 		if( provider == null ) return;
 		defaultSettingProvider.removeProvider( provider );
 	}
@@ -839,7 +839,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 	private final void configureSettings( Parameters parameters ) {
 		// Add the parameters settings provider.
 		try {
-			settings.addProvider( new ParametersSettingProvider( parameters ) );
+			settings.addProvider( new ParametersSettingsProvider( parameters ) );
 		} catch( Exception exception ) {
 			Log.write( exception );
 		}
@@ -853,7 +853,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 
 		// Add the persistent settings provider.
 		File providerFile = new File( getDataFolder(), "settings.properties" );
-		settings.addProvider( new PersistentMapSettingProvider( providerFile ) );
+		settings.addProvider( new PersistentMapSettingsProvider( providerFile ) );
 
 		// TODO Remove the following if statement after 2015-03-01.
 		if( !providerFile.exists() ) {
@@ -861,7 +861,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 			String preferencesPath = "/" + card.getGroup() + "." + card.getArtifact();
 			if( parameters.isSet( ServiceFlag.EXECMODE ) ) preferencesPath = "/" + card.getGroup() + execModePrefix + card.getArtifact();
 			Preferences preferences = Preferences.userRoot().node( preferencesPath );
-			PreferencesSettingProvider prefsProvider = new PreferencesSettingProvider( preferences );
+			PreferencesSettingsProvider prefsProvider = new PreferencesSettingsProvider( preferences );
 
 			this.settings.copyDeepFrom( new Settings( prefsProvider ) );
 			this.settings.flush();
