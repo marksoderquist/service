@@ -125,7 +125,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	private File userProductFolder;
 
-	private CheckOption checkOption = CheckOption.INTERVAL;
+	private CheckOption checkOption = CheckOption.MANUAL;
 
 	private FoundOption foundOption = FoundOption.STAGE;
 
