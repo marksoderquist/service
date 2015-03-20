@@ -76,11 +76,11 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	public enum FoundOption {
-		SELECT, CACHESELECT, STAGE
+		SELECT, STORE, STAGE
 	}
 
 	public enum ApplyOption {
-		VERIFY, SKIP, RESTART
+		VERIFY, IGNORE, RESTART
 	}
 
 	public static final String DEFAULT_CATALOG_FILE_NAME = "catalog.xml";
@@ -511,15 +511,18 @@ public class ProductManager extends Agent implements Persistent {
 	 * @throws Exception
 	 */
 	public Set<ProductCard> getPostedUpdates( boolean force ) throws Exception {
-		// Update when the last update check occurred.
-		service.getSettings().putLong( ServiceSettingsPath.UPDATE_SETTINGS_PATH + "/check/last", System.currentTimeMillis() );
-
 		Set<ProductCard> newCards = new HashSet<ProductCard>();
 		if( !isEnabled() ) return newCards;
 
 		// If the posted update cache is still valid return the updates in the cache.
 		long postedCacheAge = System.currentTimeMillis() - postedUpdateCacheTime;
 		if( force == false && postedCacheAge < POSTED_UPDATE_CACHE_TIMEOUT ) return new HashSet<ProductCard>( postedUpdateCache );
+
+		// Update when the last update check occurred.
+		service.getSettings().putLong( ServiceSettingsPath.UPDATE_SETTINGS_PATH + "/check/last", System.currentTimeMillis() );
+
+		// Schedule the next update check.
+		scheduleUpdateCheck( false );
 
 		// Download the descriptors for each product.
 		Set<ProductCard> oldCards = getProductCards();
@@ -571,9 +574,6 @@ public class ProductManager extends Agent implements Persistent {
 		// Cache the discovered updates.
 		postedUpdateCacheTime = System.currentTimeMillis();
 		postedUpdateCache = new CopyOnWriteArraySet<ProductCard>( newCards );
-
-		// Schedule the next update check.
-		scheduleUpdateCheck( false );
 
 		return newCards;
 	}
@@ -907,9 +907,9 @@ public class ProductManager extends Agent implements Persistent {
 		settings.putNodeSet( CATALOGS_SETTINGS_KEY, catalogs );
 		settings.putNodeMap( UPDATES_SETTINGS_KEY, updates );
 
-		settings.put( CHECK, checkOption.name() );
-		settings.put( FOUND, foundOption.name() );
-		settings.put( APPLY, applyOption.name() );
+		settings.put( CHECK, checkOption.name().toLowerCase() );
+		settings.put( FOUND, foundOption.name().toLowerCase() );
+		settings.put( APPLY, applyOption.name().toLowerCase() );
 
 		settings.flush();
 	}
