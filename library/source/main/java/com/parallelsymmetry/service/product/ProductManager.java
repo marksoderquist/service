@@ -34,6 +34,7 @@ import com.parallelsymmetry.utility.DateUtil;
 import com.parallelsymmetry.utility.Descriptor;
 import com.parallelsymmetry.utility.FileUtil;
 import com.parallelsymmetry.utility.JavaUtil;
+import com.parallelsymmetry.utility.TestUtil;
 import com.parallelsymmetry.utility.UriUtil;
 import com.parallelsymmetry.utility.agent.Agent;
 import com.parallelsymmetry.utility.log.Log;
@@ -400,6 +401,9 @@ public class ProductManager extends Agent implements Persistent {
 		long timeSinceLastCheck = System.currentTimeMillis() - lastUpdateCheck;
 		long delay = NO_CHECK;
 
+		// This is required to avoid a memory use problem during testing.
+		if( TestUtil.isTest() ) checkOption = CheckOption.MANUAL;
+
 		switch( checkOption ) {
 			case MANUAL:
 				delay = NO_CHECK;
@@ -478,12 +482,12 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Create the update check task.
 		task = new UpdateCheckTask( this );
-		
+
 		// Schedule the update check task.
 		timer.schedule( task, delay );
-		
+
 		long nextCheckTime = System.currentTimeMillis() + delay;
-		
+
 		// Set the next update check time in the settings.
 		settings.putLong( "next", nextCheckTime );
 
