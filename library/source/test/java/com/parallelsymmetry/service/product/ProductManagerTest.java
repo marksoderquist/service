@@ -19,7 +19,9 @@ import org.w3c.dom.Node;
 
 import com.parallelsymmetry.service.BaseServiceTest;
 import com.parallelsymmetry.service.product.ProductManager.ApplyOption;
+import com.parallelsymmetry.service.product.ProductManager.CheckInterval;
 import com.parallelsymmetry.service.product.ProductManager.CheckOption;
+import com.parallelsymmetry.service.product.ProductManager.CheckWhen;
 import com.parallelsymmetry.service.product.ProductManager.FoundOption;
 import com.parallelsymmetry.utility.Descriptor;
 import com.parallelsymmetry.utility.FileUtil;
@@ -305,6 +307,36 @@ public class ProductManagerTest extends BaseServiceTest {
 		assertEquals( installedProductB, installedProductA );
 		assertEquals( installedProductA.hashCode(), installedProductB.hashCode() );
 		assertEquals( installedProductB.hashCode(), installedProductA.hashCode() );
+	}
+
+	public void testGetNextIntervalTime() {
+		long hour = 3600000;
+		long day = 24 * hour;
+
+		assertEquals( hour, ProductManager.getNextIntervalTime( 0, CheckInterval.HOUR, 0, 0 ) );
+		assertEquals( day, ProductManager.getNextIntervalTime( 0, CheckInterval.DAY, 0, 0 ) );
+		assertEquals( 7 * day, ProductManager.getNextIntervalTime( 0, CheckInterval.WEEK, 0, 0 ) );
+		assertEquals( 30 * day, ProductManager.getNextIntervalTime( 0, CheckInterval.MONTH, 0, 0 ) );
+	}
+
+	public void testGetNextScheuleTime() {
+		long hour = 3600000;
+		long day = 24 * hour;
+
+		// Offset to get to nearest Sunday after epoch(on Thursday).
+		long offset = 3 * day;
+
+		// Check the daily values.
+		for( int index = 0; index < 24; index++ ) {
+			assertEquals( "Hour: " + index, index * hour, ProductManager.getNextScheduleTime( 0, CheckWhen.DAILY, index ) );
+		}
+
+		for( CheckWhen when : CheckWhen.values() ) {
+			if( when == CheckWhen.DAILY ) continue;
+			for( int index = 0; index < 24; index++ ) {
+				assertEquals( "When: " + when + " Hour: " + index, ( ( when.ordinal() - 1 ) * day ) + ( index * hour ), ProductManager.getNextScheduleTime( offset, when, index ) );
+			}
+		}
 	}
 
 	private void fixProductCardData( File descriptor ) throws Exception {
