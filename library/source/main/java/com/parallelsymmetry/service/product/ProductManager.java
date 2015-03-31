@@ -444,62 +444,6 @@ public class ProductManager extends Agent implements Persistent {
 		Log.write( Log.TRACE, "Next check scheduled for: " + ( delay == 0 ? "now" : date ) );
 	}
 
-	static long getNextIntervalTime( long currentTime, CheckInterval intervalUnit, long lastUpdateCheck, long timeSinceLastCheck ) {
-		long delay;
-		long intervalDelay = 0;
-		switch( intervalUnit ) {
-			case MONTH: {
-				intervalDelay = 30L * 24L * MILLIS_IN_HOUR;
-				break;
-			}
-			case WEEK: {
-				intervalDelay = 7L * 24L * MILLIS_IN_HOUR;
-				break;
-			}
-			case DAY: {
-				intervalDelay = 24L * MILLIS_IN_HOUR;
-				break;
-			}
-			case HOUR: {
-				intervalDelay = 1L * MILLIS_IN_HOUR;
-				break;
-			}
-		}
-
-		if( timeSinceLastCheck > intervalDelay ) {
-			// Check now and schedule again.
-			delay = 0;
-		} else {
-			// Schedule the next interval.
-			delay = ( lastUpdateCheck + intervalDelay ) - currentTime;
-		}
-		return delay;
-	}
-
-	static long getNextScheduleTime( long currentTime, CheckWhen scheduleWhen, int scheduleHour ) {
-		Calendar calendar = new GregorianCalendar( DateUtil.DEFAULT_TIME_ZONE );
-
-		// Calculate the next update check.
-		calendar.setTimeInMillis( currentTime );
-		calendar.set( Calendar.HOUR_OF_DAY, scheduleHour );
-		calendar.set( Calendar.MINUTE, 0 );
-		calendar.set( Calendar.SECOND, 0 );
-		calendar.set( Calendar.MILLISECOND, 0 );
-		if( scheduleWhen != CheckWhen.DAILY ) calendar.set( Calendar.DAY_OF_WEEK, scheduleWhen.ordinal() );
-		long result = calendar.getTimeInMillis() - currentTime;
-
-		// If past the scheduled time, add a day or week.
-		if( result < 0 ) {
-			if( scheduleWhen == CheckWhen.DAILY ) {
-				result += 24 * MILLIS_IN_HOUR;
-			} else {
-				result += 7 * 24 * MILLIS_IN_HOUR;
-			}
-		}
-
-		return result;
-	}
-
 	public void checkForUpdates() {
 		if( !isEnabled() ) return;
 
@@ -943,12 +887,68 @@ public class ProductManager extends Agent implements Persistent {
 		return map;
 	}
 
-	public static boolean areResourcesValid( Set<ProductResource> resources ) {
+	public static final boolean areResourcesValid( Set<ProductResource> resources ) {
 		for( ProductResource resource : resources ) {
 			if( !resource.isValid() ) return false;
 		}
 
 		return true;
+	}
+
+	public static final long getNextIntervalTime( long currentTime, CheckInterval intervalUnit, long lastUpdateCheck, long timeSinceLastCheck ) {
+		long delay;
+		long intervalDelay = 0;
+		switch( intervalUnit ) {
+			case MONTH: {
+				intervalDelay = 30L * 24L * MILLIS_IN_HOUR;
+				break;
+			}
+			case WEEK: {
+				intervalDelay = 7L * 24L * MILLIS_IN_HOUR;
+				break;
+			}
+			case DAY: {
+				intervalDelay = 24L * MILLIS_IN_HOUR;
+				break;
+			}
+			case HOUR: {
+				intervalDelay = 1L * MILLIS_IN_HOUR;
+				break;
+			}
+		}
+	
+		if( timeSinceLastCheck > intervalDelay ) {
+			// Check now and schedule again.
+			delay = 0;
+		} else {
+			// Schedule the next interval.
+			delay = ( lastUpdateCheck + intervalDelay ) - currentTime;
+		}
+		return delay;
+	}
+
+	public static final long getNextScheduleTime( long currentTime, CheckWhen scheduleWhen, int scheduleHour ) {
+		Calendar calendar = new GregorianCalendar( DateUtil.DEFAULT_TIME_ZONE );
+	
+		// Calculate the next update check.
+		calendar.setTimeInMillis( currentTime );
+		calendar.set( Calendar.HOUR_OF_DAY, scheduleHour );
+		calendar.set( Calendar.MINUTE, 0 );
+		calendar.set( Calendar.SECOND, 0 );
+		calendar.set( Calendar.MILLISECOND, 0 );
+		if( scheduleWhen != CheckWhen.DAILY ) calendar.set( Calendar.DAY_OF_WEEK, scheduleWhen.ordinal() );
+		long result = calendar.getTimeInMillis() - currentTime;
+	
+		// If past the scheduled time, add a day or week.
+		if( result < 0 ) {
+			if( scheduleWhen == CheckWhen.DAILY ) {
+				result += 24 * MILLIS_IN_HOUR;
+			} else {
+				result += 7 * 24 * MILLIS_IN_HOUR;
+			}
+		}
+	
+		return result;
 	}
 
 	protected boolean isEnabled() {
