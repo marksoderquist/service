@@ -25,7 +25,7 @@ public class UpdateShutdownHook extends Thread {
 	public UpdateShutdownHook( Service service, Map<String, ProductUpdate> updates, File updaterTarget, File updaterLogFile, String... commands ) throws URISyntaxException, IOException {
 		super( "Update Hook" );
 
-		builder = new ProcessBuilder( OperatingSystem.isWindows() ? "javaw" : "java" );
+		builder = new ProcessBuilder( OperatingSystem.getJavaExecutablePath() );
 		builder.directory( updaterTarget.getParentFile() );
 
 		builder.command().add( "-jar" );

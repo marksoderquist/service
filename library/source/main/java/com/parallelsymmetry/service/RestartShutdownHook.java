@@ -23,7 +23,7 @@ public class RestartShutdownHook extends Thread {
 	public RestartShutdownHook( Service service, String... commands ) {
 		super( "Restart Hook" );
 
-		builder = new ProcessBuilder( OperatingSystem.isWindows() ? "javaw" : "java" );
+		builder = new ProcessBuilder( OperatingSystem.getJavaExecutablePath() );
 		builder.directory( new File( System.getProperty( "user.dir" ) ) );
 
 		// Add the VM parameters to the commands.
