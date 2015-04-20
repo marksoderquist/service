@@ -18,6 +18,14 @@ import com.parallelsymmetry.utility.TextUtil;
 import com.parallelsymmetry.utility.log.Log;
 import com.parallelsymmetry.utility.log.LogFlag;
 
+/**
+ * This shutdown hook is used when the program detects that there are updates
+ * have been staged to be applied as the program starts. The program then
+ * registers an instance of this shutdown hook, and stops the program, which
+ * triggers this shutdown hook to start the update program.
+ * 
+ * @author soderquistmv
+ */
 public class UpdateShutdownHook extends Thread {
 
 	private volatile ProcessBuilder builder;
@@ -86,7 +94,7 @@ public class UpdateShutdownHook extends Thread {
 
 		builder.command().add( UpdaterFlag.LAUNCH_HOME );
 		builder.command().add( System.getProperty( "user.dir" ) );
-		
+
 		Log.write( Log.TRACE, "Update command: " + TextUtil.toString( builder.command(), " " ) );
 	}
 

@@ -16,6 +16,14 @@ import com.parallelsymmetry.utility.Parameters;
 import com.parallelsymmetry.utility.TextUtil;
 import com.parallelsymmetry.utility.log.Log;
 
+/**
+ * This shutdown hook is used when a program restart is requested. When a
+ * restart is requested the program registers an instance of this shutdown hook,
+ * and stops the program, which triggers this shutdown hook to start the program
+ * again.
+ * 
+ * @author soderquistmv
+ */
 public class RestartShutdownHook extends Thread {
 
 	private volatile ProcessBuilder builder;
