@@ -246,22 +246,24 @@ public class ServiceTest extends BaseTestCase {
 
 	public void testAlreadyRunning() throws Exception {
 		//System.out.println( "...testPassParameters()..." );
-		String name1 = "Mock Service 1";
-		MockService service1 = new MockService( name1 );
+
+		// The service name has to be the same for both instances in this test.
+		String name = "Mock Service";
+		
+		MockService service1 = new MockService( name );
 		service1.getProductManager().setCheckOption( ProductManager.CheckOption.MANUAL );
 		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false ) );
-		assertCommandLineHeader( name1, parser1 );
+		assertCommandLineHeader( name, parser1 );
 		assertTrue( "Service should be running and is not.", service1.isRunning() );
 
-		String name2 = "Mock Service 2";
-		MockService service2 = new MockService( name2 );
+		MockService service2 = new MockService( name );
 		service2.getProductManager().setCheckOption( ProductManager.CheckOption.MANUAL );
 		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.INFO, false ) );
 
 		service2.waitForShutdown( TIMEOUT, TIMEUNIT );
-		assertCommandLineHeader( name2, parser2 );
+		assertCommandLineHeader( name, parser2 );
 
-		assertEquals( "[I] " + name2 + " connected to peer.", parser2.next() );
+		assertEquals( "[I] " + name + " connected to peer.", parser2.next() );
 		assertEquals( "", parser2.next() );
 		assertNull( parser2.next() );
 
@@ -277,13 +279,16 @@ public class ServiceTest extends BaseTestCase {
 
 	public void testPassStatus() throws Exception {
 		//Log.write( "...testPassStatus()..." );
-		String name1 = "Mock Service 1";
-		MockService service1 = new MockService( name1 );
+		
+		// The service name has to be the same for both instances in this test.
+		String name = "Mock Service";
+		
+		MockService service1 = new MockService( name );
 		service1.getProductManager().setCheckOption( ProductManager.CheckOption.MANUAL );
 		LineParser parser1 = new LineParser( getCommandLineOutput( service1, Log.INFO, false, ServiceFlag.STATUS, LogFlag.LOG_LEVEL, Log.NONE.toString() ) );
-		assertCommandLineHeader( name1, parser1 );
+		assertCommandLineHeader( name, parser1 );
 
-		assertEquals( "[I] " + name1 + " status: STOPPED", parser1.next() );
+		assertEquals( "[I] " + name + " status: STOPPED", parser1.next() );
 		assertEquals( "", parser1.next() );
 		assertNull( parser1.next() );
 
@@ -293,15 +298,15 @@ public class ServiceTest extends BaseTestCase {
 		service1.waitForStartup( TIMEOUT, TIMEUNIT );
 		assertTrue( "Service should be running and is not.", service1.isRunning() );
 
-		String name2 = "Mock Service 2";
-		MockService service2 = new MockService( name2 );
+		//String name2 = "Mock Service";
+		MockService service2 = new MockService( name );
 		service2.getProductManager().setCheckOption( ProductManager.CheckOption.MANUAL );
 		LineParser parser2 = new LineParser( getCommandLineOutput( service2, Log.INFO, false, ServiceFlag.STATUS, LogFlag.LOG_LEVEL, Log.NONE.toString() ) );
 		service2.waitForShutdown( TIMEOUT, TIMEUNIT );
-		assertCommandLineHeader( name2, parser2 );
+		assertCommandLineHeader( name, parser2 );
 
-		assertEquals( "[I] " + name2 + " connected to peer.", parser2.next() );
-		assertEquals( "[I] " + name1 + " status: STARTED", parser2.next() );
+		assertEquals( "[I] " + name + " connected to peer.", parser2.next() );
+		assertEquals( "[I] " + name + " status: STARTED", parser2.next() );
 		assertEquals( "", parser2.next() );
 		assertNull( parser2.next() );
 
