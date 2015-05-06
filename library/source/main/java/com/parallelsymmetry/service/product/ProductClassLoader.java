@@ -32,7 +32,7 @@ public class ProductClassLoader extends URLClassLoader {
 
 		if( type == null ) {
 			try {
-				type = super.loadClass( name, true );
+				type = super.loadClass( name );
 			} catch( ClassNotFoundException cnf ) {
 				exception = cnf;
 			}
@@ -47,7 +47,7 @@ public class ProductClassLoader extends URLClassLoader {
 		}
 
 		if( type == null ) {
-			throw ( exception == null ? new ClassNotFoundException( name ) : exception );
+			throw exception == null ? new ClassNotFoundException( name ) : exception;
 		} else {
 			resolveClass( type );
 		}
