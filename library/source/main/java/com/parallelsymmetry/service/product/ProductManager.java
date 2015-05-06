@@ -755,9 +755,9 @@ public class ProductManager extends Agent implements Persistent {
 		saveSettings( settings );
 	}
 
-	public void loadModules( File... folders ) throws Exception {
+	public void loadProducts( File... folders ) throws Exception {
 		ClassLoader parent = getClass().getClassLoader();
-
+	
 		// Look for modules on the classpath.
 		Enumeration<URL> urls = parent.getResources( PRODUCT_DESCRIPTOR_PATH );
 		while( urls.hasMoreElements() ) {
@@ -765,34 +765,34 @@ public class ProductManager extends Agent implements Persistent {
 			URI base = UriUtil.getParent( uri );
 			URI classpath = UriUtil.getParent( base );
 			ProductCard card = new ProductCard( uri, new Descriptor( uri ) );
-			loadClasspathModule( card, classpath, parent );
+			if( !isReservedProduct( card ) ) loadClasspathModule( card, classpath, parent );
 		}
-
+	
 		// Look for modules in the specified folders.
 		for( File folder : folders ) {
 			if( !folder.exists() ) continue;
 			if( !folder.isDirectory() ) continue;
-
+	
 			// Look for simple modules (not common).
 			File[] jars = folder.listFiles( FileUtil.JAR_FILE_FILTER );
 			for( File jar : jars ) {
 				Log.write( Log.DEBUG, "Searching for module in: " + jar.toURI() );
 				URI uri = URI.create( "jar:" + jar.toURI().toASCIIString() + "!/" + PRODUCT_DESCRIPTOR_PATH );
 				ProductCard card = new ProductCard( jar.getParentFile().toURI(), new Descriptor( uri ) );
-				loadSimpleModule( card, jar.toURI(), parent );
+				if( !isReservedProduct( card ) ) loadSimpleModule( card, jar.toURI(), parent );
 			}
-
+	
 			// Look for normal modules (most common).
 			File[] moduleFolders = folder.listFiles( FileUtil.FOLDER_FILTER );
 			for( File moduleFolder : moduleFolders ) {
 				Log.write( Log.DEBUG, "Searching for module in: " + moduleFolder.toURI() );
-
+	
 				jars = moduleFolder.listFiles( FileUtil.JAR_FILE_FILTER );
 				for( File jar : jars ) {
 					try {
 						URI uri = URI.create( "jar:" + jar.toURI().toASCIIString() + "!/" + PRODUCT_DESCRIPTOR_PATH );
 						ProductCard card = new ProductCard( jar.getParentFile().toURI(), new Descriptor( uri ) );
-						loadNormalModule( card, moduleFolder.toURI(), parent );
+						if( !isReservedProduct( card ) ) loadNormalModule( card, moduleFolder.toURI(), parent );
 					} catch( FileNotFoundException exception ) {
 						// Not finding a product card is a common situation with dependencies.
 					} catch( Throwable throwable ) {
@@ -804,7 +804,6 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	public void registerProduct( ServiceProduct product ) {
-
 		String productKey = product.getCard().getProductKey();
 		products.put( productKey, product );
 		productCards.put( productKey, product.getCard() );
@@ -965,12 +964,21 @@ public class ProductManager extends Agent implements Persistent {
 		userProductFolder = new File( service.getDataFolder(), Service.MODULE_INSTALL_FOLDER_NAME );
 
 		// Load products.
-		loadModules( new File[] { homeProductFolder, userProductFolder } );
+		loadProducts( new File[] { homeProductFolder, userProductFolder } );
 	}
 
 	@Override
 	protected void stopAgent() throws Exception {
 		if( timer != null ) timer.cancel();
+	}
+
+	private boolean isReservedProduct( ProductCard card ) {
+		String key = card.getProductKey();
+	
+		if( "com.parallelsymmetry.escape".equals( key ) ) return true;
+		if( "com.parallelsymmetry.updater".equals( key ) ) return true;
+	
+		return false;
 	}
 
 	private void installProductImpl( ProductCard card, Map<ProductCard, Set<ProductResource>> productResources ) throws Exception {
@@ -983,7 +991,7 @@ public class ProductManager extends Agent implements Persistent {
 		copyProductResources( resources, installFolder );
 
 		// Load the product.
-		loadModules( userProductFolder );
+		loadProducts( userProductFolder );
 
 		// Set the enabled state.
 		setEnabledImpl( card, isEnabled( card ) );
@@ -1252,7 +1260,7 @@ public class ProductManager extends Agent implements Persistent {
 			Constructor<?> constructor = findConstructor( moduleClass );
 
 			module = (ServiceModule)constructor.newInstance( service, card );
-			registerModule( module, updatable, removable );
+			registerProduct( module, updatable, removable );
 			Log.write( Log.TRACE, source, " module loaded:  ", card.getProductKey() );
 		} catch( Throwable throwable ) {
 			Log.write( Log.WARN, source, " module failed:  ", card.getProductKey(), " (", className, ")" );
@@ -1294,7 +1302,7 @@ public class ProductManager extends Agent implements Persistent {
 		throw new NoSuchMethodException( "Module constructor not found: " + JavaUtil.getClassName( moduleClass ) + "( " + JavaUtil.getClassName( Service.class ) + ", " + JavaUtil.getClassName( ProductCard.class ) + " )" );
 	}
 
-	private void registerModule( ServiceModule module, boolean updatable, boolean removable ) {
+	private void registerProduct( ServiceModule module, boolean updatable, boolean removable ) {
 		ProductCard card = module.getCard();
 
 		// Register the product.
