@@ -762,9 +762,10 @@ public class ProductManager extends Agent implements Persistent {
 		Enumeration<URL> urls = parent.getResources( PRODUCT_DESCRIPTOR_PATH );
 		while( urls.hasMoreElements() ) {
 			URI uri = urls.nextElement().toURI();
-			URI codebase = uri.resolve( ".." );
-			ProductCard card = new ProductCard( uri.resolve( "." ), new Descriptor( uri ) );
-			loadClasspathModule( card, codebase, parent );
+			URI base = UriUtil.getParent( uri );
+			URI classpath = UriUtil.getParent( base );
+			ProductCard card = new ProductCard( uri, new Descriptor( uri ) );
+			loadClasspathModule( card, classpath, parent );
 		}
 
 		// Look for modules in the specified folders.
@@ -1170,7 +1171,7 @@ public class ProductManager extends Agent implements Persistent {
 		//		String libPath = System.getProperty( "java.library.path" );
 		//		File file = new File( codebase );
 		//		System.setProperty( "java.library.path", libPath + File.pathSeparator + file.toString() );
-		
+
 		// The following block was added to track down a build error.
 		try {
 			codebase.toURL();
