@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -1163,7 +1162,7 @@ public class ProductManager extends Agent implements Persistent {
 			card.setInstallFolder( new File( URI.create( installFolder ) ) );
 		}
 
-		ModuleClassLoader loader = new ModuleClassLoader( new URL[] { codebase.toURL() }, parent, codebase );
+		ProductClassLoader loader = new ProductClassLoader( new URL[] { codebase.toURL() }, parent, codebase );
 		ServiceModule module = loadModule( card, loader, "CLASSPATH", false, false );
 		return module;
 	}
@@ -1185,7 +1184,7 @@ public class ProductManager extends Agent implements Persistent {
 		card.setInstallFolder( jarfile.getParentFile() );
 
 		// Create the class loader.
-		ModuleClassLoader loader = new ModuleClassLoader( new URL[] { jarfile.toURI().toURL() }, parent, codebase );
+		ProductClassLoader loader = new ProductClassLoader( new URL[] { jarfile.toURI().toURL() }, parent, codebase );
 		return loadModule( card, loader, "SIMPLE", true, true );
 	}
 
@@ -1211,11 +1210,11 @@ public class ProductManager extends Agent implements Persistent {
 		}
 
 		// Create the class loader.
-		ModuleClassLoader loader = new ModuleClassLoader( urls.toArray( new URL[urls.size()] ), parent, moduleFolderUri );
+		ProductClassLoader loader = new ProductClassLoader( urls.toArray( new URL[urls.size()] ), parent, moduleFolderUri );
 		return loadModule( card, loader, "NORMAL", true, true );
 	}
 
-	private ServiceModule loadModule( ProductCard card, ModuleClassLoader loader, String source, boolean updatable, boolean removable ) throws Exception {
+	private ServiceModule loadModule( ProductCard card, ProductClassLoader loader, String source, boolean updatable, boolean removable ) throws Exception {
 		// Ignore included products.
 		if( includedProducts.contains( card.getProductKey() ) ) return null;
 
@@ -1295,70 +1294,6 @@ public class ProductManager extends Agent implements Persistent {
 		for( ProductManagerListener listener : listeners ) {
 			listener.eventOccurred( event );
 		}
-	}
-
-	private static final class ModuleClassLoader extends URLClassLoader {
-
-		private URI codebase;
-
-		private ClassLoader parent;
-
-		public ModuleClassLoader( URL[] urls, ClassLoader parent, URI codebase ) {
-			super( urls, null );
-			this.codebase = codebase;
-			this.parent = parent;
-		}
-
-		/**
-		 * Change the default class loader behavior to load module classes from the
-		 * module class loader first then delegate to the parent class loader if the
-		 * class could not be found.
-		 */
-		@Override
-		public Class<?> loadClass( final String name ) throws ClassNotFoundException {
-			Class<?> type = null;
-
-			ClassNotFoundException exception = null;
-
-			if( type == null ) {
-				try {
-					type = super.loadClass( name );
-				} catch( ClassNotFoundException cnf ) {
-					exception = cnf;
-				}
-			}
-
-			if( type == null ) {
-				try {
-					type = parent.loadClass( name );
-				} catch( ClassNotFoundException cnf ) {
-					exception = cnf;
-				}
-			}
-
-			if( type == null ) {
-				throw ( exception == null ? new ClassNotFoundException( name ) : exception );
-			} else {
-				resolveClass( type );
-			}
-
-			return type;
-		}
-
-		/**
-		 * Used to find native library files used with modules. This allows a module
-		 * to package needed native libraries in the module and be loaded at
-		 * runtime.
-		 */
-		@Override
-		protected String findLibrary( String libname ) {
-			Log.write( Log.DEVEL, "Codebase URI: " + codebase );
-			URI uri = codebase.resolve( System.mapLibraryName( libname ) );
-			Log.write( Log.DEVEL, "Library URI: " + uri );
-			File file = new File( uri );
-			return file.exists() ? file.toString() : null;
-		}
-
 	}
 
 	/**
