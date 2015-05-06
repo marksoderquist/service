@@ -763,13 +763,9 @@ public class ProductManager extends Agent implements Persistent {
 		Enumeration<URL> urls = parent.getResources( PRODUCT_DESCRIPTOR_PATH );
 		while( urls.hasMoreElements() ) {
 			URI uri = urls.nextElement().toURI();
-
-			String uriString = uri.toString();
-			int index = uriString.length() - PRODUCT_DESCRIPTOR_PATH.length();
-			URL classpath = new URL( uriString.substring( 0, index ) );
-
-			ProductCard card = new ProductCard( UriUtil.getParent( uri ), new Descriptor( uri ) );
-			loadClasspathModule( card, classpath, UriUtil.getParent( uri ), parent );
+			URI codebase = uri.resolve( ".." );
+			ProductCard card = new ProductCard( uri.resolve( "." ), new Descriptor( uri ) );
+			loadClasspathModule( card, codebase, parent );
 		}
 
 		// Look for modules in the specified folders.
@@ -916,7 +912,7 @@ public class ProductManager extends Agent implements Persistent {
 				break;
 			}
 		}
-	
+
 		if( timeSinceLastCheck > intervalDelay ) {
 			// Check now and schedule again.
 			delay = 0;
@@ -929,7 +925,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	public static final long getNextScheduleTime( long currentTime, CheckWhen scheduleWhen, int scheduleHour ) {
 		Calendar calendar = new GregorianCalendar( DateUtil.DEFAULT_TIME_ZONE );
-	
+
 		// Calculate the next update check.
 		calendar.setTimeInMillis( currentTime );
 		calendar.set( Calendar.HOUR_OF_DAY, scheduleHour );
@@ -938,7 +934,7 @@ public class ProductManager extends Agent implements Persistent {
 		calendar.set( Calendar.MILLISECOND, 0 );
 		if( scheduleWhen != CheckWhen.DAILY ) calendar.set( Calendar.DAY_OF_WEEK, scheduleWhen.ordinal() );
 		long result = calendar.getTimeInMillis() - currentTime;
-	
+
 		// If past the scheduled time, add a day or week.
 		if( result < 0 ) {
 			if( scheduleWhen == CheckWhen.DAILY ) {
@@ -947,7 +943,7 @@ public class ProductManager extends Agent implements Persistent {
 				result += 7 * 24 * MILLIS_IN_HOUR;
 			}
 		}
-	
+
 		return result;
 	}
 
@@ -1157,15 +1153,17 @@ public class ProductManager extends Agent implements Persistent {
 	 * @return
 	 * @throws Exception
 	 */
-	private ServiceModule loadClasspathModule( ProductCard card, URL classpath, URI codebase, ClassLoader parent ) throws Exception {
+	private ServiceModule loadClasspathModule( ProductCard card, URI codebase, ClassLoader parent ) throws Exception {
+		String path = codebase.toString();
+
+		// Fix the install folder when running in development.
 		String suffix = "target/main/java/";
-		String path = classpath.toString();
 		if( path.endsWith( suffix ) ) {
 			String installFolder = path.substring( 0, path.length() - suffix.length() );
 			card.setInstallFolder( new File( URI.create( installFolder ) ) );
 		}
 
-		ModuleClassLoader loader = new ModuleClassLoader( new URL[] { classpath }, parent, codebase );
+		ModuleClassLoader loader = new ModuleClassLoader( new URL[] { codebase.toURL() }, parent, codebase );
 		ServiceModule module = loadModule( card, loader, "CLASSPATH", false, false );
 		return module;
 	}
@@ -1354,7 +1352,10 @@ public class ProductManager extends Agent implements Persistent {
 		 */
 		@Override
 		protected String findLibrary( String libname ) {
-			File file = new File( codebase.resolve( System.mapLibraryName( libname ) ) );
+			Log.write( Log.DEVEL, "Codebase URI: " + codebase );
+			URI uri = codebase.resolve( System.mapLibraryName( libname ) );
+			Log.write( Log.DEVEL, "Library URI: " + uri );
+			File file = new File( uri );
 			return file.exists() ? file.toString() : null;
 		}
 
