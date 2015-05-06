@@ -32,7 +32,7 @@ public class ProductClassLoader extends URLClassLoader {
 
 		if( type == null ) {
 			try {
-				type = super.loadClass( name );
+				type = super.loadClass( name, true );
 			} catch( ClassNotFoundException cnf ) {
 				exception = cnf;
 			}
@@ -57,16 +57,21 @@ public class ProductClassLoader extends URLClassLoader {
 
 	/**
 	 * Used to find native library files used with modules. This allows a module
-	 * to package needed native libraries in the module and be loaded at
-	 * runtime.
+	 * to package needed native libraries in the module and be loaded at runtime.
 	 */
 	@Override
 	protected String findLibrary( String libname ) {
 		Log.write( Log.DEVEL, "Codebase URI: " + codebase );
 		URI uri = codebase.resolve( System.mapLibraryName( libname ) );
-		Log.write( Log.DEVEL, "Library URI: " + uri );
+		//Log.write( Log.DEVEL, "Library URI: " + uri );
 		File file = new File( uri );
-		return file.exists() ? file.toString() : null;
+
+		if( file.exists() ) Log.write( Log.DEVEL, "Library found: " + file.toURI() );
+
+		return file.exists() ? file.toString() : super.findLibrary( libname );
 	}
+
+	// /home/arco/Projects/psm/module/openderby/target/main/java/librxtxSerial.so
+	// /home/arco/Projects/psm/module/openderby/target/main/java/librxtxSerial.so
 
 }

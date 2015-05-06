@@ -1162,6 +1162,15 @@ public class ProductManager extends Agent implements Persistent {
 			card.setInstallFolder( new File( URI.create( installFolder ) ) );
 		}
 
+		// It appears to be nearly impossible to load native libraries from the
+		// ProductClassLoader when the module was found on the classpath. This is
+		// due to the fact that the native library may be loaded by a class that is
+		// found on the system classpath but the java library path set on that 
+		// class loader does not include the module codebase. 
+		//		String libPath = System.getProperty( "java.library.path" );
+		//		File file = new File( codebase );
+		//		System.setProperty( "java.library.path", libPath + File.pathSeparator + file.toString() );
+
 		ProductClassLoader loader = new ProductClassLoader( new URL[] { codebase.toURL() }, parent, codebase );
 		ServiceModule module = loadModule( card, loader, "CLASSPATH", false, false );
 		return module;
