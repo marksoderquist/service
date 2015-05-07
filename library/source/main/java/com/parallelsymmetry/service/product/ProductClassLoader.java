@@ -5,6 +5,8 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 
+import com.parallelsymmetry.utility.OperatingSystem;
+
 public class ProductClassLoader extends URLClassLoader {
 
 	private URI codebase;
@@ -56,7 +58,7 @@ public class ProductClassLoader extends URLClassLoader {
 	 */
 	@Override
 	protected String findLibrary( String libname ) {
-		File file = new File( codebase.resolve( System.mapLibraryName( libname ) ) );
+		File file = new File( codebase.resolve( "lib/" + OperatingSystem.resolveNativeLibPath( libname ) ) );
 		return file.exists() ? file.toString() : super.findLibrary( libname );
 	}
 
