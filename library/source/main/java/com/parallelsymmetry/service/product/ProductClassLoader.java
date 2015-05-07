@@ -58,7 +58,7 @@ public class ProductClassLoader extends URLClassLoader {
 	 */
 	@Override
 	protected String findLibrary( String libname ) {
-		File file = new File( codebase.resolve( "lib/" + OperatingSystem.resolveNativeLibPath( libname ) ) );
+		File file = new File( codebase.resolve( "lib" + File.separator + OperatingSystem.resolveNativeLibPath( libname ) ) );
 		return file.exists() ? file.toString() : super.findLibrary( libname );
 	}
 
