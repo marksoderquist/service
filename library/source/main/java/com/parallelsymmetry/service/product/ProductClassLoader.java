@@ -55,6 +55,13 @@ public class ProductClassLoader extends URLClassLoader {
 		return type;
 	}
 
+	public URL getResource( String name ) {
+		URL url = null;
+		if( url == null ) url = super.findResource( name );
+		if( url == null ) url = parent.getResource( name );
+		return url;
+	}
+
 	/**
 	 * Used to find native library files used with modules. This allows a module
 	 * to package needed native libraries in the module and be loaded at runtime.

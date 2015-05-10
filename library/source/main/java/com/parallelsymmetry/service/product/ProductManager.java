@@ -1180,14 +1180,6 @@ public class ProductManager extends Agent implements Persistent {
 		//		File file = new File( codebase );
 		//		System.setProperty( "java.library.path", libPath + File.pathSeparator + file.toString() );
 
-		// The following block was added to track down a build error.
-		try {
-			codebase.toURL();
-		} catch( Exception exception ) {
-			Log.write( Log.ERROR, codebase );
-			Log.write( Log.ERROR, exception );
-		}
-
 		ProductClassLoader loader = new ProductClassLoader( new URL[] { codebase.toURL() }, parent, codebase );
 		ServiceModule module = loadModule( card, loader, "CLASSPATH", false, false );
 		return module;
@@ -1240,7 +1232,7 @@ public class ProductManager extends Agent implements Persistent {
 		return loadModule( card, loader, "NORMAL", true, true );
 	}
 
-	private ServiceModule loadModule( ProductCard card, ProductClassLoader loader, String source, boolean updatable, boolean removable ) throws Exception {
+	private ServiceModule loadModule( ProductCard card, ClassLoader loader, String source, boolean updatable, boolean removable ) throws Exception {
 		// Ignore included products.
 		if( includedProducts.contains( card.getProductKey() ) ) return null;
 
