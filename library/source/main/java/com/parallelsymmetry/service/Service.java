@@ -697,7 +697,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 				return;
 			} else if( parameters.isTrue( ServiceFlag.VERSION ) ) {
 				return;
-			} else if( parameters.isTrue( ServiceFlag.HELP ) ) {
+			} else if( parameters.isSet( ServiceFlag.HELP ) ) {
 				printHelp( parameters.get( ServiceFlag.HELP ) );
 				return;
 			}
