@@ -29,6 +29,8 @@ import com.parallelsymmetry.service.product.ProductManagerEvent.Type;
 import com.parallelsymmetry.service.task.DescriptorDownloadTask;
 import com.parallelsymmetry.service.task.DownloadTask;
 import com.parallelsymmetry.updater.Updater;
+import com.parallelsymmetry.utility.BundleKey;
+import com.parallelsymmetry.utility.Bundles;
 import com.parallelsymmetry.utility.DateUtil;
 import com.parallelsymmetry.utility.Descriptor;
 import com.parallelsymmetry.utility.FileUtil;
@@ -495,8 +497,9 @@ public class ProductManager extends Agent implements Persistent {
 				Log.write( Log.DEBUG, "Installed pack source: " + uri );
 			}
 
-			tasks.put( oldCard, new DescriptorDownloadTask( uri ) );
-			service.getTaskManager().submit( tasks.get( oldCard ) );
+			DescriptorDownloadTask task = new DescriptorDownloadTask( uri );
+			service.getTaskManager().submit( task );
+			tasks.put( oldCard, task );
 		}
 
 		// Determine what products have posted updates.
@@ -527,8 +530,8 @@ public class ProductManager extends Agent implements Persistent {
 			}
 		}
 
-		// If there are no updates and there is an exception, throw it.
-		if( newCards.size() == 0 && exception != null ) throw exception;
+		// If there is an exception and there are no updates, throw the exception.
+		if( exception != null && newCards.size() == 0 ) throw exception;
 
 		// Cache the discovered updates.
 		postedUpdateCacheTime = System.currentTimeMillis();
@@ -757,7 +760,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	public void loadProducts( File... folders ) throws Exception {
 		ClassLoader parent = getClass().getClassLoader();
-	
+
 		// Look for modules on the classpath.
 		Enumeration<URL> urls = parent.getResources( PRODUCT_DESCRIPTOR_PATH );
 		while( urls.hasMoreElements() ) {
@@ -767,12 +770,12 @@ public class ProductManager extends Agent implements Persistent {
 			ProductCard card = new ProductCard( uri, new Descriptor( uri ) );
 			if( !isReservedProduct( card ) ) loadClasspathModule( card, classpath, parent );
 		}
-	
+
 		// Look for modules in the specified folders.
 		for( File folder : folders ) {
 			if( !folder.exists() ) continue;
 			if( !folder.isDirectory() ) continue;
-	
+
 			// Look for simple modules (not common).
 			File[] jars = folder.listFiles( FileUtil.JAR_FILE_FILTER );
 			for( File jar : jars ) {
@@ -781,12 +784,12 @@ public class ProductManager extends Agent implements Persistent {
 				ProductCard card = new ProductCard( jar.getParentFile().toURI(), new Descriptor( uri ) );
 				if( !isReservedProduct( card ) ) loadSimpleModule( card, jar.toURI(), parent );
 			}
-	
+
 			// Look for normal modules (most common).
 			File[] moduleFolders = folder.listFiles( FileUtil.FOLDER_FILTER );
 			for( File moduleFolder : moduleFolders ) {
 				Log.write( Log.DEBUG, "Searching for module in: " + moduleFolder.toURI() );
-	
+
 				jars = moduleFolder.listFiles( FileUtil.JAR_FILE_FILTER );
 				for( File jar : jars ) {
 					try {
@@ -974,10 +977,10 @@ public class ProductManager extends Agent implements Persistent {
 
 	private boolean isReservedProduct( ProductCard card ) {
 		String key = card.getProductKey();
-	
+
 		if( "com.parallelsymmetry.escape".equals( key ) ) return true;
 		if( "com.parallelsymmetry.updater".equals( key ) ) return true;
-	
+
 		return false;
 	}
 
