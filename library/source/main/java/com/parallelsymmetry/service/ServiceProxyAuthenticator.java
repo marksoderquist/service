@@ -31,7 +31,7 @@ public class ServiceProxyAuthenticator extends Authenticator {
 		if( username == null ) username = settings.get( "username", null );
 		if( password == null ) password = settings.get( "password", null );
 
-		if( username == null || password == null ) return new PasswordAuthentication( username, password.toCharArray() );
+		if( username != null && password != null ) return new PasswordAuthentication( username, password.toCharArray() );
 
 		return null;
 	}
