@@ -3,6 +3,7 @@ package com.parallelsymmetry.service;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 
+import com.parallelsymmetry.utility.log.Log;
 import com.parallelsymmetry.utility.setting.Settings;
 
 public class ServiceProxyAuthenticator extends Authenticator {
@@ -24,8 +25,8 @@ public class ServiceProxyAuthenticator extends Authenticator {
 		String scheme = all ? "http" : getRequestingScheme();
 
 		// First try by specific protocol.
-		username = settings.get( scheme + "-username", null );
-		password = settings.get( scheme + "-password", null );
+		if( username == null ) username = settings.get( scheme + "-username", null );
+		if( password == null ) password = settings.get( scheme + "-password", null );
 
 		// Second try just general credentials.
 		if( username == null ) username = settings.get( "username", null );
