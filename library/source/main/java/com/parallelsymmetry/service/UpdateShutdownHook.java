@@ -1,14 +1,5 @@
 package com.parallelsymmetry.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
-import java.util.Map;
-
 import com.parallelsymmetry.service.product.ProductUpdate;
 import com.parallelsymmetry.updater.UpdaterFlag;
 import com.parallelsymmetry.utility.JavaUtil;
@@ -18,12 +9,23 @@ import com.parallelsymmetry.utility.TextUtil;
 import com.parallelsymmetry.utility.log.Log;
 import com.parallelsymmetry.utility.log.LogFlag;
 
+import java.io.File;
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.Map;
+
+import static com.parallelsymmetry.service.RestartShutdownHook.getWindowsExecutablePath;
+
 /**
  * This shutdown hook is used when the program detects that there are updates
  * have been staged to be applied as the program starts. The program then
  * registers an instance of this shutdown hook, and stops the program, which
  * triggers this shutdown hook to start the update program.
- * 
+ *
  * @author soderquistmv
  */
 public class UpdateShutdownHook extends Thread {
@@ -61,27 +63,29 @@ public class UpdateShutdownHook extends Thread {
 
 		// Add the launch parameters.
 		builder.command().add( UpdaterFlag.LAUNCH );
-		builder.command().add( OperatingSystem.getJavaExecutableName() );
+		builder.command().add( OperatingSystem.isWindows() ? getWindowsExecutablePath() : OperatingSystem.getJavaExecutablePath() );
 
-		// Add the VM parameters to the commands.
-		RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
-		List<String> runtimeFlags = runtimeBean.getInputArguments();
-		for( String flag : runtimeFlags ) {
-			if( flag.startsWith( Parameters.SINGLE ) ) {
-				builder.command().add( "\\" + flag );
-			} else {
-				builder.command().add( flag );
+		if( !OperatingSystem.isWindows() ) {
+			// Add the VM parameters to the commands.
+			RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
+			List<String> runtimeFlags = runtimeBean.getInputArguments();
+			for( String flag : runtimeFlags ) {
+				if( flag.startsWith( Parameters.SINGLE ) ) {
+					builder.command().add( "\\" + flag );
+				} else {
+					builder.command().add( flag );
+				}
 			}
-		}
 
-		// Add the classpath information.
-		List<URI> uris = JavaUtil.parseClasspath( runtimeBean.getClassPath() );
-		if( uris.size() == 1 && uris.get( 0 ).getPath().endsWith( ".jar" ) ) {
-			builder.command().add( "\\-jar" );
-		} else {
-			builder.command().add( "\\-cp" );
+			// Add the classpath information.
+			List<URI> uris = JavaUtil.parseClasspath( runtimeBean.getClassPath() );
+			if( uris.size() == 1 && uris.get( 0 ).getPath().endsWith( ".jar" ) ) {
+				builder.command().add( "\\-jar" );
+			} else {
+				builder.command().add( "\\-cp" );
+			}
+			builder.command().add( runtimeBean.getClassPath() );
 		}
-		builder.command().add( runtimeBean.getClassPath() );
 
 		// Add the original command line parameters.
 		for( String command : service.getParameters().getOriginalCommands() ) {
