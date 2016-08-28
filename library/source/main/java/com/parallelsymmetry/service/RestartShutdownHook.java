@@ -1,5 +1,11 @@
 package com.parallelsymmetry.service;
 
+import com.parallelsymmetry.utility.JavaUtil;
+import com.parallelsymmetry.utility.OperatingSystem;
+import com.parallelsymmetry.utility.Parameters;
+import com.parallelsymmetry.utility.TextUtil;
+import com.parallelsymmetry.utility.log.Log;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -10,18 +16,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.parallelsymmetry.utility.JavaUtil;
-import com.parallelsymmetry.utility.OperatingSystem;
-import com.parallelsymmetry.utility.Parameters;
-import com.parallelsymmetry.utility.TextUtil;
-import com.parallelsymmetry.utility.log.Log;
-
 /**
  * This shutdown hook is used when a program restart is requested. When a
  * restart is requested the program registers an instance of this shutdown hook,
  * and stops the program, which triggers this shutdown hook to start the program
  * again.
- * 
+ *
  * @author soderquistmv
  */
 public class RestartShutdownHook extends Thread {
@@ -31,25 +31,29 @@ public class RestartShutdownHook extends Thread {
 	public RestartShutdownHook( Service service, String... commands ) {
 		super( "Restart Hook" );
 
-		builder = new ProcessBuilder( OperatingSystem.getJavaExecutablePath() );
+		builder = new ProcessBuilder( OperatingSystem.isWindows() ? getWindowsExecutablePath() : OperatingSystem.getJavaExecutablePath() );
 		builder.directory( new File( System.getProperty( "user.dir" ) ) );
 
-		// Add the VM parameters to the commands.
-		RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
-		for( String command : runtimeBean.getInputArguments() ) {
-			if( !builder.command().contains( command ) ) builder.command().add( command );
-		}
+		if( !OperatingSystem.isWindows() ) {
+			// Add the VM parameters to the commands.
+			RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
+			for( String command : runtimeBean.getInputArguments() ) {
+				if( "abort".equals( command ) ) continue;
+				if( "exit".equals( command ) ) continue;
+				if( !builder.command().contains( command ) ) builder.command().add( command );
+			}
 
-		// Add the classpath information.
-		List<URI> classpath = JavaUtil.getClasspath();
-		boolean jar = classpath.size() == 1 && classpath.get( 0 ).getPath().endsWith( ".jar" );
-		if( jar ) {
-			builder.command().add( "-jar" );
-		} else {
-			builder.command().add( "-cp" );
+			// Add the classpath information.
+			List<URI> classpath = JavaUtil.getClasspath();
+			boolean jar = classpath.size() == 1 && classpath.get( 0 ).getPath().endsWith( ".jar" );
+			if( jar ) {
+				builder.command().add( "-jar" );
+			} else {
+				builder.command().add( "-cp" );
+			}
+			builder.command().add( runtimeBean.getClassPath() );
+			if( !jar ) builder.command().add( service.getClass().getName() );
 		}
-		builder.command().add( runtimeBean.getClassPath() );
-		if( !jar ) builder.command().add( service.getClass().getName() );
 
 		Parameters overrideParameters = Parameters.parse( commands );
 
@@ -88,6 +92,13 @@ public class RestartShutdownHook extends Thread {
 		}
 
 		Log.write( Log.TRACE, "Restart command: ", TextUtil.toString( builder.command(), " " ) );
+	}
+
+	public static final String getWindowsExecutablePath() {
+		StringBuilder builder = new StringBuilder( System.getProperty( "user.dir" ) );
+		builder.append( File.separator );
+		builder.append( "escape.exe" );
+		return builder.toString();
 	}
 
 	@Override
