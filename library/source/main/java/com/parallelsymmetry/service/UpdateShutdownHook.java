@@ -18,7 +18,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 
-import static com.parallelsymmetry.service.RestartShutdownHook.getWindowsExecutablePath;
+import static com.parallelsymmetry.service.RestartShutdownHook.getRestartExecutablePath;
 
 /**
  * This shutdown hook is used when the program detects that there are updates
@@ -63,7 +63,7 @@ public class UpdateShutdownHook extends Thread {
 
 		// Add the launch parameters.
 		builder.command().add( UpdaterFlag.LAUNCH );
-		builder.command().add( OperatingSystem.isWindows() ? getWindowsExecutablePath() : OperatingSystem.getJavaExecutablePath() );
+		builder.command().add( getRestartExecutablePath() );
 
 		if( !OperatingSystem.isWindows() ) {
 			// Add the VM parameters to the commands.

@@ -31,7 +31,7 @@ public class RestartShutdownHook extends Thread {
 	public RestartShutdownHook( Service service, String... commands ) {
 		super( "Restart Hook" );
 
-		builder = new ProcessBuilder( OperatingSystem.isWindows() ? getWindowsExecutablePath() : OperatingSystem.getJavaExecutablePath() );
+		builder = new ProcessBuilder( getRestartExecutablePath() );
 		builder.directory( new File( System.getProperty( "user.dir" ) ) );
 
 		if( !OperatingSystem.isWindows() ) {
@@ -94,11 +94,18 @@ public class RestartShutdownHook extends Thread {
 		Log.write( Log.TRACE, "Restart command: ", TextUtil.toString( builder.command(), " " ) );
 	}
 
-	public static final String getWindowsExecutablePath() {
-		StringBuilder builder = new StringBuilder( System.getProperty( "user.dir" ) );
-		builder.append( File.separator );
-		builder.append( "escape.exe" );
-		return builder.toString();
+	public static final String getRestartExecutablePath() {
+		String executablePath = OperatingSystem.getJavaExecutablePath();
+
+		if( OperatingSystem.isWindows() ) {
+			StringBuilder builder = new StringBuilder( System.getProperty( "user.dir" ) );
+			builder.append( File.separator );
+			builder.append( "escape.exe" );
+			String launcherPath = builder.toString();
+			if( new File( launcherPath ).exists() ) executablePath = launcherPath;
+		}
+
+		return executablePath;
 	}
 
 	@Override
