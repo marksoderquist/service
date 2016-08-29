@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.parallelsymmetry.service.RestartShutdownHook.getRestartExecutablePath;
+import static com.parallelsymmetry.service.RestartShutdownHook.isWindowsLauncherFound;
 
 /**
  * This shutdown hook is used when the program detects that there are updates
@@ -65,7 +66,7 @@ public class UpdateShutdownHook extends Thread {
 		builder.command().add( UpdaterFlag.LAUNCH );
 		builder.command().add( getRestartExecutablePath() );
 
-		if( !OperatingSystem.isWindows() ) {
+		if( !isWindowsLauncherFound() ) {
 			// Add the VM parameters to the commands.
 			RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
 			List<String> runtimeFlags = runtimeBean.getInputArguments();
