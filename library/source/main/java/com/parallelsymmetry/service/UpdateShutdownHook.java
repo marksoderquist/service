@@ -71,6 +71,8 @@ public class UpdateShutdownHook extends Thread {
 			RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
 			List<String> runtimeFlags = runtimeBean.getInputArguments();
 			for( String flag : runtimeFlags ) {
+				if( "abort".equals( flag ) ) continue;
+				if( "exit".equals( flag ) ) continue;
 				if( flag.startsWith( Parameters.SINGLE ) ) {
 					builder.command().add( "\\" + flag );
 				} else {
