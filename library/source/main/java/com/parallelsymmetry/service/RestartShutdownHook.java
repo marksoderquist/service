@@ -31,10 +31,10 @@ public class RestartShutdownHook extends Thread {
 	public RestartShutdownHook( Service service, String... commands ) {
 		super( "Restart Hook" );
 
-		builder = new ProcessBuilder( getRestartExecutablePath() );
+		builder = new ProcessBuilder( getRestartExecutablePath( service ) );
 		builder.directory( new File( System.getProperty( "user.dir" ) ) );
 
-		if( !isWindowsLauncherFound() ) {
+		if( !isWindowsLauncherFound( service ) ) {
 			// Add the VM parameters to the commands.
 			RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
 			for( String command : runtimeBean.getInputArguments() ) {
@@ -94,21 +94,21 @@ public class RestartShutdownHook extends Thread {
 		Log.write( Log.TRACE, "Restart command: ", TextUtil.toString( builder.command(), " " ) );
 	}
 
-	public static final boolean isWindowsLauncherFound() {
-		return new File( getWindowsLauncherPath() ).exists();
+	public static final boolean isWindowsLauncherFound( Service service ) {
+		return new File( getWindowsLauncherPath( service ) ).exists();
 	}
 
-	public static final String getRestartExecutablePath() {
+	public static final String getRestartExecutablePath( Service service ) {
 		String executablePath = OperatingSystem.getJavaExecutablePath();
 
-		String launcherPath = getWindowsLauncherPath();
+		String launcherPath = getWindowsLauncherPath( service );
 		if( new File( launcherPath ).exists() ) executablePath = launcherPath;
 
 		return executablePath;
 	}
 
-	public static final String getWindowsLauncherPath() {
-		StringBuilder builder = new StringBuilder( System.getProperty( "user.dir" ) );
+	public static final String getWindowsLauncherPath( Service service ) {
+		StringBuilder builder = new StringBuilder( service.getHomeFolder().toString() );
 		builder.append( File.separator );
 		builder.append( "escape.exe" );
 		return builder.toString();

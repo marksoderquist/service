@@ -64,9 +64,9 @@ public class UpdateShutdownHook extends Thread {
 
 		// Add the launch parameters.
 		builder.command().add( UpdaterFlag.LAUNCH );
-		builder.command().add( getRestartExecutablePath() );
+		builder.command().add( getRestartExecutablePath( service ) );
 
-		if( !isWindowsLauncherFound() ) {
+		if( !isWindowsLauncherFound( service ) ) {
 			// Add the VM parameters to the commands.
 			RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
 			List<String> runtimeFlags = runtimeBean.getInputArguments();
