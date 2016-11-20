@@ -1,26 +1,5 @@
 package com.parallelsymmetry.service.product;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.net.URI;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
-
 import com.parallelsymmetry.service.Service;
 import com.parallelsymmetry.service.ServiceFlag;
 import com.parallelsymmetry.service.ServiceSettingsPath;
@@ -29,14 +8,7 @@ import com.parallelsymmetry.service.product.ProductManagerEvent.Type;
 import com.parallelsymmetry.service.task.DescriptorDownloadTask;
 import com.parallelsymmetry.service.task.DownloadTask;
 import com.parallelsymmetry.updater.Updater;
-import com.parallelsymmetry.utility.BundleKey;
-import com.parallelsymmetry.utility.Bundles;
-import com.parallelsymmetry.utility.DateUtil;
-import com.parallelsymmetry.utility.Descriptor;
-import com.parallelsymmetry.utility.FileUtil;
-import com.parallelsymmetry.utility.JavaUtil;
-import com.parallelsymmetry.utility.TestUtil;
-import com.parallelsymmetry.utility.UriUtil;
+import com.parallelsymmetry.utility.*;
 import com.parallelsymmetry.utility.agent.Agent;
 import com.parallelsymmetry.utility.log.Log;
 import com.parallelsymmetry.utility.product.ProductCard;
@@ -44,6 +16,16 @@ import com.parallelsymmetry.utility.setting.Persistent;
 import com.parallelsymmetry.utility.setting.SettingEvent;
 import com.parallelsymmetry.utility.setting.SettingListener;
 import com.parallelsymmetry.utility.setting.Settings;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.net.URI;
+import java.net.URL;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * The update manager handles discovery, staging and applying product updates.
@@ -59,7 +41,7 @@ import com.parallelsymmetry.utility.setting.Settings;
  * Applying involves configuring and executing a separate update process to
  * apply the staged updates. This requires the calling process to terminate to
  * allow the update process to change required files.
- * 
+ *
  * @author SoderquistMV
  */
 
@@ -264,7 +246,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	/**
 	 * Determines if a product is installed regardless of release.
-	 * 
+	 *
 	 * @param card
 	 * @return
 	 */
@@ -274,7 +256,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	/**
 	 * Determines if a specific release of a product is installed.
-	 * 
+	 *
 	 * @param card
 	 * @return
 	 */
@@ -330,7 +312,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	/**
 	 * Get the path to the updater library.
-	 * 
+	 *
 	 * @return
 	 */
 	public File getUpdaterPath() {
@@ -339,7 +321,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	/**
 	 * Get the path to the updater library.
-	 * 
+	 *
 	 * @param file
 	 */
 	public void setUpdaterPath( File file ) {
@@ -377,7 +359,7 @@ public class ProductManager extends Agent implements Persistent {
 	/**
 	 * Schedule the update check task according to the settings. This method may
 	 * safely be called as many times as necessary from any thread.
-	 * 
+	 *
 	 * @param startup True if the method is called at product start.
 	 */
 	public synchronized void scheduleUpdateCheck( boolean startup ) {
@@ -442,7 +424,7 @@ public class ProductManager extends Agent implements Persistent {
 
 		// Log the next update check time.
 		String date = DateUtil.format( new Date( nextCheckTime ), DateUtil.DEFAULT_DATE_FORMAT, TimeZone.getTimeZone( "America/Denver" ) );
-		Log.write( Log.TRACE, "Next check scheduled for: " + ( delay == 0 ? "now" : date ) );
+		Log.write( Log.TRACE, "Next check scheduled for: " + (delay == 0 ? "now" : date) );
 	}
 
 	public void checkForUpdates() {
@@ -467,7 +449,7 @@ public class ProductManager extends Agent implements Persistent {
 	/**
 	 * Gets the set of posted product updates. If there are no posted updates
 	 * found an empty set is returned.
-	 * 
+	 *
 	 * @return The set of posted updates.
 	 * @throws Exception
 	 */
@@ -550,7 +532,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	/**
 	 * Attempt to stage the product packs from posted updates.
-	 * 
+	 *
 	 * @return true if one or more product packs were staged.
 	 * @throws Exception
 	 */
@@ -568,7 +550,7 @@ public class ProductManager extends Agent implements Persistent {
 	/**
 	 * Attempt to stage the product packs described by the specified product
 	 * cards.
-	 * 
+	 *
 	 * @param updateCards
 	 * @return true if one or more product packs were staged.
 	 * @throws Exception
@@ -688,7 +670,7 @@ public class ProductManager extends Agent implements Persistent {
 	/**
 	 * Apply updates. If updates are found then the method returns the number of
 	 * updates applied.
-	 * 
+	 *
 	 * @return The number of updates applied.
 	 */
 	public final int updateProduct() {
@@ -720,7 +702,7 @@ public class ProductManager extends Agent implements Persistent {
 	 * generally called when the program starts and, if the update program is
 	 * successfully started, the program should be terminated to allow for the
 	 * updates to be applied.
-	 * 
+	 *
 	 * @param ui Should the updater show a progress bar?
 	 * @return The number of updates applied.
 	 * @throws Exception
@@ -762,6 +744,12 @@ public class ProductManager extends Agent implements Persistent {
 		ClassLoader parent = getClass().getClassLoader();
 
 		// Look for modules on the classpath.
+		// FIXME Finding modules on the classpath is problematic
+		/*
+		* Finding modules on the classpath just doesn't work well due
+		* to resource conflicts. This functionality should probably
+		* be deprecated in favor of a different strategy during development.
+		*/
 		Enumeration<URL> urls = parent.getResources( PRODUCT_DESCRIPTOR_PATH );
 		while( urls.hasMoreElements() ) {
 			URI uri = urls.nextElement().toURI();
@@ -920,7 +908,7 @@ public class ProductManager extends Agent implements Persistent {
 			delay = 0;
 		} else {
 			// Schedule the next interval.
-			delay = ( lastUpdateCheck + intervalDelay ) - currentTime;
+			delay = (lastUpdateCheck + intervalDelay) - currentTime;
 		}
 		return delay;
 	}
@@ -967,7 +955,7 @@ public class ProductManager extends Agent implements Persistent {
 		userProductFolder = new File( service.getDataFolder(), Service.MODULE_INSTALL_FOLDER_NAME );
 
 		// Load products.
-		loadProducts( new File[] { homeProductFolder, userProductFolder } );
+		loadProducts( new File[]{ homeProductFolder, userProductFolder } );
 	}
 
 	@Override
@@ -1157,7 +1145,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	/**
 	 * A classpath module is found on the classpath.
-	 * 
+	 *
 	 * @param descriptor
 	 * @param codebase
 	 * @param parent
@@ -1183,14 +1171,14 @@ public class ProductManager extends Agent implements Persistent {
 		//		File file = new File( codebase );
 		//		System.setProperty( "java.library.path", libPath + File.pathSeparator + file.toString() );
 
-		ProductClassLoader loader = new ProductClassLoader( new URL[] { codebase.toURL() }, parent, codebase );
+		ProductClassLoader loader = new ProductClassLoader( new URL[]{ codebase.toURL() }, parent, codebase );
 		ServiceModule module = loadModule( card, loader, "CLASSPATH", false, false );
 		return module;
 	}
 
 	/**
 	 * A simple module is entirely contained inside a jar file.
-	 * 
+	 *
 	 * @param descriptor
 	 * @param jarUri
 	 * @param parent
@@ -1205,13 +1193,13 @@ public class ProductManager extends Agent implements Persistent {
 		card.setInstallFolder( jarfile.getParentFile() );
 
 		// Create the class loader.
-		ProductClassLoader loader = new ProductClassLoader( new URL[] { jarfile.toURI().toURL() }, parent, codebase );
+		ProductClassLoader loader = new ProductClassLoader( new URL[]{ jarfile.toURI().toURL() }, parent, codebase );
 		return loadModule( card, loader, "SIMPLE", true, true );
 	}
 
 	/**
 	 * A normal module, the most common, is entirely contained in a folder.
-	 * 
+	 *
 	 * @param descriptor
 	 * @param moduleFolderUri
 	 * @param parent
@@ -1231,7 +1219,7 @@ public class ProductManager extends Agent implements Persistent {
 		}
 
 		// Create the class loader.
-		ProductClassLoader loader = new ProductClassLoader( urls.toArray( new URL[urls.size()] ), parent, moduleFolderUri );
+		ProductClassLoader loader = new ProductClassLoader( urls.toArray( new URL[ urls.size() ] ), parent, moduleFolderUri );
 		return loadModule( card, loader, "NORMAL", true, true );
 	}
 
@@ -1276,10 +1264,10 @@ public class ProductManager extends Agent implements Persistent {
 
 			if( types.length != 2 ) continue;
 
-			boolean nameService = Service.class.getName().equals( types[0].getName() );
-			boolean nameProductCard = ProductCard.class.getName().equals( types[1].getName() );
-			boolean instanceofService = Service.class.isAssignableFrom( types[0] );
-			boolean instanceofProductCard = ProductCard.class.isAssignableFrom( types[1] );
+			boolean nameService = Service.class.getName().equals( types[ 0 ].getName() );
+			boolean nameProductCard = ProductCard.class.getName().equals( types[ 1 ].getName() );
+			boolean instanceofService = Service.class.isAssignableFrom( types[ 0 ] );
+			boolean instanceofProductCard = ProductCard.class.isAssignableFrom( types[ 1 ] );
 
 			if( nameService && !instanceofService ) {
 				Log.write( Log.WARN, "Class name matched but not assignable: ", Service.class.getName() );
@@ -1320,7 +1308,7 @@ public class ProductManager extends Agent implements Persistent {
 	/**
 	 * NOTE: This class is Persistent and changing the package will most likely
 	 * result in a ClassNotFoundException being thrown at runtime.
-	 * 
+	 *
 	 * @author SoderquistMV
 	 */
 	static final class InstalledProduct implements Persistent {
