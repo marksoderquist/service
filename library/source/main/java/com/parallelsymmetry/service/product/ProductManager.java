@@ -105,7 +105,7 @@ public class ProductManager extends Agent implements Persistent {
 
 	private Map<String, ServiceModule> modules;
 
-	private File homeProductFolder;
+	private File homeModuleFolder;
 
 	private File userProductFolder;
 
@@ -703,7 +703,7 @@ public class ProductManager extends Agent implements Persistent {
 	 * successfully started, the program should be terminated to allow for the
 	 * updates to be applied.
 	 *
-	 * @param ui Should the updater show a progress bar?
+	 * @param extras Extra commands to add to the update program when launched.
 	 * @return The number of updates applied.
 	 * @throws Exception
 	 */
@@ -742,22 +742,6 @@ public class ProductManager extends Agent implements Persistent {
 
 	public void loadProducts( File... folders ) throws Exception {
 		ClassLoader parent = getClass().getClassLoader();
-
-		// Look for modules on the classpath.
-		// FIXME Finding modules on the classpath is problematic
-		/*
-		* Finding modules on the classpath just doesn't work well due
-		* to resource conflicts. This functionality should probably
-		* be deprecated in favor of a different strategy during development.
-		*/
-		Enumeration<URL> urls = parent.getResources( PRODUCT_DESCRIPTOR_PATH );
-		while( urls.hasMoreElements() ) {
-			URI uri = urls.nextElement().toURI();
-			URI base = UriUtil.getParent( uri );
-			URI classpath = UriUtil.getParent( base );
-			ProductCard card = new ProductCard( uri, new Descriptor( uri ) );
-			if( !isReservedProduct( card ) ) loadClasspathModule( card, classpath, parent );
-		}
 
 		// Look for modules in the specified folders.
 		for( File folder : folders ) {
@@ -950,12 +934,26 @@ public class ProductManager extends Agent implements Persistent {
 		// Create the update check timer.
 		timer = new Timer( true );
 
-		// Define the product folders.
-		homeProductFolder = new File( service.getHomeFolder(), Service.MODULE_INSTALL_FOLDER_NAME );
+		// Define the module folders.
+		homeModuleFolder = new File( service.getHomeFolder(), Service.MODULE_INSTALL_FOLDER_NAME );
 		userProductFolder = new File( service.getDataFolder(), Service.MODULE_INSTALL_FOLDER_NAME );
 
-		// Load products.
-		loadProducts( new File[]{ homeProductFolder, userProductFolder } );
+		// Create the default module folders list.
+		List<File> moduleFolders = new ArrayList<File>();
+		moduleFolders.add( homeModuleFolder );
+		moduleFolders.add( userProductFolder );
+
+		// Check for module paths in the parameters.
+		List<String> modulePaths = service.getParameters().getValues( "module" );
+		if( modulePaths != null ) {
+			for( String path : modulePaths ) {
+				File folder = new File( path );
+				if( folder.exists() ) moduleFolders.add( folder );
+			}
+		}
+
+		// Load modules.
+		loadProducts( moduleFolders.toArray( new File[ modulePaths.size() ] ) );
 	}
 
 	@Override
@@ -1144,42 +1142,28 @@ public class ProductManager extends Agent implements Persistent {
 	}
 
 	/**
-	 * A classpath module is found on the classpath.
+	 * A folder module is and unpacked module contained in a folder.
 	 *
-	 * @param descriptor
-	 * @param codebase
+	 * @param card
+	 * @param folder
 	 * @param parent
 	 * @return
 	 * @throws Exception
 	 */
-	private ServiceModule loadClasspathModule( ProductCard card, URI codebase, ClassLoader parent ) throws Exception {
-		String path = codebase.toString();
+	private ServiceModule loadFolderModule( ProductCard card, File folder, ClassLoader parent ) throws Exception {
+		URI codebase = folder.toURI();
 
-		// Fix the install folder when running in development.
-		String suffix = "target/main/java/";
-		if( path.endsWith( suffix ) ) {
-			String installFolder = path.substring( 0, path.length() - suffix.length() );
-			card.setInstallFolder( new File( URI.create( installFolder ) ) );
-		}
+		card.setInstallFolder( folder );
 
-		// It appears to be nearly impossible to load native libraries from the
-		// ProductClassLoader when the module was found on the classpath. This is
-		// due to the fact that the native library may be loaded by a class that is
-		// found on the system classpath but the java library path set on that 
-		// class loader does not include the module codebase. 
-		//		String libPath = System.getProperty( "java.library.path" );
-		//		File file = new File( codebase );
-		//		System.setProperty( "java.library.path", libPath + File.pathSeparator + file.toString() );
-
-		ProductClassLoader loader = new ProductClassLoader( new URL[]{ codebase.toURL() }, parent, codebase );
-		ServiceModule module = loadModule( card, loader, "CLASSPATH", false, false );
-		return module;
+		// Create the class loader.
+		ProductClassLoader loader = new ProductClassLoader( new URL[]{ folder.toURL() }, parent, codebase );
+		return loadModule( card, loader, "FOLDER", true, true );
 	}
 
 	/**
 	 * A simple module is entirely contained inside a jar file.
 	 *
-	 * @param descriptor
+	 * @param card
 	 * @param jarUri
 	 * @param parent
 	 * @return
@@ -1200,7 +1184,7 @@ public class ProductManager extends Agent implements Persistent {
 	/**
 	 * A normal module, the most common, is entirely contained in a folder.
 	 *
-	 * @param descriptor
+	 * @param card
 	 * @param moduleFolderUri
 	 * @param parent
 	 * @return
