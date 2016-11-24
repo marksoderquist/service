@@ -953,7 +953,7 @@ public class ProductManager extends Agent implements Persistent {
 		}
 
 		// Load modules.
-		loadProducts( moduleFolders.toArray( new File[ modulePaths.size() ] ) );
+		loadProducts( moduleFolders.toArray( new File[ moduleFolders.size() ] ) );
 	}
 
 	@Override
