@@ -20,7 +20,7 @@
 	<repositories>
 		<repository>
 			<id>psm</id>
-			<url>http://code.parallelsymmetry.com/repo/psm</url>
+			<url>https://code.xeomar.com/repo/psm</url>
 		</repository>
 	</repositories>
 
@@ -47,7 +47,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.2</version>
 
 				<executions>
 					<execution>
