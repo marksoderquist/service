@@ -1,22 +1,25 @@
 package com.parallelsymmetry.service;
 
-import java.io.BufferedInputStream;
-import java.io.EOFException;
-import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.net.Authenticator;
-import java.net.ConnectException;
-import java.net.ProxySelector;
-import java.net.Socket;
-import java.net.SocketException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
+import com.parallelsymmetry.service.product.ProductManager;
+import com.parallelsymmetry.service.product.ProductUtil;
+import com.parallelsymmetry.service.product.ServiceModule;
+import com.parallelsymmetry.service.product.ServiceProduct;
+import com.parallelsymmetry.utility.*;
+import com.parallelsymmetry.utility.agent.Agent;
+import com.parallelsymmetry.utility.agent.ServerAgent;
+import com.parallelsymmetry.utility.agent.Worker;
+import com.parallelsymmetry.utility.log.DefaultFormatter;
+import com.parallelsymmetry.utility.log.Log;
+import com.parallelsymmetry.utility.log.LogFlag;
+import com.parallelsymmetry.utility.product.ProductCard;
+import com.parallelsymmetry.utility.product.ProductCardException;
+import com.parallelsymmetry.utility.setting.*;
+import com.parallelsymmetry.utility.task.Task;
+import com.parallelsymmetry.utility.task.TaskManager;
+
+import javax.swing.*;
+import java.io.*;
+import java.net.*;
 import java.security.InvalidParameterException;
 import java.util.HashSet;
 import java.util.List;
@@ -28,42 +31,7 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
-import javax.swing.Icon;
-import javax.swing.JOptionPane;
-import javax.swing.UIManager;
-
-import com.parallelsymmetry.service.product.ProductManager;
-import com.parallelsymmetry.service.product.ProductUtil;
-import com.parallelsymmetry.service.product.ServiceModule;
-import com.parallelsymmetry.service.product.ServiceProduct;
-import com.parallelsymmetry.utility.Descriptor;
-import com.parallelsymmetry.utility.FileUtil;
-import com.parallelsymmetry.utility.JavaUtil;
-import com.parallelsymmetry.utility.OperatingSystem;
-import com.parallelsymmetry.utility.Parameters;
-import com.parallelsymmetry.utility.PerformanceCheck;
-import com.parallelsymmetry.utility.TestUtil;
-import com.parallelsymmetry.utility.TextUtil;
-import com.parallelsymmetry.utility.ThreadUtil;
-import com.parallelsymmetry.utility.agent.Agent;
-import com.parallelsymmetry.utility.agent.ServerAgent;
-import com.parallelsymmetry.utility.agent.Worker;
-import com.parallelsymmetry.utility.log.DefaultFormatter;
-import com.parallelsymmetry.utility.log.Log;
-import com.parallelsymmetry.utility.log.LogFlag;
-import com.parallelsymmetry.utility.product.ProductCard;
-import com.parallelsymmetry.utility.product.ProductCardException;
-import com.parallelsymmetry.utility.setting.BaseSettingsProvider;
-import com.parallelsymmetry.utility.setting.MapSettingsProvider;
-import com.parallelsymmetry.utility.setting.ParametersSettingsProvider;
-import com.parallelsymmetry.utility.setting.PersistentMapSettingsProvider;
 //import com.parallelsymmetry.utility.setting.PreferencesSettingsProvider;
-import com.parallelsymmetry.utility.setting.SettingEvent;
-import com.parallelsymmetry.utility.setting.SettingListener;
-import com.parallelsymmetry.utility.setting.Settings;
-import com.parallelsymmetry.utility.setting.SettingsProvider;
-import com.parallelsymmetry.utility.task.Task;
-import com.parallelsymmetry.utility.task.TaskManager;
 
 public abstract class Service extends Agent implements ServiceProduct {
 
@@ -129,7 +97,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 	/**
 	 * Construct the service with the specified name and descriptor. The
 	 * descriptor must conform to the product descriptor specification.
-	 * 
+	 *
 	 * @param name
 	 * @param descriptor
 	 */
@@ -159,14 +127,14 @@ public abstract class Service extends Agent implements ServiceProduct {
 	 * Process the command line parameters. This method is the entry point for the
 	 * service and should be called from the main() method of the implementing
 	 * class.
-	 * 
+	 *
 	 * @param commands The command line commands to process.
 	 * @throws RuntimeException if not called from the main() method or the
-	 *           processInternal() method.
+	 * processInternal() method.
 	 */
 	public synchronized void process( String... commands ) {
 		// Check the calling method.
-		String source = Thread.currentThread().getStackTrace()[2].getMethodName();
+		String source = Thread.currentThread().getStackTrace()[ 2 ].getMethodName();
 		if( !"main".equals( source ) && !"processInternal".equals( source ) ) throw new RuntimeException( "This method should be called directly from the main() method!" );
 
 		try {
@@ -195,13 +163,13 @@ public abstract class Service extends Agent implements ServiceProduct {
 	/**
 	 * Intended as an entry point for calling the service internally. Particularly
 	 * useful for testing purposes.
-	 * 
+	 *
 	 * @param commands
 	 * @throws RuntimeException if called directly from the main() method.
 	 */
 	public synchronized void processInternal( String... commands ) {
 		// Check the calling method.
-		if( "main".equals( Thread.currentThread().getStackTrace()[2].getMethodName() ) ) throw new RuntimeException( "This method should not be called directly from the main() method!" );
+		if( "main".equals( Thread.currentThread().getStackTrace()[ 2 ].getMethodName() ) ) throw new RuntimeException( "This method should not be called directly from the main() method!" );
 
 		// Process the commands.
 		process( commands );
@@ -243,7 +211,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 	 * Get the home folder. If the home folder is null that means that the program
 	 * is not installed locally and was most likely started with a technology like
 	 * Java Web Start.
-	 * 
+	 *
 	 * @return
 	 */
 	public final File getHomeFolder() {
@@ -399,8 +367,8 @@ public abstract class Service extends Agent implements ServiceProduct {
 		}
 
 		if( message != null ) {
-			messages = new String[1];
-			messages[0] = message.toString();
+			messages = new String[ 1 ];
+			messages[ 0 ] = message.toString();
 		}
 
 		StringWriter writer = new StringWriter();
@@ -415,7 +383,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 
 	/**
 	 * Restart the service supplying extra commands if desired.
-	 * 
+	 *
 	 * @param commands
 	 */
 	public void serviceRestart( String... commands ) {
@@ -564,7 +532,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 	 * Override this method and return a set of valid command line flags if you
 	 * want the service to validate command line flags. By default this method
 	 * returns null and allows any command line flags.
-	 * 
+	 *
 	 * @return
 	 */
 	protected Set<String> getValidCommandLineFlags() {
@@ -602,9 +570,9 @@ public abstract class Service extends Agent implements ServiceProduct {
 
 		String[] parts = locale.split( "_" );
 
-		String l = parts.length > 0 ? parts[0] : "";
-		String c = parts.length > 1 ? parts[1] : "";
-		String v = parts.length > 2 ? parts[2] : "";
+		String l = parts.length > 0 ? parts[ 0 ] : "";
+		String c = parts.length > 1 ? parts[ 1 ] : "";
+		String v = parts.length > 2 ? parts[ 2 ] : "";
 
 		Locale.setDefault( new Locale( l, c, v ) );
 	}
@@ -627,7 +595,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 	 * Process the program parameters. This method is called from both the
 	 * process() method if another instance of the program is not running or the
 	 * peerExists() method if another instance is running.
-	 * 
+	 *
 	 * @param parameters
 	 */
 	private final void processParameters( Parameters parameters, boolean peer ) {
@@ -729,10 +697,16 @@ public abstract class Service extends Agent implements ServiceProduct {
 	}
 
 	private final boolean checkJava( Parameters parameters ) {
-		String javaRuntimeVersion = System.getProperty( "java.runtime.version" );
-		Log.write( Log.DEBUG, "Comparing Java version: " + javaRuntimeVersion + " >= " + javaVersionMinimum );
-		if( javaVersionMinimum.compareTo( javaRuntimeVersion ) > 0 ) {
-			error( "Java " + javaVersionMinimum + " or higher is required, found: " + javaRuntimeVersion );
+		String minimumVersion = javaVersionMinimum;
+		String runtimeVersion = System.getProperty( "java.runtime.version" );
+
+		if( minimumVersion.startsWith( "1." ) ) minimumVersion = minimumVersion.substring( 2 );
+		if( runtimeVersion.startsWith( "1." ) ) runtimeVersion = runtimeVersion.substring( 2 );
+
+		Log.write( Log.DEBUG, "Comparing Java version: " + runtimeVersion + " >= " + minimumVersion );
+
+		if( minimumVersion.compareTo( runtimeVersion ) > 0 ) {
+			error( "Java " + javaVersionMinimum + " or higher is required, found: " + System.getProperty( "java.runtime.version" ) );
 			return false;
 		}
 		return true;
@@ -770,7 +744,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 	 * Find the home directory. This method expects the program jar file to be
 	 * installed in a sub-directory of the home directory. Example:
 	 * <code>$HOME/lib/program.jar</code>
-	 * 
+	 *
 	 * @param parameters
 	 * @return
 	 */
@@ -920,7 +894,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 				Object object;
 				BufferedInputStream bufferedInput = new BufferedInputStream( socket.getInputStream() );
 				ObjectInputStream objectInput = new ObjectInputStream( bufferedInput );
-				while( ( object = objectInput.readObject() ) != null ) {
+				while( (object = objectInput.readObject()) != null ) {
 					LogRecord entry = (LogRecord)object;
 					Log.writeTo( PEER_LOGGER_NAME, entry );
 				}
