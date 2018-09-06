@@ -375,7 +375,7 @@ public abstract class Service extends Agent implements ServiceProduct {
 		if( throwable != null ) throwable.printStackTrace( new PrintWriter( writer ) );
 
 		// Show message on console.
-		if( message != null ) Log.write( Log.ERROR, message );
+		if( message != null ) Log.write( Log.ERROR, message.toString().trim() );
 		Log.write( Log.ERROR, writer.toString().trim() );
 
 		return messages;
