@@ -700,12 +700,9 @@ public abstract class Service extends Agent implements ServiceProduct {
 		String minimumVersion = javaVersionMinimum;
 		String runtimeVersion = System.getProperty( "java.runtime.version" );
 
-		if( minimumVersion.startsWith( "1." ) ) minimumVersion = minimumVersion.substring( 2 );
-		if( runtimeVersion.startsWith( "1." ) ) runtimeVersion = runtimeVersion.substring( 2 );
-
 		Log.write( Log.DEBUG, "Comparing Java version: " + runtimeVersion + " >= " + minimumVersion );
 
-		if( minimumVersion.compareTo( runtimeVersion ) > 0 ) {
+		if( JavaUtil.compareJavaVersion( minimumVersion, runtimeVersion ) > 0 ) {
 			error( "Java " + javaVersionMinimum + " or higher is required, found: " + System.getProperty( "java.runtime.version" ) );
 			return false;
 		}
