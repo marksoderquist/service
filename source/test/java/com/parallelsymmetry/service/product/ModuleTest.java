@@ -1,17 +1,19 @@
 package com.parallelsymmetry.service.product;
 
-import java.net.URL;
-
-import org.junit.Test;
-
 import com.parallelsymmetry.service.BaseTestCase;
 import com.parallelsymmetry.service.MockService;
-import com.parallelsymmetry.service.product.ServiceModule;
 import com.parallelsymmetry.utility.DateUtil;
 import com.parallelsymmetry.utility.Descriptor;
 import com.parallelsymmetry.utility.Release;
 import com.parallelsymmetry.utility.Version;
 import com.parallelsymmetry.utility.product.ProductCard;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.net.URL;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class ModuleTest extends BaseTestCase {
 
@@ -19,10 +21,12 @@ public class ModuleTest extends BaseTestCase {
 
 	private ServiceModule module;
 
+	@BeforeEach
 	@Override
-	public void setUp() throws Exception {
+	public void setup() throws Exception {
 		MockService service = new MockService();
 		URL url = getClass().getResource( TEST_MODULE_DESCRIPTOR_PATH );
+		assertNotNull( url );
 		module = new MockModule( service, new ProductCard( url.toURI(), new Descriptor( url ) ) );
 	}
 

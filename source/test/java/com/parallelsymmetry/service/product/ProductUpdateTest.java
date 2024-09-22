@@ -1,15 +1,19 @@
 package com.parallelsymmetry.service.product;
 
+import com.parallelsymmetry.service.BaseServiceTest;
+import com.parallelsymmetry.utility.product.ProductCard;
+import org.junit.jupiter.api.Test;
+
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.parallelsymmetry.service.BaseServiceTest;
-import com.parallelsymmetry.service.product.ProductUpdate;
-import com.parallelsymmetry.utility.product.ProductCard;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ProductUpdateTest extends BaseServiceTest {
 
+	@Test
 	public void testHashCode() throws Exception {
 		ProductCard card1 = new ProductCard( "group", "artifact" );
 		File source1 = new File( "source" );
@@ -24,6 +28,7 @@ public class ProductUpdateTest extends BaseServiceTest {
 		assertEquals( update1.hashCode(), update2.hashCode() );
 	}
 
+	@Test
 	public void testEquals() throws Exception {
 		ProductCard card1 = new ProductCard( "group", "artifact" );
 		File source1 = new File( "source" );
@@ -39,6 +44,7 @@ public class ProductUpdateTest extends BaseServiceTest {
 		assertTrue( update1.equals( update2 ) );
 	}
 
+	@Test
 	public void testProductUpdateSet() throws Exception {
 		ProductCard card1 = new ProductCard( "group", "artifact" );
 		File source1 = new File( "source" );

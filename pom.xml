@@ -18,8 +18,8 @@
 
 	<repositories>
 		<repository>
-			<id>psm</id>
-			<url>https://code.xeomar.com/repo/psm</url>
+			<id>avn</id>
+			<url>https://repo.avereon.com/avn</url>
 		</repository>
 	</repositories>
 

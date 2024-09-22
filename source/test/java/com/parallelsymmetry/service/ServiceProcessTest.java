@@ -1,16 +1,18 @@
 package com.parallelsymmetry.service;
 
-import junit.framework.TestCase;
-
 import com.parallelsymmetry.utility.ArrayUtil;
 import com.parallelsymmetry.utility.ConsoleReader;
 import com.parallelsymmetry.utility.ThreadUtil;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-public class ServiceProcessTest extends TestCase {
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
-	private String[] startCommands = new String[] { "java", "-cp", System.getProperty( "java.class.path" ), "com.parallelsymmetry.service.MockService", "-log.level", "info" };
+public class ServiceProcessTest extends BaseTestCase {
 
-	private String[] stopCommands = ArrayUtil.combine( startCommands, new String[] { "-stop" } );
+	private String[] startCommands = new String[]{ "java", "-cp", System.getProperty( "java.class.path" ), "com.parallelsymmetry.service.MockService", "-log.level", "info" };
+
+	private String[] stopCommands = ArrayUtil.combine( startCommands, new String[]{ "-stop" } );
 
 	private boolean showStartOutput = false;
 
@@ -20,8 +22,9 @@ public class ServiceProcessTest extends TestCase {
 
 	private Process stopProcess;
 
+	@AfterEach
 	@Override
-	public void tearDown() throws Exception {
+	public void teardown() throws Exception {
 		try {
 			startProcess.destroy();
 			startProcess.waitFor();
@@ -33,8 +36,10 @@ public class ServiceProcessTest extends TestCase {
 
 		assertFalse( isProcessRunning( startProcess ) );
 		assertFalse( isProcessRunning( stopProcess ) );
+		super.teardown();
 	}
 
+	@Test
 	public void testProcess() throws Exception {
 		// Start a mock service process.
 		ProcessBuilder builder = new ProcessBuilder( startCommands );

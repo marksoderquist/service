@@ -1,11 +1,11 @@
 package com.parallelsymmetry.service.product;
 
-import java.io.File;
-
 import com.parallelsymmetry.utility.log.Log;
 import com.parallelsymmetry.utility.product.Product;
 import com.parallelsymmetry.utility.product.ProductCard;
 import com.parallelsymmetry.utility.product.ProductCardException;
+
+import java.io.File;
 
 class MockProduct implements Product {
 

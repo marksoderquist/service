@@ -1,5 +1,19 @@
 package com.parallelsymmetry.service.product;
 
+import com.parallelsymmetry.service.BaseServiceTest;
+import com.parallelsymmetry.service.product.ProductManager.*;
+import com.parallelsymmetry.utility.Descriptor;
+import com.parallelsymmetry.utility.FileUtil;
+import com.parallelsymmetry.utility.XmlUtil;
+import com.parallelsymmetry.utility.product.ProductCard;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
@@ -9,24 +23,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-
-import org.junit.Test;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-
-import com.parallelsymmetry.service.BaseServiceTest;
-import com.parallelsymmetry.service.product.ProductManager.ApplyOption;
-import com.parallelsymmetry.service.product.ProductManager.CheckInterval;
-import com.parallelsymmetry.service.product.ProductManager.CheckOption;
-import com.parallelsymmetry.service.product.ProductManager.CheckWhen;
-import com.parallelsymmetry.service.product.ProductManager.FoundOption;
-import com.parallelsymmetry.utility.Descriptor;
-import com.parallelsymmetry.utility.FileUtil;
-import com.parallelsymmetry.utility.XmlUtil;
-import com.parallelsymmetry.utility.product.ProductCard;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ProductManagerTest extends BaseServiceTest {
 
@@ -58,9 +55,10 @@ public class ProductManagerTest extends BaseServiceTest {
 
 	private ProductManager manager;
 
+	@BeforeEach
 	@Override
-	public void setUp() throws Exception {
-		super.setUp();
+	public void setup() throws Exception {
+		super.setup();
 		manager = service.getProductManager();
 	}
 
@@ -114,7 +112,7 @@ public class ProductManagerTest extends BaseServiceTest {
 		assertTrue( FileUtil.copy( SOURCE_PRODUCT_CARD, TARGET_PRODUCT_CARD ) );
 
 		// Remove the old update card if it exists.
-		assertTrue( "Unable to remove file", FileUtil.delete( TARGET_UPDATE_CARD ) );
+		assertTrue( FileUtil.delete( TARGET_UPDATE_CARD ) );
 
 		// Start the service set the update manager for manual checks.
 		service.getTaskManager().start();
@@ -188,7 +186,7 @@ public class ProductManagerTest extends BaseServiceTest {
 			// Enable the update manager temporarily.
 			manager.setCheckOption( ProductManager.CheckOption.MANUAL );
 			assertEquals( 1, manager.stagePostedUpdates() );
-			assertTrue( updateFile.toString(), updateFile.exists() );
+			assertTrue( updateFile.exists() );
 			assertEquals( 1, watcher.getEvents().size() );
 			assertEquals( ProductManagerEvent.Type.PRODUCT_STAGED, watcher.getEvents().get( 0 ).getType() );
 		} finally {
@@ -297,6 +295,7 @@ public class ProductManagerTest extends BaseServiceTest {
 		assertFalse( manager.isInstalled( card ) );
 	}
 
+	@Test
 	public void testInstalledProductClass() {
 		File file = new File( "." );
 
@@ -309,6 +308,7 @@ public class ProductManagerTest extends BaseServiceTest {
 		assertEquals( installedProductB.hashCode(), installedProductA.hashCode() );
 	}
 
+	@Test
 	public void testGetNextIntervalTime() {
 		long hour = 3600000;
 		long day = 24 * hour;
@@ -319,6 +319,7 @@ public class ProductManagerTest extends BaseServiceTest {
 		assertEquals( 30 * day, ProductManager.getNextIntervalTime( 0, CheckInterval.MONTH, 0, 0 ) );
 	}
 
+	@Test
 	public void testGetNextScheuleTime() {
 		long hour = 3600000;
 		long day = 24 * hour;
@@ -328,13 +329,13 @@ public class ProductManagerTest extends BaseServiceTest {
 
 		// Check the daily values.
 		for( int index = 0; index < 24; index++ ) {
-			assertEquals( "Hour: " + index, index * hour, ProductManager.getNextScheduleTime( 0, CheckWhen.DAILY, index ) );
+			assertEquals( index * hour, ProductManager.getNextScheduleTime( 0, CheckWhen.DAILY, index ) );
 		}
 
 		for( CheckWhen when : CheckWhen.values() ) {
 			if( when == CheckWhen.DAILY ) continue;
 			for( int index = 0; index < 24; index++ ) {
-				assertEquals( "When: " + when + " Hour: " + index, ( ( when.ordinal() - 1 ) * day ) + ( index * hour ), ProductManager.getNextScheduleTime( offset, when, index ) );
+				assertEquals( ((when.ordinal() - 1) * day) + (index * hour), ProductManager.getNextScheduleTime( offset, when, index ) );
 			}
 		}
 	}
@@ -367,7 +368,7 @@ public class ProductManagerTest extends BaseServiceTest {
 
 	}
 
-	private class ProductManagerWatcher implements ProductManagerListener {
+	private static class ProductManagerWatcher implements ProductManagerListener {
 
 		private List<ProductManagerEvent> events;
 
@@ -376,7 +377,7 @@ public class ProductManagerTest extends BaseServiceTest {
 		}
 
 		public void reset() {
-			events = new CopyOnWriteArrayList<ProductManagerEvent>();
+			events = new CopyOnWriteArrayList<>();
 		}
 
 		@Override
@@ -385,7 +386,7 @@ public class ProductManagerTest extends BaseServiceTest {
 		}
 
 		public List<ProductManagerEvent> getEvents() {
-			return new ArrayList<ProductManagerEvent>( events );
+			return new ArrayList<>( events );
 		}
 
 	}

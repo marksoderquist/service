@@ -1,6 +1,5 @@
 package com.parallelsymmetry.service;
 
-import com.parallelsymmetry.service.Service;
 import com.parallelsymmetry.utility.Parameters;
 import com.parallelsymmetry.utility.ThreadUtil;
 import com.parallelsymmetry.utility.log.Log;
