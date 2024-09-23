@@ -7,4 +7,6 @@ module com.parallelsymmetry.service {
 	requires java.management;
 	requires java.logging;
 	requires java.desktop;
+
+	exports com.parallelsymmetry.service;
 }
