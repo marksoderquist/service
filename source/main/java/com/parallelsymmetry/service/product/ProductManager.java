@@ -370,7 +370,7 @@ public class ProductManager extends Agent implements Persistent {
 			if( !alreadyRun ) Log.write( Log.DEBUG, "Check for updates task cancelled." );
 		}
 
-		// Don't schedule tasks if the NOUPDATECHECK flag is set. 
+		// Don't schedule tasks if the NOUPDATECHECK flag is set.
 		if( service.getParameters().isSet( ServiceFlag.NOUPDATECHECK ) ) return;
 
 		Settings settings = service.getSettings().getNode( ServiceSettingsPath.UPDATE_SETTINGS_PATH + "/check" );
@@ -513,7 +513,7 @@ public class ProductManager extends Agent implements Persistent {
 		}
 
 		// If there is an exception and there are no updates, throw the exception.
-		if( exception != null && newCards.size() == 0 ) throw exception;
+		if( exception != null && newCards.isEmpty() ) throw exception;
 
 		// Cache the discovered updates.
 		postedUpdateCacheTime = System.currentTimeMillis();
@@ -825,10 +825,13 @@ public class ProductManager extends Agent implements Persistent {
 		}
 		this.updates = updatesMap;
 
+		String checkOptionDefault = CheckOption.MANUAL.name().toLowerCase();
+		String foundOptionDefault = FoundOption.STORE.name().toLowerCase();
+		String applyOptionDefault = ApplyOption.IGNORE.name().toLowerCase();
 		Settings updateSettings = settings.getNode( "update" );
-		this.checkOption = CheckOption.valueOf( updateSettings.get( CHECK, null ).toUpperCase() );
-		this.foundOption = FoundOption.valueOf( updateSettings.get( FOUND, null ).toUpperCase() );
-		this.applyOption = ApplyOption.valueOf( updateSettings.get( APPLY, null ).toUpperCase() );
+		this.checkOption = CheckOption.valueOf( updateSettings.get( CHECK, checkOptionDefault ).toUpperCase() );
+		this.foundOption = FoundOption.valueOf( updateSettings.get( FOUND, foundOptionDefault ).toUpperCase() );
+		this.applyOption = ApplyOption.valueOf( updateSettings.get( APPLY, applyOptionDefault ).toUpperCase() );
 	}
 
 	@Override
